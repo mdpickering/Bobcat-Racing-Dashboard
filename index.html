@@ -21,7 +21,8 @@
     }
   </script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -482,7 +483,7 @@
     let subteams = JSON.parse(localStorage.getItem('bobcat_subteams')) || DEFAULT_SUBTEAMS;
     let orders = JSON.parse(localStorage.getItem('bobcat_orders')) || DEFAULT_ORDERS;
     
-    // Configured with your live Supabase credentials
+    // Configured with your live Supabase credentials (Root URL)
     let settings = {
       ctoPin: '1111',
       supabaseUrl: 'https://sxguavofxfrasoeiafjk.supabase.co',
@@ -500,9 +501,10 @@
 
     /* --- Cloud Sync Engine --- */
     async function initCloudSync() {
-      if (settings.supabaseUrl && settings.supabaseKey && window.supabase) {
+      const clientFactory = window.supabase?.createClient || (typeof createClient === 'function' ? createClient : null);
+      if (settings.supabaseUrl && settings.supabaseKey && clientFactory) {
         try {
-          supabase = window.supabase.createClient(settings.supabaseUrl, settings.supabaseKey);
+          supabase = clientFactory(settings.supabaseUrl, settings.supabaseKey);
           
           const { data: testData, error: testErr } = await supabase.from('tasks').select('id').limit(1);
           if (testErr) throw testErr;
@@ -605,57 +607,60 @@
       }
     }
 
-    async function saveState(syncType = null, syncData = null) {
+    /* Save local state and push to cloud non-blockingly */
+    function saveState(syncType = null, syncData = null) {
       localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
       localStorage.setItem('bobcat_orders', JSON.stringify(orders));
 
       if (isCloudConnected && supabase && syncType && syncData) {
-        try {
-          if (syncType === 'task_upsert') {
-            await supabase.from('tasks').upsert({
-              id: syncData.id,
-              title: syncData.title,
-              subsystem_id: syncData.subsystemId,
-              category: syncData.category,
-              priority: syncData.priority,
-              status: syncData.status,
-              assignee: syncData.assignee,
-              deadline: syncData.deadline,
-              notes: syncData.notes
-            });
-          } else if (syncType === 'task_delete') {
-            await supabase.from('tasks').delete().eq('id', syncData);
-          } else if (syncType === 'order_upsert') {
-            await supabase.from('orders').upsert({
-              id: syncData.id,
-              item: syncData.item,
-              subsystem_id: syncData.subsystemId,
-              vendor: syncData.vendor,
-              vendor_url: syncData.vendorUrl,
-              part_number: syncData.partNumber,
-              qty: syncData.qty,
-              unit_price: syncData.unitPrice,
-              urgency: syncData.urgency,
-              requested_by: syncData.requestedBy,
-              status: syncData.status
-            });
-          } else if (syncType === 'order_delete') {
-            await supabase.from('orders').delete().eq('id', syncData);
-          } else if (syncType === 'subteam_upsert') {
-            await supabase.from('subteams').upsert({
-              id: syncData.id,
-              name: syncData.name,
-              lead: syncData.lead,
-              members: syncData.members,
-              subsystem_id: syncData.subsystemId
-            });
-          } else if (syncType === 'subteam_delete') {
-            await supabase.from('subteams').delete().eq('id', syncData);
+        (async () => {
+          try {
+            if (syncType === 'task_upsert') {
+              await supabase.from('tasks').upsert({
+                id: syncData.id,
+                title: syncData.title,
+                subsystem_id: syncData.subsystemId,
+                category: syncData.category,
+                priority: syncData.priority,
+                status: syncData.status,
+                assignee: syncData.assignee,
+                deadline: syncData.deadline,
+                notes: syncData.notes
+              });
+            } else if (syncType === 'task_delete') {
+              await supabase.from('tasks').delete().eq('id', syncData);
+            } else if (syncType === 'order_upsert') {
+              await supabase.from('orders').upsert({
+                id: syncData.id,
+                item: syncData.item,
+                subsystem_id: syncData.subsystemId,
+                vendor: syncData.vendor,
+                vendor_url: syncData.vendorUrl,
+                part_number: syncData.partNumber,
+                qty: syncData.qty,
+                unit_price: syncData.unitPrice,
+                urgency: syncData.urgency,
+                requested_by: syncData.requestedBy,
+                status: syncData.status
+              });
+            } else if (syncType === 'order_delete') {
+              await supabase.from('orders').delete().eq('id', syncData);
+            } else if (syncType === 'subteam_upsert') {
+              await supabase.from('subteams').upsert({
+                id: syncData.id,
+                name: syncData.name,
+                lead: syncData.lead,
+                members: syncData.members,
+                subsystem_id: syncData.subsystemId
+              });
+            } else if (syncType === 'subteam_delete') {
+              await supabase.from('subteams').delete().eq('id', syncData);
+            }
+          } catch (err) {
+            console.error('Cloud Sync Write Error:', err);
           }
-        } catch (err) {
-          console.error('Cloud Sync Write Error:', err);
-        }
+        })();
       }
 
       render();
@@ -916,11 +921,11 @@
       lucide.createIcons();
     }
 
-    async function signOffTask(id, newStatus) {
+    function signOffTask(id, newStatus) {
       const target = tasks.find(t => t.id === id);
       if (target) {
         target.status = newStatus;
-        await saveState('task_upsert', target);
+        saveState('task_upsert', target);
         showToast(newStatus === 'Complete' ? 'Component Approved & Released' : 'Sent back for revision');
       }
     }
@@ -1174,7 +1179,7 @@
       subSelect.addEventListener('change', updateCats);
       updateCats();
 
-      document.getElementById('form-task').onsubmit = async (e) => {
+      document.getElementById('form-task').onsubmit = (e) => {
         e.preventDefault();
         const data = {
           id: isEdit ? taskId : 't' + Date.now(),
@@ -1190,7 +1195,7 @@
         if (isEdit) tasks = tasks.map(x => x.id === taskId ? data : x);
         else tasks.push(data);
         
-        await saveState('task_upsert', data);
+        saveState('task_upsert', data);
         closeModal();
         showToast(isEdit ? 'Task updated' : 'Task assigned');
       };
@@ -1198,34 +1203,6 @@
       document.getElementById('modal-container').classList.remove('hidden');
       document.getElementById('modal-container').classList.add('flex');
       lucide.createIcons();
-    }
-
-    async function deleteTask(id) {
-      if (confirm('Delete this task?')) {
-        tasks = tasks.filter(t => t.id !== id);
-        await saveState('task_delete', id);
-        showToast('Task removed');
-      }
-    }
-
-    async function updateTaskStatus(id, newStatus) {
-      const target = tasks.find(t => t.id === id);
-      if (target) {
-        target.status = newStatus;
-        await saveState('task_upsert', target);
-      }
-    }
-
-    async function claimTaskPrompt(id) {
-      const name = prompt('Enter your name:');
-      if (name) {
-        const target = tasks.find(t => t.id === id);
-        if (target) {
-          target.assignee = name.trim();
-          await saveState('task_upsert', target);
-          showToast(`Task assigned to ${name}`);
-        }
-      }
     }
 
     function openTeamModal(teamId = null) {
@@ -1271,7 +1248,7 @@
         </form>
       `;
 
-      document.getElementById('form-subteam').onsubmit = async (e) => {
+      document.getElementById('form-subteam').onsubmit = (e) => {
         e.preventDefault();
         const data = {
           id: isEdit ? teamId : 'st_' + Date.now(),
@@ -1283,7 +1260,7 @@
         if (isEdit) subteams = subteams.map(x => x.id === teamId ? data : x);
         else subteams.push(data);
         
-        await saveState('subteam_upsert', data);
+        saveState('subteam_upsert', data);
         closeModal();
         showToast(isEdit ? 'Sub-team updated' : 'Sub-team created');
       };
@@ -1293,11 +1270,39 @@
       lucide.createIcons();
     }
 
-    async function deleteTeam(id) {
+    function deleteTeam(id) {
       if (confirm('Delete this sub-team structure?')) {
         subteams = subteams.filter(st => st.id !== id);
-        await saveState('subteam_delete', id);
+        saveState('subteam_delete', id);
         showToast('Sub-team deleted');
+      }
+    }
+
+    function deleteTask(id) {
+      if (confirm('Delete this task?')) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveState('task_delete', id);
+        showToast('Task removed');
+      }
+    }
+
+    function updateTaskStatus(id, newStatus) {
+      const target = tasks.find(t => t.id === id);
+      if (target) {
+        target.status = newStatus;
+        saveState('task_upsert', target);
+      }
+    }
+
+    function claimTaskPrompt(id) {
+      const name = prompt('Enter your name:');
+      if (name) {
+        const target = tasks.find(t => t.id === id);
+        if (target) {
+          target.assignee = name.trim();
+          saveState('task_upsert', target);
+          showToast(`Task assigned to ${name}`);
+        }
       }
     }
 
@@ -1363,7 +1368,7 @@
         </form>
       `;
 
-      document.getElementById('form-order').onsubmit = async (e) => {
+      document.getElementById('form-order').onsubmit = (e) => {
         e.preventDefault();
         const orderData = {
           id: 'o' + Date.now(),
@@ -1381,24 +1386,19 @@
         };
 
         orders.push(orderData);
-        await saveState('order_upsert', orderData);
+        saveState('order_upsert', orderData);
         closeModal();
         showToast('Order submitted');
 
         if (settings.webhookUrl) {
-          try {
-            await fetch(settings.webhookUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...orderData,
-                notificationEmails: settings.emailList.split(',').map(e => e.trim())
-              })
-            });
-            showToast('Dispatched to OneDrive & Email alerts');
-          } catch (err) {
-            console.error('Webhook error:', err);
-          }
+          fetch(settings.webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...orderData,
+              notificationEmails: settings.emailList.split(',').map(e => e.trim())
+            })
+          }).catch(err => console.error('Webhook error:', err));
         }
       };
 
@@ -1407,18 +1407,18 @@
       lucide.createIcons();
     }
 
-    async function updateOrderStatus(id, status) {
+    function updateOrderStatus(id, status) {
       const target = orders.find(o => o.id === id);
       if (target) {
         target.status = status;
-        await saveState('order_upsert', target);
+        saveState('order_upsert', target);
       }
     }
 
-    async function deleteOrder(id) {
+    function deleteOrder(id) {
       if (confirm('Delete this purchase order?')) {
         orders = orders.filter(o => o.id !== id);
-        await saveState('order_delete', id);
+        saveState('order_delete', id);
         showToast('Order removed');
       }
     }
@@ -1453,17 +1453,16 @@
           </div>
         </form>
       `;
-      document.getElementById('form-settings').onsubmit = async (e) => {
+      document.getElementById('form-settings').onsubmit = (e) => {
         e.preventDefault();
         settings.ctoPin = document.getElementById('f-set-pin').value.trim();
         settings.webhookUrl = document.getElementById('f-set-webhook').value.trim();
         settings.emailList = document.getElementById('f-set-emails').value.trim();
         settings.supabaseUrl = document.getElementById('f-set-sburl').value.trim();
         settings.supabaseKey = document.getElementById('f-set-sbkey').value.trim();
-        localStorage.setItem('bobcat_settings', JSON.stringify(settings));
         closeModal();
         showToast('Settings saved');
-        await initCloudSync();
+        initCloudSync();
       };
       document.getElementById('modal-container').classList.remove('hidden');
       document.getElementById('modal-container').classList.add('flex');
@@ -1521,6 +1520,7 @@
     });
 
     /* Boot Sequence */
+    render();
     initCloudSync();
     switchTab('home');
   </script>

@@ -478,12 +478,11 @@
       { id: "o2", item: "3/16\" High-Pressure Fuel Line (10ft)", description: "SAE J30R9 fuel injection hose", subsystemId: "drivetrain", vendor: "Summit Racing", vendorUrl: "https://www.summitracing.com", partNumber: "SUM-2200", qty: 1, unitPrice: 24.99, urgency: "Next Batch Order", requestedBy: "Spence", status: "Ordered" }
     ];
 
-    /* --- Application State --- */
+    /* Application State */
     let tasks = JSON.parse(localStorage.getItem('bobcat_tasks')) || DEFAULT_TASKS;
     let subteams = JSON.parse(localStorage.getItem('bobcat_subteams')) || DEFAULT_SUBTEAMS;
     let orders = JSON.parse(localStorage.getItem('bobcat_orders')) || DEFAULT_ORDERS;
     
-    // Configured with your live Supabase credentials (Root URL)
     let settings = {
       ctoPin: '1111',
       supabaseUrl: 'https://sxguavofxfrasoeiafjk.supabase.co',
@@ -492,50 +491,48 @@
       emailList: 'captain@bobcatracing.edu, lead@bobcatracing.edu'
     };
 
-    let supabase = null;
+    let dbClient = null;
     let isCloudConnected = false;
     let ctoUnlocked = sessionStorage.getItem('bobcat_cto_unlocked') === 'true';
     let currentTab = 'home';
     let selectedSubsystemId = TAXONOMY[1].id;
     let selectedCategoryName = TAXONOMY[1].categories[0].name;
 
-    /* --- Cloud Sync Engine --- */
+    /* Cloud Sync Engine */
     async function initCloudSync() {
-      const clientFactory = window.supabase?.createClient || (typeof createClient === 'function' ? createClient : null);
-      if (settings.supabaseUrl && settings.supabaseKey && clientFactory) {
-        try {
-          supabase = clientFactory(settings.supabaseUrl, settings.supabaseKey);
+      try {
+        const clientFactory = window.supabase?.createClient;
+        if (settings.supabaseUrl && settings.supabaseKey && clientFactory) {
+          dbClient = clientFactory(settings.supabaseUrl, settings.supabaseKey);
           
-          const { data: testData, error: testErr } = await supabase.from('tasks').select('id').limit(1);
-          if (testErr) throw testErr;
+          const { data, error } = await dbClient.from('tasks').select('id').limit(1);
+          if (error) throw error;
 
           isCloudConnected = true;
           updateSyncBadge(true);
-
           await pullCloudData();
 
-          supabase.channel('public:tasks')
+          dbClient.channel('public:sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => pullCloudData())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => pullCloudData())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'subteams' }, () => pullCloudData())
             .subscribe();
-
-        } catch (err) {
-          console.warn('Supabase fallback to local mode:', err);
+        } else {
           updateSyncBadge(false);
         }
-      } else {
+      } catch (err) {
+        console.warn('Operating in local-first storage mode:', err);
         updateSyncBadge(false);
       }
     }
 
     async function pullCloudData() {
-      if (!isCloudConnected || !supabase) return;
+      if (!isCloudConnected || !dbClient) return;
       try {
         const [resTasks, resOrders, resSubteams] = await Promise.all([
-          supabase.from('tasks').select('*'),
-          supabase.from('orders').select('*'),
-          supabase.from('subteams').select('*')
+          dbClient.from('tasks').select('*'),
+          dbClient.from('orders').select('*'),
+          dbClient.from('subteams').select('*')
         ]);
 
         if (resTasks.data && resTasks.data.length > 0) {
@@ -552,7 +549,7 @@
           }));
         } else if (resTasks.data && resTasks.data.length === 0) {
           for (let t of DEFAULT_TASKS) {
-            await supabase.from('tasks').insert({
+            await dbClient.from('tasks').insert({
               id: t.id,
               title: t.title,
               subsystem_id: t.subsystemId,
@@ -594,7 +591,7 @@
 
         render();
       } catch (e) {
-        console.error('Error fetching cloud data:', e);
+        console.error('Data pull error:', e);
       }
     }
 
@@ -607,17 +604,16 @@
       }
     }
 
-    /* Save local state and push to cloud non-blockingly */
     function saveState(syncType = null, syncData = null) {
       localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
       localStorage.setItem('bobcat_orders', JSON.stringify(orders));
 
-      if (isCloudConnected && supabase && syncType && syncData) {
+      if (isCloudConnected && dbClient && syncType && syncData) {
         (async () => {
           try {
             if (syncType === 'task_upsert') {
-              await supabase.from('tasks').upsert({
+              await dbClient.from('tasks').upsert({
                 id: syncData.id,
                 title: syncData.title,
                 subsystem_id: syncData.subsystemId,
@@ -629,9 +625,9 @@
                 notes: syncData.notes
               });
             } else if (syncType === 'task_delete') {
-              await supabase.from('tasks').delete().eq('id', syncData);
+              await dbClient.from('tasks').delete().eq('id', syncData);
             } else if (syncType === 'order_upsert') {
-              await supabase.from('orders').upsert({
+              await dbClient.from('orders').upsert({
                 id: syncData.id,
                 item: syncData.item,
                 subsystem_id: syncData.subsystemId,
@@ -645,9 +641,9 @@
                 status: syncData.status
               });
             } else if (syncType === 'order_delete') {
-              await supabase.from('orders').delete().eq('id', syncData);
+              await dbClient.from('orders').delete().eq('id', syncData);
             } else if (syncType === 'subteam_upsert') {
-              await supabase.from('subteams').upsert({
+              await dbClient.from('subteams').upsert({
                 id: syncData.id,
                 name: syncData.name,
                 lead: syncData.lead,
@@ -655,10 +651,10 @@
                 subsystem_id: syncData.subsystemId
               });
             } else if (syncType === 'subteam_delete') {
-              await supabase.from('subteams').delete().eq('id', syncData);
+              await dbClient.from('subteams').delete().eq('id', syncData);
             }
           } catch (err) {
-            console.error('Cloud Sync Write Error:', err);
+            console.error('Async DB error:', err);
           }
         })();
       }

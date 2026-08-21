@@ -21,7 +21,6 @@
     }
   </script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -39,9 +38,8 @@
   <!-- Top Header Navigation -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <!-- Clickable Logo Easter Egg (Triple click to trigger PIN) -->
-      <div id="brand-logo-trigger" class="flex items-center gap-3 cursor-pointer select-none" title="Bobcat Racing">
-        <div class="h-9 w-9 rounded-lg bg-[#0c2340] flex items-center justify-center text-[#b59a57] shadow-md font-bold transition-transform active:scale-95">
+      <div class="flex items-center gap-3 select-none">
+        <div class="h-9 w-9 rounded-lg bg-[#0c2340] flex items-center justify-center text-[#b59a57] shadow-md font-bold">
           <i data-lucide="gauge" class="w-5 h-5"></i>
         </div>
         <div>
@@ -53,23 +51,22 @@
       <!-- Public Navigation Tabs -->
       <nav id="main-nav-bar" class="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="home">Overview</button>
-        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="tasks">Tasks &amp; Subsystems</button>
-        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="schedule">Master Timeline</button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="tasks">Tasks &amp; Work Packages</button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="schedule">Master Timeline &amp; Calendar</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="orders">Purchase Orders</button>
-        <!-- Dynamically injected "Executive View" tab when unlocked -->
+        <!-- Injected Executive Tab (Revealed only via Ctrl+Shift+X) -->
         <button id="nav-cto-secret" class="nav-tab hidden px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all text-[#0c2340] bg-amber-50 border border-amber-200 hover:bg-amber-100 items-center gap-1.5" data-tab="cto">
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#0c2340]"></i>
           <span>Executive View</span>
         </button>
       </nav>
 
-      <!-- Settings / Connection Status -->
+      <!-- Sync Status Indicator -->
       <div class="flex items-center gap-2">
-        <button id="btn-open-settings" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-mono text-slate-700 shadow-xs transition-colors">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-mono text-slate-600 select-none shadow-xs">
           <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
           <span id="sync-status-text">Checking...</span>
-          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-slate-400"></i>
-        </button>
+        </div>
       </div>
     </div>
   </header>
@@ -90,7 +87,7 @@
     <div id="view-home" class="space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Total Completion</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Build Progress</span>
           <div class="flex items-baseline justify-between mt-2">
             <span id="stat-progress-pct" class="text-2xl font-bold tracking-tight text-slate-900">0%</span>
             <span id="stat-completed-count" class="text-xs font-mono text-slate-500">0/0 done</span>
@@ -101,12 +98,12 @@
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Critical Blockers</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Shop Blockers</span>
           <div class="flex items-baseline justify-between mt-2">
             <span id="stat-blockers-count" class="text-2xl font-bold tracking-tight text-rose-600">0</span>
             <i data-lucide="octagon-alert" class="w-4 h-4 text-rose-600"></i>
           </div>
-          <p class="text-[11px] text-slate-500 mt-2">Immediate shop / design blockers</p>
+          <p class="text-[11px] text-slate-500 mt-2">Active design &amp; fab blockers</p>
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
@@ -119,12 +116,12 @@
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Total PO Spend</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Open Deliverables</span>
           <div class="flex items-baseline justify-between mt-2">
-            <span id="stat-spend-total" class="text-2xl font-bold tracking-tight text-emerald-600">$0.00</span>
-            <i data-lucide="wallet" class="w-4 h-4 text-emerald-600"></i>
+            <span id="stat-open-count" class="text-2xl font-bold tracking-tight text-sky-600">0</span>
+            <i data-lucide="clock" class="w-4 h-4 text-sky-600"></i>
           </div>
-          <p class="text-[11px] text-slate-500 mt-2">Requested via parts form</p>
+          <p class="text-[11px] text-slate-500 mt-2">Pending shop completion</p>
         </div>
       </div>
 
@@ -132,10 +129,10 @@
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
             <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <i data-lucide="layers" class="w-4 h-4 text-[#0c2340]"></i> Subsystem Progress
+              <i data-lucide="layers" class="w-4 h-4 text-[#0c2340]"></i> Subsystem Progress Breakdown
             </h2>
             <button class="text-xs text-[#0c2340] hover:text-[#b59a57] font-semibold flex items-center gap-1 transition-colors" onclick="switchTab('tasks')">
-              View Task Breakdown &rarr;
+              View Work Packages &rarr;
             </button>
           </div>
           <div id="subsystem-progress-list" class="space-y-3.5"></div>
@@ -145,7 +142,7 @@
           <div>
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i> Critical Shop Queue
+                <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i> High-Priority Shop Queue
               </h2>
             </div>
             <div id="urgent-tasks-list" class="space-y-2.5"></div>
@@ -162,26 +159,49 @@
       </div>
     </div>
 
-    <!-- ==================== VIEW 2: HIDDEN EXECUTIVE / CTO PORTAL ==================== -->
+    <!-- ==================== VIEW 2: EXECUTIVE / CTO PORTAL (SECRET) ==================== -->
     <div id="view-cto" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">Executive Portal</span>
-            <h1 class="text-lg font-bold text-slate-900">Sub-Team Hierarchy &amp; Technical Operations</h1>
+            <h1 class="text-lg font-bold text-slate-900">Operations, Sub-Teams &amp; Financials</h1>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Manage team leads, assigned engineers, and technical sign-offs</p>
+          <p class="text-xs text-slate-500 mt-0.5">Confidential team hierarchy, budget review, and technical sign-offs</p>
         </div>
         <div class="flex items-center gap-2">
+          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3.5 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-slate-500"></i> Admin Settings
+          </button>
           <button onclick="openTeamModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
             <i data-lucide="user-plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> + Add Sub-Team
           </button>
-          <button onclick="lockCtoPortal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 flex items-center gap-1">
-            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Hide &amp; Lock Portal
+          <button onclick="lockCtoPortal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg px-3 py-2 text-xs font-semibold border border-rose-200 flex items-center gap-1">
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock &amp; Hide
           </button>
         </div>
       </div>
 
+      <!-- Executive Financial Summary Cards (Only visible here) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Total PO Approved Spend</span>
+          <p id="cto-stat-approved-spend" class="text-2xl font-bold text-emerald-600 mt-1">$0.00</p>
+          <span class="text-[11px] text-slate-400 font-mono">Approved &amp; Ordered</span>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Pending Requests Total</span>
+          <p id="cto-stat-pending-spend" class="text-2xl font-bold text-amber-600 mt-1">$0.00</p>
+          <span class="text-[11px] text-slate-400 font-mono">Awaiting CFO Approval</span>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Combined Lifetime Total</span>
+          <p id="cto-stat-total-spend" class="text-2xl font-bold text-slate-900 mt-1">$0.00</p>
+          <span class="text-[11px] text-slate-400 font-mono">All Purchase Orders</span>
+        </div>
+      </div>
+
+      <!-- Technical Sign-Off / Review Queue -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
           <div class="flex items-center gap-2">
@@ -193,6 +213,7 @@
         <div id="cto-review-queue" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
       </div>
 
+      <!-- Sub-Teams Cards Grid -->
       <div>
         <h3 class="text-xs font-mono uppercase font-bold text-slate-600 tracking-wider mb-3 flex items-center gap-1.5">
           <i data-lucide="network" class="w-4 h-4 text-slate-500"></i> Active Engineering Sub-Teams
@@ -201,43 +222,18 @@
       </div>
     </div>
 
-    <!-- ==================== VIEW 3: TASK BOARD ==================== -->
-    <div id="view-tasks" class="hidden space-y-6">
-      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-        <div class="flex flex-wrap items-center gap-3 flex-1">
-          <div class="flex flex-col gap-1 min-w-[220px]">
-            <label class="text-[10px] font-mono uppercase font-bold text-slate-500">1. Select Subsystem</label>
-            <select id="select-subsystem" class="bg-slate-50 border border-slate-300 text-slate-900 font-medium text-xs rounded-lg px-3 py-2 outline-none focus:border-[#0c2340] focus:bg-white transition-colors"></select>
+    <!-- ==================== VIEW 3: STREAMLINED TASK BOARD ==================== -->
+    <div id="view-tasks" class="space-y-6">
+      
+      <!-- Streamlined Search & Quick Filter Controls -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
+            <input type="text" id="task-search-input" placeholder="Search any task, person, or part name..." class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0c2340] focus:bg-white transition-colors">
           </div>
-          <div class="flex flex-col gap-1 min-w-[220px]">
-            <label class="text-[10px] font-mono uppercase font-bold text-slate-500">2. Select Subcategory</label>
-            <select id="select-subcategory" class="bg-slate-50 border border-slate-300 text-slate-900 font-medium text-xs rounded-lg px-3 py-2 outline-none focus:border-[#0c2340] focus:bg-white transition-colors"></select>
-          </div>
-        </div>
-        <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2 self-end sm:self-auto">
-          <i data-lucide="plus" class="w-4 h-4 text-[#b59a57]"></i> Add Task To Category
-        </button>
-      </div>
-
-      <div id="focused-rules-card" class="bg-slate-50 border border-slate-200 rounded-xl p-4.5 space-y-2">
-        <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[11px] font-bold" id="rule-badge-code">SAE B.0</span>
-            <h3 class="text-sm font-bold text-slate-900" id="focused-category-title">Subcategory Rules</h3>
-          </div>
-          <span class="text-[11px] font-mono text-slate-500">SAE Rulebook Excerpt</span>
-        </div>
-        <p class="text-xs text-slate-600 leading-relaxed font-normal" id="focused-rule-text">Select a category above to view rules.</p>
-      </div>
-
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-xs font-mono uppercase font-bold text-slate-600 tracking-wider flex items-center gap-2">
-            <i data-lucide="list-todo" class="w-4 h-4 text-slate-500"></i> Work Packages &amp; Tasks (<span id="category-task-count">0</span>)
-          </h3>
-          <div class="flex items-center gap-1.5 text-xs">
-            <span class="text-slate-500 text-[11px] font-mono">Filter:</span>
-            <select id="filter-task-status" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-md px-2 py-1 outline-none shadow-xs">
+            <select id="task-status-filter" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-mono font-medium text-slate-700 outline-none">
               <option value="All">All Statuses</option>
               <option value="To Do">To Do</option>
               <option value="In Progress">In Progress</option>
@@ -245,32 +241,65 @@
               <option value="Ready for CTO Review">Ready for Review</option>
               <option value="Complete">Complete</option>
             </select>
+            <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5 flex-shrink-0">
+              <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Task
+            </button>
           </div>
         </div>
-        <div id="tasks-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5"></div>
+
+        <!-- Subsystem Quick Filter Pills (No Cascading Dropdowns) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="subsystem-pill-bar"></div>
       </div>
+
+      <!-- Clean Work Packages Container -->
+      <div id="all-tasks-stream" class="space-y-6"></div>
     </div>
 
-    <!-- ==================== VIEW 4: TIMELINE ==================== -->
+    <!-- ==================== VIEW 4: CALENDAR & TIMELINE ==================== -->
     <div id="view-schedule" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-lg font-bold text-slate-900">Master Build Schedule &amp; Timeline</h1>
-          <p class="text-xs text-slate-500">Multi-week Gantt matrix of fabrication, testing, and CAD milestones</p>
+          <h1 class="text-lg font-bold text-slate-900">Master Build Schedule &amp; Calendar</h1>
+          <p class="text-xs text-slate-500">Interactive build calendar and multi-week subsystem matrix</p>
         </div>
-        <div class="flex items-center gap-2">
-          <button onclick="openMilestoneModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
-            <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Timeline Item
-          </button>
-        </div>
+        <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5 self-start sm:self-auto">
+          <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Milestone / Task
+        </button>
       </div>
 
+      <!-- 1. Interactive Monthly Calendar -->
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="calendar" class="w-4 h-4 text-[#0c2340]"></i>
+              <span id="calendar-month-title">February 2026</span>
+            </h2>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="changeMonth(-1)" class="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <button onclick="changeMonth(1)" class="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div class="grid grid-cols-7 gap-1 text-center font-mono text-[11px] font-bold text-slate-400 mb-1">
+          <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
+      </div>
+
+      <!-- 2. Multi-Week Timeline Matrix (Below the Calendar) -->
       <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Fabrication &amp; Milestone Matrix</h3>
+          <span class="text-[11px] font-mono text-slate-500">Weeks 1–15 Roadmap</span>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
             <thead>
               <tr class="bg-[#0c2340] text-white font-mono text-[11px]">
-                <th class="py-3 px-3 w-40 sticky left-0 bg-[#0c2340] z-10 border-r border-slate-700">Subsystem</th>
+                <th class="py-3 px-3 w-44 sticky left-0 bg-[#0c2340] z-10 border-r border-slate-700">Subsystem</th>
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W1</th>
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W2</th>
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W3</th>
@@ -299,21 +328,22 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-slate-900">Purchase Orders &amp; Parts Tracker</h1>
-          <p class="text-xs text-slate-500">Automated synchronization with OneDrive Excel &amp; Team Email alerts</p>
+          <p class="text-xs text-slate-500">Shop parts requisition and delivery tracker</p>
         </div>
         <button onclick="openOrderModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2 self-start sm:self-auto">
           <i data-lucide="plus" class="w-4 h-4 text-[#b59a57]"></i> Submit Purchase Request
         </button>
       </div>
 
+      <!-- Public Requisition Stats (No dollar values) -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Requested Spend</span>
-          <p id="po-stat-requested" class="text-xl font-bold text-slate-900 mt-1">$0.00</p>
+          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Requisitions Submitted</span>
+          <p id="po-stat-requested-count" class="text-xl font-bold text-slate-900 mt-1">0 Requests</p>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Approved &amp; Ordered</span>
-          <p id="po-stat-approved" class="text-xl font-bold text-amber-600 mt-1">$0.00</p>
+          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Approved / In Transit</span>
+          <p id="po-stat-approved-count" class="text-xl font-bold text-amber-600 mt-1">0 Orders</p>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Delivered To Shop</span>
@@ -330,8 +360,6 @@
                 <th class="py-3 px-4">Subsystem</th>
                 <th class="py-3 px-4">Vendor &amp; Part #</th>
                 <th class="py-3 px-4 text-right">Qty</th>
-                <th class="py-3 px-4 text-right">Unit Price</th>
-                <th class="py-3 px-4 text-right">Total</th>
                 <th class="py-3 px-4">Urgency</th>
                 <th class="py-3 px-4">Requester</th>
                 <th class="py-3 px-4">Status</th>
@@ -347,13 +375,15 @@
 
   <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-slate-400 font-mono flex items-center justify-between border-t border-slate-200/60 mt-auto">
     <span>&copy; Bobcat Racing SAE Team</span>
-    <button id="footer-secret-trigger" class="text-slate-400 hover:text-slate-600 transition-colors" title="System info">Engineering Spec v2.6</button>
+    <span class="text-slate-400">Engineering Workspace</span>
   </footer>
 
+  <!-- Modals Container -->
   <div id="modal-container" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
     <div id="modal-card" class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl p-6 relative"></div>
   </div>
 
+  <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-[#0c2340] text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs flex items-center gap-2 border border-slate-700">
     <i data-lucide="info" class="w-4 h-4 text-[#b59a57]"></i>
     <span id="toast-message">Message</span>
@@ -366,10 +396,10 @@
         name: "Chassis & Structural Envelope",
         code: "SAE B.3",
         categories: [
-          { name: "Primary Members", rule: "Primary members (RRH, RHO, FLC) must be minimum 1.0\" OD x 0.120\" wall steel tubing. Roll Hoop Overhead (RHO) must provide min 41.0\" clearance above seat bottom." },
-          { name: "Secondary Members & Bracing", rule: "Secondary members (lateral diagonals, FAB low, under-seat support) must be min 1.0\" OD x 0.035\" wall steel. Ensure FAB low members do NOT block CVT pulley." },
-          { name: "Mounting Brackets & Tabs", rule: "Suspension tabs must be double-shear configuration. Any through-drilled tube MUST have a fully welded 360-degree internal steel sleeve." },
-          { name: "Welding & Tube Prep", rule: "All roll cage joints must have full penetration welds. Prepare test weld samples for tech inspection documentation." }
+          { name: "Primary Members", rule: "Primary members (RRH, RHO, FLC) must be min 1.0\" OD x 0.120\" wall steel tubing. Roll Hoop Overhead must provide min 41.0\" clearance above seat bottom." },
+          { name: "Secondary Members & Bracing", rule: "Secondary members (lateral diagonals, FAB low) must be min 1.0\" OD x 0.035\" wall steel. Ensure FAB low members do NOT block CVT pulley." },
+          { name: "Mounting Brackets & Tabs", rule: "Suspension tabs must be double-shear configuration. Through-drilled tubes require welded 360-degree internal steel sleeves." },
+          { name: "Welding & Tube Prep", rule: "All roll cage joints require full penetration welds. Prepare test weld samples for tech inspection." }
         ]
       },
       {
@@ -377,10 +407,10 @@
         name: "Drivetrain & Powertrain",
         code: "SAE B.6 / B.9",
         categories: [
-          { name: "Engine & Fuel", rule: "Stock Kohler/Rehlko CH440 engine. Must install official restrictor plate. Fuel system requires 3/16\" approved line, inline fuel filter, positive shut-off valve, and catch container." },
-          { name: "CVT Primary/Secondary", rule: "All primary/secondary clutches and belts rotating faster than final drive require containment guards (min 0.063\" steel or 0.090\" 6061-T6 aluminum)." },
-          { name: "Reduction & Gearbox", rule: "Jackshafts and intermediate shafts must have zero axial play under load. Replace 3D-printed testing spacers with permanent machined alloy stock." },
-          { name: "Final Drive & Axles", rule: "Half-shafts, CV joints, and wheel couplers must maintain positive engagement throughout full suspension travel without binding." }
+          { name: "Engine & Fuel", rule: "Stock Kohler/Rehlko CH440 engine with official restrictor. Fuel line 3/16\" with positive shut-off and catch bottle." },
+          { name: "CVT Primary/Secondary", rule: "All rotating clutch components require containment guards (min 0.063\" steel or 0.090\" 6061-T6 aluminum)." },
+          { name: "Reduction & Gearbox", rule: "Intermediate shafts must have zero axial play under load. Replace 3D-printed testing spacers with machined alloy." },
+          { name: "Final Drive & Axles", rule: "Half-shafts, CV joints, and wheel couplers must maintain positive engagement through full suspension travel." }
         ]
       },
       {
@@ -388,10 +418,10 @@
         name: "Front Suspension & Steering",
         code: "SAE B.5 / B.7",
         categories: [
-          { name: "Control Arms", rule: "A-arms must withstand 4G impact loads. Spherical bearings and rod ends must be installed in double shear or retained with safety washers." },
-          { name: "Uprights & Hubs", rule: "Wheel bearings and front uprights must have positive retention. Fasteners must meet minimum Grade 8 or AN standards." },
-          { name: "Damping & Shocks", rule: "Shock mounting bolts must be loaded in double shear. Limit straps required if damper internal stops can top out under spring extension." },
-          { name: "Steering Mechanism", rule: "Steering system requires positive mechanical steering stops to prevent tie-rod over-centering. Column requires quick-disconnect hub." }
+          { name: "Control Arms", rule: "A-arms must withstand 4G impact loads. Spherical bearings and rod ends must be installed in double shear." },
+          { name: "Uprights & Hubs", rule: "Wheel bearings and front uprights must have positive retention. Fasteners must meet min Grade 8 or AN standard." },
+          { name: "Damping & Shocks", rule: "Shock mounting bolts must be loaded in double shear. Limit straps required if damper internal stops can top out." },
+          { name: "Steering Mechanism", rule: "Positive mechanical steering stops to prevent tie-rod over-centering. Column requires quick-disconnect hub." }
         ]
       },
       {
@@ -399,7 +429,7 @@
         name: "Rear Suspension",
         code: "SAE B.5",
         categories: [
-          { name: "Suspension Links", rule: "Trailing arms and camber/toe links must maintain wheel track and alignment throughout full suspension articulation." },
+          { name: "Suspension Links", rule: "Trailing arms and camber/toe links must maintain wheel track and alignment through full articulation." },
           { name: "Bearing Carriers & Uprights", rule: "Rear bearing carriers must withstand torque reaction from inboard or outboard braking setups." },
           { name: "Shocks & Geometry", rule: "Validate rear anti-squat and wheel travel clearance against frame members and half-shaft CV joint operating angles." }
         ]
@@ -409,9 +439,9 @@
         name: "Braking System & Pedals",
         code: "SAE B.7",
         categories: [
-          { name: "Pedal Box Assembly", rule: "Dual master cylinders mounted with an adjustable balance bar. Brake pedal must have a positive mechanical over-travel stop." },
-          { name: "Hydraulics & Lines", rule: "Two completely independent hydraulic circuits (front/rear split). Lines must be steel hardline or braided stainless flex hose." },
-          { name: "Calipers & Rotors", rule: "System must achieve 4-wheel simultaneous lockup on dry pavement from speed during the dynamic brake test." }
+          { name: "Pedal Box Assembly", rule: "Dual master cylinders mounted with an adjustable balance bar. Brake pedal requires positive mechanical over-travel stop." },
+          { name: "Hydraulics & Lines", rule: "Two completely independent hydraulic circuits (front/rear split) with steel hardline or braided flex hose." },
+          { name: "Calipers & Rotors", rule: "System must achieve 4-wheel simultaneous lockup on dry pavement from speed during dynamic brake test." }
         ]
       },
       {
@@ -419,8 +449,8 @@
         name: "Electrical, Safety & Shielding",
         code: "SAE B.4 / B.8 / B.10",
         categories: [
-          { name: "Electrical Controls & Switches", rule: "Requires two kill switches wired in series: one cockpit switch within belted driver reach, and one external switch on the rear roll hoop." },
-          { name: "Driver Cell & Harness", rule: "5 or 6-point SFI/FIA harness. Lap belts angled 45° to 80°. Shoulder straps mounted 0\" to 4\" below shoulder level. 5.0-second driver egress." },
+          { name: "Electrical Controls & Switches", rule: "Two kill switches wired in series: one cockpit switch within belted driver reach, one external on rear roll hoop." },
+          { name: "Driver Cell & Harness", rule: "5 or 6-point SFI/FIA harness. Lap belts angled 45° to 80°. Shoulder straps 0\" to 4\" below shoulder level. 5.0s egress." },
           { name: "Cockpit Protection & Guards", rule: "Solid firewall separating driver from fuel/engine. Front nose shielding and belly pan splash guards required." }
         ]
       },
@@ -429,9 +459,9 @@
         name: "SAE Submissions & Costing",
         code: "SAE Admin / Cost",
         categories: [
-          { name: "Technical Reports & RCSS", rule: "Roll Cage Specification Sheet (RCSS), material documentation receipts, and weld sample photos. Critical tech prerequisite." },
+          { name: "Technical Reports & RCSS", rule: "Roll Cage Specification Sheet (RCSS), material documentation receipts, and weld sample photos. Prerequisite." },
           { name: "Cost Prototype & BOM", rule: "Online Cost Prototype BOM and Written Cost Reduction Report. Managed directly with CFO." },
-          { name: "Business Presentation & Formalities", rule: "Business Presenter form, team roster confirmation, and static event presentation preparation." }
+          { name: "Business Presentation & Formalities", rule: "Business Presenter form, team roster confirmation, and static event presentation deck." }
         ]
       }
     ];
@@ -483,7 +513,7 @@
     let subteams = JSON.parse(localStorage.getItem('bobcat_subteams')) || DEFAULT_SUBTEAMS;
     let orders = JSON.parse(localStorage.getItem('bobcat_orders')) || DEFAULT_ORDERS;
     
-    let settings = {
+    let settings = JSON.parse(localStorage.getItem('bobcat_settings')) || {
       ctoPin: '1111',
       supabaseUrl: 'https://sxguavofxfrasoeiafjk.supabase.co',
       supabaseKey: 'sb_publishable_tl4wnVqpQs8m4PkwbShAQg_ZTSuVH9j',
@@ -495,8 +525,8 @@
     let isCloudConnected = false;
     let ctoUnlocked = sessionStorage.getItem('bobcat_cto_unlocked') === 'true';
     let currentTab = 'home';
-    let selectedSubsystemId = TAXONOMY[1].id;
-    let selectedCategoryName = TAXONOMY[1].categories[0].name;
+    let activeSubsystemFilter = 'all';
+    let calDate = new Date(2026, 1, 1); // February 2026 Build Phase
 
     /* Cloud Sync Engine */
     async function initCloudSync() {
@@ -521,7 +551,7 @@
           updateSyncBadge(false);
         }
       } catch (err) {
-        console.warn('Operating in local-first storage mode:', err);
+        console.warn('Local storage fallback:', err);
         updateSyncBadge(false);
       }
     }
@@ -547,20 +577,6 @@
             deadline: r.deadline,
             notes: r.notes
           }));
-        } else if (resTasks.data && resTasks.data.length === 0) {
-          for (let t of DEFAULT_TASKS) {
-            await dbClient.from('tasks').insert({
-              id: t.id,
-              title: t.title,
-              subsystem_id: t.subsystemId,
-              category: t.category,
-              priority: t.priority,
-              status: t.status,
-              assignee: t.assignee,
-              deadline: t.deadline,
-              notes: t.notes
-            });
-          }
         }
 
         if (resOrders.data && resOrders.data.length > 0) {
@@ -591,7 +607,7 @@
 
         render();
       } catch (e) {
-        console.error('Data pull error:', e);
+        console.error('Data sync pull error:', e);
       }
     }
 
@@ -654,7 +670,7 @@
               await dbClient.from('subteams').delete().eq('id', syncData);
             }
           } catch (err) {
-            console.error('Async DB error:', err);
+            console.error('Async DB write error:', err);
           }
         })();
       }
@@ -708,8 +724,11 @@
 
       if (currentTab === 'home') renderHome();
       if (currentTab === 'cto' && ctoUnlocked) renderCto();
-      if (currentTab === 'tasks') renderTasks();
-      if (currentTab === 'schedule') renderTimelineMatrix();
+      if (currentTab === 'tasks') renderStreamlinedTasks();
+      if (currentTab === 'schedule') {
+        renderCalendar();
+        renderTimelineMatrix();
+      }
       if (currentTab === 'orders') renderOrders();
       lucide.createIcons();
     }
@@ -720,14 +739,14 @@
       const completedTasks = tasks.filter(t => t.status === 'Complete').length;
       const pct = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
       const blockers = tasks.filter(t => t.status === 'Blocked').length;
-      const totalSpend = orders.reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
+      const openTasks = tasks.filter(t => t.status !== 'Complete').length;
 
       document.getElementById('stat-progress-pct').innerText = `${pct}%`;
       document.getElementById('stat-completed-count').innerText = `${completedTasks}/${totalTasks} done`;
       document.getElementById('stat-progress-bar').style.width = `${pct}%`;
       document.getElementById('stat-blockers-count').innerText = blockers;
       document.getElementById('stat-teams-count').innerText = TAXONOMY.length;
-      document.getElementById('stat-spend-total').innerText = `$${totalSpend.toFixed(2)}`;
+      document.getElementById('stat-open-count').innerText = openTasks;
 
       const subList = document.getElementById('subsystem-progress-list');
       subList.innerHTML = TAXONOMY.map(sub => {
@@ -735,7 +754,7 @@
         const subDone = subTasks.filter(t => t.status === 'Complete').length;
         const subPct = subTasks.length ? Math.round((subDone / subTasks.length) * 100) : 0;
         return `
-          <div class="space-y-1.5 cursor-pointer hover:opacity-85 transition-opacity" onclick="jumpToSubsystem('${sub.id}')">
+          <div class="space-y-1.5 cursor-pointer hover:opacity-85 transition-opacity" onclick="filterBySubsystem('${sub.id}')">
             <div class="flex justify-between text-xs">
               <span class="text-slate-800 font-semibold">${sub.name}</span>
               <span class="text-slate-500 font-mono text-[11px]">${subDone}/${subTasks.length} (${subPct}%)</span>
@@ -767,13 +786,12 @@
       }
     }
 
-    function jumpToSubsystem(subId) {
-      selectedSubsystemId = subId;
-      selectedCategoryName = getSubsystem(subId).categories[0].name;
+    function filterBySubsystem(subId) {
+      activeSubsystemFilter = subId;
       switchTab('tasks');
     }
 
-    /* 2. Secret PIN Modal & CTO Portal Logic */
+    /* 2. Executive / CTO Secret Portal */
     function promptSecretPin() {
       const modalCard = document.getElementById('modal-card');
       modalCard.innerHTML = `
@@ -785,7 +803,7 @@
           <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
         <form id="form-secret-pin" class="space-y-4 mt-4 text-xs">
-          <p class="text-slate-500 text-xs">Enter your 4-digit executive PIN to reveal sub-team structures and CAD sign-off queues.</p>
+          <p class="text-slate-500 text-xs">Enter your 4-digit executive PIN to access financials, team assignments, and sign-offs.</p>
           <div class="flex justify-center my-3">
             <input type="password" maxlength="4" pattern="[0-9]{4}" id="f-secret-pin-input" autofocus required placeholder="&bull;&bull;&bull;&bull;" class="w-44 text-center font-mono text-2xl tracking-widest bg-slate-50 border border-slate-300 rounded-lg py-2.5 outline-none focus:border-[#0c2340] focus:bg-white">
           </div>
@@ -824,6 +842,16 @@
     }
 
     function renderCto() {
+      // 1. Executive Financial Tracking
+      const approvedSpend = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered' || o.status === 'Arrived in Shop').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
+      const pendingSpend = orders.filter(o => o.status === 'Requested').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
+      const totalSpend = orders.reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
+
+      document.getElementById('cto-stat-approved-spend').innerText = `$${approvedSpend.toFixed(2)}`;
+      document.getElementById('cto-stat-pending-spend').innerText = `$${pendingSpend.toFixed(2)}`;
+      document.getElementById('cto-stat-total-spend').innerText = `$${totalSpend.toFixed(2)}`;
+
+      // 2. Engineering Sign-Off Review Queue
       const reviewTasks = tasks.filter(t => t.status === 'Ready for CTO Review');
       document.getElementById('cto-review-count').innerText = `${reviewTasks.length} items pending`;
       const reviewQueue = document.getElementById('cto-review-queue');
@@ -853,6 +881,7 @@
         `).join('');
       }
 
+      // 3. Sub-Teams Roster
       const subteamsGrid = document.getElementById('subteams-grid');
       subteamsGrid.innerHTML = subteams.map(st => {
         const teamTasks = tasks.filter(t => t.subsystemId === st.subsystemId);
@@ -926,88 +955,179 @@
       }
     }
 
-    /* 3. Tasks & Subsystems View */
-    function renderTasks() {
-      const subSelect = document.getElementById('select-subsystem');
-      subSelect.innerHTML = TAXONOMY.map(s => `<option value="${s.id}" ${s.id === selectedSubsystemId ? 'selected' : ''}>${s.name}</option>`).join('');
+    /* 3. Streamlined & Unified Task Board (Zero Cascading Dropdowns) */
+    function renderStreamlinedTasks() {
+      // 1. Render Subsystem Filter Pills
+      const pillBar = document.getElementById('subsystem-pill-bar');
+      const allCount = tasks.length;
+      pillBar.innerHTML = `
+        <button onclick="setSubsystemFilter('all')" class="px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${activeSubsystemFilter === 'all' ? 'bg-[#0c2340] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+          All Subsystems (${allCount})
+        </button>
+        ${TAXONOMY.map(s => {
+          const count = tasks.filter(t => t.subsystemId === s.id).length;
+          const active = activeSubsystemFilter === s.id;
+          return `
+            <button onclick="setSubsystemFilter('${s.id}')" class="px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${active ? 'bg-[#0c2340] text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+              <span>${s.name.split('&')[0].trim()}</span>
+              <span class="text-[10px] font-mono opacity-80">(${count})</span>
+            </button>
+          `;
+        }).join('')}
+      `;
 
-      const activeSub = getSubsystem(selectedSubsystemId);
-      const catSelect = document.getElementById('select-subcategory');
-      catSelect.innerHTML = activeSub.categories.map(c => `<option value="${c.name}" ${c.name === selectedCategoryName ? 'selected' : ''}>${c.name}</option>`).join('');
+      // 2. Filter & Render Task Cards Stream
+      const query = (document.getElementById('task-search-input')?.value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('task-status-filter')?.value || 'All';
 
-      const activeCatObj = activeSub.categories.find(c => c.name === selectedCategoryName) || activeSub.categories[0];
-      document.getElementById('rule-badge-code').innerText = activeSub.code;
-      document.getElementById('focused-category-title').innerText = `${activeSub.name} → ${activeCatObj.name}`;
-      document.getElementById('focused-rule-text').innerText = activeCatObj.rule;
+      const streamContainer = document.getElementById('all-tasks-stream');
+      const targetSubsystems = activeSubsystemFilter === 'all' ? TAXONOMY : TAXONOMY.filter(s => s.id === activeSubsystemFilter);
 
-      const filterStatus = document.getElementById('filter-task-status').value;
-      let catTasks = tasks.filter(t => t.subsystemId === selectedSubsystemId && t.category === selectedCategoryName);
-      if (filterStatus !== 'All') catTasks = catTasks.filter(t => t.status === filterStatus);
+      let matchedTotal = 0;
+      streamContainer.innerHTML = targetSubsystems.map(sub => {
+        let subTasks = tasks.filter(t => t.subsystemId === sub.id);
+        if (statusFilter !== 'All') subTasks = subTasks.filter(t => t.status === statusFilter);
+        if (query) {
+          subTasks = subTasks.filter(t => 
+            t.title.toLowerCase().includes(query) || 
+            (t.assignee || '').toLowerCase().includes(query) || 
+            (t.notes || '').toLowerCase().includes(query) || 
+            (t.category || '').toLowerCase().includes(query)
+          );
+        }
 
-      document.getElementById('category-task-count').innerText = catTasks.length;
-      const container = document.getElementById('tasks-container');
+        matchedTotal += subTasks.length;
+        if (!subTasks.length && query) return ''; // Hide empty categories when actively searching
 
-      if (!catTasks.length) {
-        container.innerHTML = `
-          <div class="col-span-full py-12 text-center bg-white border border-dashed border-slate-300 rounded-xl">
-            <p class="text-xs text-slate-500 font-mono">No tasks recorded in this category yet.</p>
-            <button onclick="openTaskModal()" class="mt-3 text-xs text-[#0c2340] hover:text-[#b59a57] font-semibold">+ Add New Task</button>
+        return `
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">${sub.code}</span>
+                  <h3 class="text-sm font-bold text-slate-900">${sub.name}</h3>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1 leading-snug">${sub.categories[0]?.rule || 'SAE Technical Specifications'}</p>
+              </div>
+              <button onclick="openTaskModal(null, '${sub.id}')" class="text-xs text-[#0c2340] hover:text-[#b59a57] font-semibold flex items-center gap-1 self-start sm:self-auto font-mono">
+                + Add to ${sub.name.split(' ')[0]}
+              </button>
+            </div>
+
+            <!-- Task Cards Grid for this subsystem -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              ${subTasks.length ? subTasks.map(t => {
+                const priorityColor = {
+                  Critical: 'text-rose-700 border-rose-300 bg-rose-50',
+                  High: 'text-amber-800 border-amber-300 bg-amber-50',
+                  Medium: 'text-blue-800 border-blue-300 bg-blue-50',
+                  Low: 'text-slate-600 border-slate-300 bg-slate-100'
+                }[t.priority] || 'text-slate-600 border-slate-300 bg-slate-100';
+
+                const statusColor = {
+                  'To Do': 'bg-slate-100 text-slate-600 border-slate-300',
+                  'In Progress': 'bg-sky-50 text-sky-700 border-sky-300',
+                  'Blocked': 'bg-rose-50 text-rose-700 border-rose-300',
+                  'Ready for CTO Review': 'bg-amber-50 text-amber-800 border-amber-300 font-bold',
+                  'Complete': 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                }[t.status] || 'bg-slate-100 text-slate-700';
+
+                return `
+                  <div class="bg-slate-50/50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between hover:border-slate-400 shadow-xs transition-colors space-y-3">
+                    <div class="space-y-1.5">
+                      <div class="flex items-start justify-between gap-1.5">
+                        <span class="text-[9.5px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${priorityColor}">${t.priority}</span>
+                        <div class="flex items-center gap-1">
+                          <button onclick="openTaskModal('${t.id}')" class="p-1 hover:text-[#0c2340] text-slate-400" title="Edit"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                          <button onclick="deleteTask('${t.id}')" class="p-1 hover:text-rose-600 text-slate-400" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                      </div>
+                      <h4 class="text-xs font-bold text-slate-900 leading-snug">${t.title}</h4>
+                      <span class="text-[10px] font-mono text-slate-500 block">${t.category}</span>
+                      ${t.notes ? `<p class="text-[11px] text-slate-600 leading-relaxed">${t.notes}</p>` : ''}
+                    </div>
+
+                    <div class="pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                      <div class="flex items-center gap-1">
+                        ${t.assignee ? `
+                          <span class="text-slate-700 font-mono text-[10.5px] font-medium flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 text-slate-400"></i> ${t.assignee}</span>
+                        ` : `
+                          <button onclick="claimTaskPrompt('${t.id}')" class="text-[#0c2340] hover:text-[#b59a57] font-mono font-semibold text-[10.5px]">+ Claim</button>
+                        `}
+                      </div>
+                      <select onchange="updateTaskStatus('${t.id}', this.value)" class="bg-white border border-slate-200 text-[10.5px] font-mono font-semibold rounded px-2 py-0.5 outline-none ${statusColor}">
+                        <option value="To Do" ${t.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                        <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="Blocked" ${t.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
+                        <option value="Ready for CTO Review" ${t.status === 'Ready for CTO Review' ? 'selected' : ''}>Review</option>
+                        <option value="Complete" ${t.status === 'Complete' ? 'selected' : ''}>Complete</option>
+                      </select>
+                    </div>
+                  </div>
+                `;
+              }).join('') : `<p class="col-span-full py-4 text-center text-xs font-mono text-slate-400">No active tasks in this section.</p>`}
+            </div>
           </div>
         `;
-      } else {
-        container.innerHTML = catTasks.map(t => {
-          const priorityColor = {
-            Critical: 'text-rose-700 border-rose-300 bg-rose-50',
-            High: 'text-amber-800 border-amber-300 bg-amber-50',
-            Medium: 'text-blue-800 border-blue-300 bg-blue-50',
-            Low: 'text-slate-600 border-slate-300 bg-slate-100'
-          }[t.priority] || 'text-slate-600 border-slate-300 bg-slate-100';
+      }).join('');
 
-          const statusColor = {
-            'To Do': 'bg-slate-100 text-slate-600 border-slate-300',
-            'In Progress': 'bg-sky-50 text-sky-700 border-sky-300',
-            'Blocked': 'bg-rose-50 text-rose-700 border-rose-300',
-            'Ready for CTO Review': 'bg-amber-50 text-amber-800 border-amber-300 font-bold',
-            'Complete': 'bg-emerald-50 text-emerald-700 border-emerald-300'
-          }[t.status] || 'bg-slate-100 text-slate-700';
-
-          return `
-            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:border-slate-400 shadow-xs transition-colors space-y-3">
-              <div class="space-y-2">
-                <div class="flex items-start justify-between gap-2">
-                  <span class="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${priorityColor}">${t.priority}</span>
-                  <div class="flex items-center gap-1">
-                    <button onclick="openTaskModal('${t.id}')" class="p-1 hover:text-[#0c2340] text-slate-400 transition-colors" title="Edit"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                    <button onclick="deleteTask('${t.id}')" class="p-1 hover:text-rose-600 text-slate-400 transition-colors" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                  </div>
-                </div>
-                <h4 class="text-sm font-bold text-slate-900 leading-snug">${t.title}</h4>
-                ${t.notes ? `<p class="text-xs text-slate-600 leading-relaxed">${t.notes}</p>` : ''}
-              </div>
-
-              <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-1.5">
-                  ${t.assignee ? `
-                    <span class="text-slate-700 font-mono text-[11px] font-medium flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 text-slate-400"></i> ${t.assignee}</span>
-                  ` : `
-                    <button onclick="claimTaskPrompt('${t.id}')" class="text-[#0c2340] hover:text-[#b59a57] font-mono font-semibold text-[11px]">+ Claim</button>
-                  `}
-                </div>
-                <select onchange="updateTaskStatus('${t.id}', this.value)" class="bg-slate-50 border border-slate-200 text-[11px] font-mono font-semibold rounded px-2 py-1 outline-none text-slate-700 ${statusColor}">
-                  <option value="To Do" ${t.status === 'To Do' ? 'selected' : ''}>To Do</option>
-                  <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                  <option value="Blocked" ${t.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
-                  <option value="Ready for CTO Review" ${t.status === 'Ready for CTO Review' ? 'selected' : ''}>Ready for Review</option>
-                  <option value="Complete" ${t.status === 'Complete' ? 'selected' : ''}>Complete</option>
-                </select>
-              </div>
-            </div>
-          `;
-        }).join('');
+      if (!matchedTotal && query) {
+        streamContainer.innerHTML = `
+          <div class="py-12 text-center bg-white border border-dashed border-slate-300 rounded-xl">
+            <p class="text-xs font-mono text-slate-500">No tasks found matching "${query}"</p>
+          </div>
+        `;
       }
     }
 
-    /* 4. Master Timeline Matrix View */
+    function setSubsystemFilter(subId) {
+      activeSubsystemFilter = subId;
+      renderStreamlinedTasks();
+      lucide.createIcons();
+    }
+
+    /* 4. Interactive Calendar Engine */
+    function changeMonth(delta) {
+      calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
+      renderCalendar();
+      lucide.createIcons();
+    }
+
+    function renderCalendar() {
+      const year = calDate.getFullYear();
+      const month = calDate.getMonth();
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      document.getElementById('calendar-month-title').innerText = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const grid = document.getElementById('calendar-grid');
+
+      let html = '';
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div class="h-20 bg-slate-50/50 rounded-lg border border-slate-100 opacity-40"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayTasks = tasks.filter(t => t.deadline === dateStr);
+
+        html += `
+          <div class="h-20 p-1.5 bg-white border border-slate-200 rounded-lg flex flex-col justify-between hover:border-slate-400 transition-colors">
+            <span class="font-mono text-[10px] font-bold text-slate-700 text-right">${d}</span>
+            <div class="space-y-1 overflow-y-auto max-h-12">
+              ${dayTasks.map(t => `
+                <div class="px-1 py-0.5 rounded text-[9px] font-semibold truncate ${t.status==='Complete'?'bg-emerald-100 text-emerald-800':t.priority==='Critical'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}" title="${t.title} (${t.assignee || 'Unassigned'})">
+                  ${t.title}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
+    }
+
     function renderTimelineMatrix() {
       const tbody = document.getElementById('timeline-matrix-body');
       const weeks = ['W1','W2','W3','W4','W5','W6','W7','BREAK','W9','W10','W11','W12','W13','W14','W15'];
@@ -1036,19 +1156,18 @@
       }).join('');
     }
 
-    /* 5. Purchase Orders View */
+    /* 5. Purchase Orders View (Public: No Dollar Values) */
     function renderOrders() {
-      const requested = orders.filter(o => o.status === 'Requested').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
-      const approved = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
-      const receivedCount = orders.filter(o => o.status === 'Arrived in Shop').length;
+      const reqCount = orders.filter(o => o.status === 'Requested').length;
+      const appCount = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered').length;
+      const recCount = orders.filter(o => o.status === 'Arrived in Shop').length;
 
-      document.getElementById('po-stat-requested').innerText = `$${requested.toFixed(2)}`;
-      document.getElementById('po-stat-approved').innerText = `$${approved.toFixed(2)}`;
-      document.getElementById('po-stat-received').innerText = `${receivedCount} Items`;
+      document.getElementById('po-stat-requested-count').innerText = `${reqCount} Requests`;
+      document.getElementById('po-stat-approved-count').innerText = `${appCount} Orders`;
+      document.getElementById('po-stat-received').innerText = `${recCount} Items`;
 
       const tbody = document.getElementById('orders-table-body');
       tbody.innerHTML = orders.map(o => {
-        const lineTotal = (o.qty * o.unitPrice).toFixed(2);
         const urgColor = o.urgency === 'Immediate Need' ? 'text-rose-700 bg-rose-50 border-rose-200 font-bold' : 'text-slate-600 bg-slate-100 border-slate-200';
         return `
           <tr class="hover:bg-slate-50 transition-colors">
@@ -1061,9 +1180,7 @@
               <a href="${o.vendorUrl || '#'}" target="_blank" class="text-[#0c2340] font-semibold hover:underline inline-flex items-center gap-1">${o.vendor || 'Vendor'} <i data-lucide="external-link" class="w-3 h-3"></i></a>
               <span class="block text-[10px] font-mono text-slate-500">${o.partNumber || 'N/A'}</span>
             </td>
-            <td class="py-3 px-4 text-right font-mono text-slate-800">${o.qty}</td>
-            <td class="py-3 px-4 text-right font-mono text-slate-600">$${Number(o.unitPrice).toFixed(2)}</td>
-            <td class="py-3 px-4 text-right font-mono font-bold text-slate-900">$${lineTotal}</td>
+            <td class="py-3 px-4 text-right font-mono text-slate-800 font-bold">${o.qty}</td>
             <td class="py-3 px-4"><span class="text-[10px] font-mono px-2 py-0.5 rounded border ${urgColor}">${o.urgency}</span></td>
             <td class="py-3 px-4 text-slate-700 font-mono text-[11px]">${o.requestedBy || 'Team Member'}</td>
             <td class="py-3 px-4">
@@ -1088,15 +1205,15 @@
       document.getElementById('modal-container').classList.remove('flex');
     }
 
-    function openTaskModal(taskId = null, presetSub = null, presetCat = null, presetAssignee = null) {
+    function openTaskModal(taskId = null, presetSub = null) {
       const isEdit = !!taskId;
       const t = isEdit ? tasks.find(x => x.id === taskId) : {
         title: '',
-        subsystemId: presetSub || selectedSubsystemId,
-        category: presetCat || selectedCategoryName,
+        subsystemId: presetSub || TAXONOMY[0].id,
+        category: getSubsystem(presetSub || TAXONOMY[0].id).categories[0].name,
         priority: 'Medium',
         status: 'To Do',
-        assignee: presetAssignee || '',
+        assignee: '',
         deadline: new Date().toISOString().split('T')[0],
         notes: ''
       };
@@ -1193,7 +1310,7 @@
         
         saveState('task_upsert', data);
         closeModal();
-        showToast(isEdit ? 'Task updated' : 'Task assigned');
+        showToast(isEdit ? 'Task updated' : 'Task created');
       };
 
       document.getElementById('modal-container').classList.remove('hidden');
@@ -1419,12 +1536,12 @@
       }
     }
 
-    /* Settings Modal */
-    document.getElementById('btn-open-settings').onclick = () => {
+    /* Admin Settings Modal (Accessible ONLY inside Executive View) */
+    function openSettingsModal() {
       const modalCard = document.getElementById('modal-card');
       modalCard.innerHTML = `
         <div class="flex items-center justify-between pb-4 border-b border-slate-200">
-          <h3 class="text-sm font-bold text-slate-900">Workspace Settings &amp; Cloud Sync</h3>
+          <h3 class="text-sm font-bold text-slate-900">Executive Settings &amp; Security</h3>
           <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
         <form id="form-settings" class="space-y-4 mt-4 text-xs">
@@ -1435,8 +1552,14 @@
           <div class="pt-2 border-t border-slate-200">
             <span class="text-[11px] font-mono text-slate-700 font-bold block mb-1">Live Multi-User Sync (Supabase)</span>
             <div class="space-y-2">
-              <input id="f-set-sburl" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono" value="${settings.supabaseUrl || ''}">
-              <input id="f-set-sbkey" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono" value="${settings.supabaseKey || ''}">
+              <div>
+                <label class="block text-slate-500 mb-0.5 text-[10px] font-mono">Project URL</label>
+                <input id="f-set-sburl" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono" value="${settings.supabaseUrl || ''}">
+              </div>
+              <div>
+                <label class="block text-slate-500 mb-0.5 text-[10px] font-mono">Publishable Key</label>
+                <input id="f-set-sbkey" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono" value="${settings.supabaseKey || ''}">
+              </div>
             </div>
           </div>
           <div class="pt-2 border-t border-slate-200">
@@ -1456,6 +1579,7 @@
         settings.emailList = document.getElementById('f-set-emails').value.trim();
         settings.supabaseUrl = document.getElementById('f-set-sburl').value.trim();
         settings.supabaseKey = document.getElementById('f-set-sbkey').value.trim();
+        localStorage.setItem('bobcat_settings', JSON.stringify(settings));
         closeModal();
         showToast('Settings saved');
         initCloudSync();
@@ -1463,9 +1587,9 @@
       document.getElementById('modal-container').classList.remove('hidden');
       document.getElementById('modal-container').classList.add('flex');
       lucide.createIcons();
-    };
+    }
 
-    /* Secret Triggers */
+    /* Secret Ghost Hotkey Trigger (Ctrl+Shift+X or Cmd+Shift+X) ONLY */
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
@@ -1474,46 +1598,13 @@
       }
     });
 
-    let logoClickCount = 0;
-    let logoClickTimer = null;
-    document.getElementById('brand-logo-trigger').addEventListener('click', () => {
-      logoClickCount++;
-      clearTimeout(logoClickTimer);
-      logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 800);
-      if (logoClickCount >= 3) {
-        logoClickCount = 0;
-        if (!ctoUnlocked) promptSecretPin();
-        else switchTab('cto');
-      }
-    });
-
-    document.getElementById('footer-secret-trigger').addEventListener('click', () => {
-      if (!ctoUnlocked) promptSecretPin();
-      else switchTab('cto');
-    });
-
     /* Navigation Listeners */
     document.querySelectorAll('.nav-tab').forEach(b => {
       b.addEventListener('click', () => switchTab(b.dataset.tab));
     });
 
-    document.getElementById('select-subsystem').addEventListener('change', (e) => {
-      selectedSubsystemId = e.target.value;
-      selectedCategoryName = getSubsystem(selectedSubsystemId).categories[0].name;
-      renderTasks();
-      lucide.createIcons();
-    });
-
-    document.getElementById('select-subcategory').addEventListener('change', (e) => {
-      selectedCategoryName = e.target.value;
-      renderTasks();
-      lucide.createIcons();
-    });
-
-    document.getElementById('filter-task-status').addEventListener('change', () => {
-      renderTasks();
-      lucide.createIcons();
-    });
+    document.getElementById('task-search-input')?.addEventListener('input', () => renderStreamlinedTasks());
+    document.getElementById('task-status-filter')?.addEventListener('change', () => renderStreamlinedTasks());
 
     /* Boot Sequence */
     render();

@@ -424,7 +424,9 @@
   </div>
 
   <script>
-    /* Complete Revised Subsystems Taxonomy */
+    /* Schema Versioning for Auto-Migration */
+    const DATA_VERSION = "v3_complete_build";
+
     const TAXONOMY = [
       {
         id: "chassis",
@@ -503,7 +505,6 @@
       }
     ];
 
-    /* Sub-Teams Breakdown */
     const DEFAULT_SUBTEAMS = [
       { id: "st_rear", name: "Rear Suspension & Rear Brakes", lead: "Andy", members: ["Matt", "Jorge"], subsystemId: "rear-suspension-brakes" },
       { id: "st_front", name: "Front Suspension & Steering", lead: "Matt", members: ["Andy"], subsystemId: "front-suspension" },
@@ -512,7 +513,6 @@
       { id: "st_chassis", name: "Chassis & Shielding", lead: "Emmett", members: ["Jorge", "Matt"], subsystemId: "shielding-safety" }
     ];
 
-    /* Complete Revised Tasks List */
     const DEFAULT_TASKS = [
       // Chassis
       { id: "t1", title: "Complete full penetration welds on primary/secondary cage joints", subsystemId: "chassis", category: "Roll Cage & Primary Members", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-10", notes: "Ensure 100% weld penetration and prepare sample joints for tech inspection." },
@@ -523,7 +523,7 @@
       // Front Suspension
       { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "Andy", deadline: "2026-02-03", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
       { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
-      { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Mechanism", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-03", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
+      { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Column & Mechanical Stops", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-03", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
       { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "Andy", deadline: "2026-02-17", notes: "Verify shock travel clearance throughout full steering sweep." },
 
       // Rear Suspension & Brakes Team
@@ -557,8 +557,7 @@
       { id: "t28", title: "Online Cost Prototype BOM Finalization", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "Critical", status: "In Progress", assignee: "CFO Lead", deadline: "2026-04-10", notes: "Final vehicle costing BOM." }
     ];
 
-    /* Editable Multi-Week Timeline Roadmap */
-    let timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || [
+    let timelineRows = [
       { id: "r1", subsystem: "Frame & Chassis Finish", weeks: { W2: "Fab nose & rear", W3: "Tabs & Sleeving", W4: "Harness Mounts", W6: "FAB low weld", W7: "Finish Welding", W10: "TESTING", W11: "TESTING" } },
       { id: "r2", subsystem: "Front Suspension & Steering", weeks: { W2: "A-Arm CAD", W3: "Knuckle Caliper CAD", W4: "Fab A-Arms", W5: "Rack & Stops", W6: "Mount Knuckles", W7: "Rolling Chassis" } },
       { id: "r3", subsystem: "Rear Suspension & Brakes", weeks: { W2: "Trailing Arm CAD", W3: "Bearing Carrier CAD", W4: "Fab Trailing Arms", W5: "Mount Calipers", W6: "CV Articulation", W7: "Car on Wheels!" } },
@@ -574,16 +573,31 @@
       { id: "o3", item: "Dual Master Cylinder Balance Bar Assembly", description: "Threaded balance bar with 3/8-24 spherical center pivot", subsystemId: "pedals-driver-controls", vendor: "Wilwood", vendorUrl: "https://www.wilwood.com", partNumber: "340-1757", qty: 1, unitPrice: 54.00, urgency: "Immediate Need", requestedBy: "John", status: "Approved" }
     ];
 
-    const DEFAULT_NOTIFICATIONS = [
-      { id: "n1", title: "New Architecture", message: "Rear Suspension & Rear Brakes Team configured with trailing arm mounts", timestamp: new Date().toISOString(), read: false, type: "task" },
-      { id: "n2", title: "Task Ready for Review", message: "Andy submitted 'Final Front A-Arm CAD' for CTO sign-off", timestamp: new Date(Date.now() - 3600000).toISOString(), read: false, type: "review" }
-    ];
+    /* Automatic Cache Check & Data Hydration */
+    const storedVersion = localStorage.getItem('bobcat_schema_version');
+    let tasks, subteams, orders, notifications;
 
-    /* State Initialization */
-    let tasks = JSON.parse(localStorage.getItem('bobcat_tasks')) || DEFAULT_TASKS;
-    let subteams = JSON.parse(localStorage.getItem('bobcat_subteams')) || DEFAULT_SUBTEAMS;
-    let orders = JSON.parse(localStorage.getItem('bobcat_orders')) || DEFAULT_ORDERS;
-    let notifications = JSON.parse(localStorage.getItem('bobcat_notifications')) || DEFAULT_NOTIFICATIONS;
+    if (storedVersion !== DATA_VERSION) {
+      // Auto-migrate from older cache to ensure all 28 tasks display
+      tasks = DEFAULT_TASKS;
+      subteams = DEFAULT_SUBTEAMS;
+      orders = DEFAULT_ORDERS;
+      notifications = [
+        { id: "n1", title: "Build Scope Updated", message: "Loaded complete 28-task roadmap across all vehicle systems", timestamp: new Date().toISOString(), read: false, type: "task" }
+      ];
+      localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
+      localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
+      localStorage.setItem('bobcat_orders', JSON.stringify(orders));
+      localStorage.setItem('bobcat_timeline_rows', JSON.stringify(timelineRows));
+      localStorage.setItem('bobcat_notifications', JSON.stringify(notifications));
+      localStorage.setItem('bobcat_schema_version', DATA_VERSION);
+    } else {
+      tasks = JSON.parse(localStorage.getItem('bobcat_tasks')) || DEFAULT_TASKS;
+      subteams = JSON.parse(localStorage.getItem('bobcat_subteams')) || DEFAULT_SUBTEAMS;
+      orders = JSON.parse(localStorage.getItem('bobcat_orders')) || DEFAULT_ORDERS;
+      notifications = JSON.parse(localStorage.getItem('bobcat_notifications')) || [];
+      timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || timelineRows;
+    }
     
     let settings = JSON.parse(localStorage.getItem('bobcat_settings')) || {
       ctoPin: '1111',
@@ -722,7 +736,7 @@
           dbClient.from('subteams').select('*')
         ]);
 
-        if (resTasks.data && resTasks.data.length > 0) {
+        if (resTasks.data && resTasks.data.length >= DEFAULT_TASKS.length) {
           tasks = resTasks.data.map(r => ({
             id: r.id,
             title: r.title,
@@ -734,6 +748,22 @@
             deadline: r.deadline,
             notes: r.notes
           }));
+        } else {
+          // If database has fewer tasks than our complete build roadmap, upsert the full 28 tasks
+          for (let t of DEFAULT_TASKS) {
+            await dbClient.from('tasks').upsert({
+              id: t.id,
+              title: t.title,
+              subsystem_id: t.subsystemId,
+              category: t.category,
+              priority: t.priority,
+              status: t.status,
+              assignee: t.assignee,
+              deadline: t.deadline,
+              notes: t.notes
+            });
+          }
+          tasks = DEFAULT_TASKS;
         }
 
         if (resOrders.data && resOrders.data.length > 0) {
@@ -834,6 +864,33 @@
       }
 
       render();
+    }
+
+    function reseedDefaultTasks() {
+      if (confirm('Reset and load all 28 default engineering tasks across all vehicle domains?')) {
+        tasks = DEFAULT_TASKS;
+        localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
+        localStorage.setItem('bobcat_schema_version', DATA_VERSION);
+        if (isCloudConnected && dbClient) {
+          (async () => {
+            for (let t of DEFAULT_TASKS) {
+              await dbClient.from('tasks').upsert({
+                id: t.id,
+                title: t.title,
+                subsystem_id: t.subsystemId,
+                category: t.category,
+                priority: t.priority,
+                status: t.status,
+                assignee: t.assignee,
+                deadline: t.deadline,
+                notes: t.notes
+              });
+            }
+          })();
+        }
+        showToast('All 28 tasks reseeded successfully');
+        render();
+      }
     }
 
     function showToast(msg) {
@@ -1799,8 +1856,9 @@
             <input id="f-set-webhook" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono mb-2" value="${settings.webhookUrl || ''}" placeholder="Webhook URL (OneDrive / Power Automate)">
             <input id="f-set-emails" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${settings.emailList || ''}" placeholder="captain@bobcatracing.edu, lead@bobcatracing.edu">
           </div>
-          <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
-            <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Save &amp; Reconnect</button>
+          <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
+            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Reseed 28 Tasks</button>
+            <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Save Settings</button>
           </div>
         </form>
       `;

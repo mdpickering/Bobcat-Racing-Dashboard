@@ -49,7 +49,7 @@
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
-      <!-- Brand Logo (Pure Static - No Hidden Click Triggers) -->
+      <!-- Brand Logo -->
       <div class="flex items-center gap-3 select-none">
         <div class="h-9 w-9 rounded-lg bg-[#0c2340] flex items-center justify-center text-[#b59a57] shadow-md font-bold">
           <i data-lucide="gauge" class="w-5 h-5"></i>
@@ -76,7 +76,7 @@
         </button>
       </nav>
 
-      <!-- Action Items & Lead Login Trigger Button -->
+      <!-- Action Items & Lead Login Trigger -->
       <div class="flex items-center gap-2">
         <button id="btn-lead-auth-trigger" onclick="openLeadAuthModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-xs flex items-center gap-1.5 transition-colors">
           <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
@@ -176,8 +176,8 @@
             <button onclick="openTaskModal()" class="flex-1 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-1.5">
               <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Task
             </button>
-            <button onclick="openOrderModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
-              <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Order Part
+            <button onclick="openBulkOrderModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+              <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Order Parts
             </button>
           </div>
         </div>
@@ -203,7 +203,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Team Members & Unclaimed Section -->
         <div class="space-y-4">
           <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
@@ -224,7 +223,6 @@
           </div>
         </div>
 
-        <!-- Team Tasks Grid -->
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <div>
@@ -243,19 +241,22 @@
       </div>
     </div>
 
-    <!-- ==================== VIEW 3: EXECUTIVE / CTO PORTAL (CTRL+SHIFT+X ONLY) ==================== -->
+    <!-- ==================== VIEW 3: EXECUTIVE / CTO PORTAL ==================== -->
     <div id="view-cto" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">Executive Portal</span>
-            <h1 class="text-lg font-bold text-slate-900">Operations, Subsystem Configuration &amp; Excel Exporter</h1>
+            <h1 class="text-lg font-bold text-slate-900">Operations, Staging &amp; Excel Exporter</h1>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Master authority: configure team PINs, budget approvals, and sign off CAD releases</p>
+          <p class="text-xs text-slate-500 mt-0.5">Master authority: active requisitions staging, completed PO history, and PIN programming</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <button onclick="exportSelectedOrdersToExactExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors font-mono">
             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Selected Excel (.xlsx)
+          </button>
+          <button onclick="openBulkOrderModal()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-lg px-3 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5 font-mono">
+            <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i> + Multi-Part PO
           </button>
           <button onclick="openSubsystemManagerModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5 font-mono">
             <i data-lucide="layers" class="w-3.5 h-3.5 text-[#b59a57]"></i> Configure Subsystems &amp; PINs
@@ -275,43 +276,44 @@
       <!-- Financial Tracking Summary -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Total PO Approved Spend</span>
-          <p id="cto-stat-approved-spend" class="text-2xl font-bold text-emerald-600 mt-1">$0.00</p>
-          <span class="text-[11px] text-slate-400 font-mono">Approved &amp; Ordered</span>
+          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Active In-Flight Spend</span>
+          <p id="cto-stat-approved-spend" class="text-2xl font-bold text-amber-600 mt-1">$0.00</p>
+          <span class="text-[11px] text-slate-400 font-mono">Approved / Ordered</span>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Pending Requests Total</span>
-          <p id="cto-stat-pending-spend" class="text-2xl font-bold text-amber-600 mt-1">$0.00</p>
-          <span class="text-[11px] text-slate-400 font-mono">Awaiting Approval</span>
+          <p id="cto-stat-pending-spend" class="text-2xl font-bold text-slate-700 mt-1">$0.00</p>
+          <span class="text-[11px] text-slate-400 font-mono">Awaiting Review</span>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Combined Lifetime Total</span>
-          <p id="cto-stat-total-spend" class="text-2xl font-bold text-slate-900 mt-1">$0.00</p>
-          <span class="text-[11px] text-slate-400 font-mono">All Purchase Orders</span>
+          <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Arrived &amp; Completed Total</span>
+          <p id="cto-stat-arrived-spend" class="text-2xl font-bold text-emerald-600 mt-1">$0.00</p>
+          <span class="text-[11px] text-slate-400 font-mono">Delivered to Shop</span>
         </div>
       </div>
 
-      <!-- Excel PO Live Staging Card -->
+      <!-- Active PO Live Staging Card (Arrived items auto-hide here) -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
           <div class="flex items-center gap-2">
-            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
-            <h3 class="text-sm font-bold text-slate-900">Purchase Orders Staging &amp; Excel Exporter (Exact Template)</h3>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <h3 class="text-sm font-bold text-slate-900">Active Requisitions Staging (Requested / Approved / Ordered)</h3>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="toggleSelectAllOrders(true)" class="text-xs font-mono text-slate-600 hover:text-slate-900 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">Select All</button>
+            <button onclick="toggleSelectAllActiveOrders(true)" class="text-xs font-mono text-slate-600 hover:text-slate-900 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">Select All</button>
             <button onclick="toggleSelectOnlyApprovedOrders()" class="text-xs font-mono text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">Select Approved</button>
             <button onclick="exportSelectedOrdersToExactExcel()" class="text-xs font-mono font-bold text-white bg-emerald-700 hover:bg-emerald-800 px-3 py-1 rounded shadow-xs flex items-center gap-1">
               <i data-lucide="download" class="w-3 h-3"></i> Export .xlsx
             </button>
           </div>
         </div>
+        <p class="text-xs text-slate-500">Orders auto-hide from this active queue upon marking as <strong class="text-emerald-700">"Arrived in Shop"</strong> and move into the history archive below.</p>
         
         <div class="overflow-x-auto max-h-72 border border-slate-200 rounded-lg">
           <table class="w-full text-left text-xs border-collapse min-w-[950px]">
             <thead class="bg-[#44546A] text-white text-[10px] font-mono uppercase font-bold sticky top-0 z-10">
               <tr>
-                <th class="py-2.5 px-3 w-8 text-center"><input type="checkbox" id="chk-master-orders" onchange="toggleSelectAllOrders(this.checked)" class="rounded"></th>
+                <th class="py-2.5 px-3 w-8 text-center"><input type="checkbox" id="chk-master-orders" onchange="toggleSelectAllActiveOrders(this.checked)" class="rounded"></th>
                 <th class="py-2.5 px-3">Vendor</th>
                 <th class="py-2.5 px-3">Item(s)</th>
                 <th class="py-2.5 px-3">Part #</th>
@@ -326,6 +328,43 @@
             </thead>
             <tbody id="cto-orders-table-body" class="divide-y divide-slate-100 bg-white font-mono text-[11px]"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Collapsible Arrived & Completed PO History Archive -->
+      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+        <div onclick="toggleCompletedPOArchive()" class="p-4 bg-slate-50/90 hover:bg-slate-100 cursor-pointer flex items-center justify-between border-b border-slate-200 transition-colors">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <h3 class="text-xs font-bold font-mono text-slate-800 uppercase tracking-wider">Arrived &amp; Completed Inventory Archive</h3>
+            <span id="cto-completed-po-count" class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">0 delivered</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono text-slate-500" id="cto-completed-toggle-text">Show Archive</span>
+            <i data-lucide="chevron-down" id="cto-completed-chevron" class="w-4 h-4 text-slate-500 transition-transform"></i>
+          </div>
+        </div>
+
+        <div id="cto-completed-po-container" class="hidden p-4">
+          <div class="overflow-x-auto max-h-64 border border-slate-200 rounded-lg">
+            <table class="w-full text-left text-xs border-collapse min-w-[950px]">
+              <thead class="bg-slate-100 text-slate-700 text-[10px] font-mono uppercase font-bold sticky top-0 z-10">
+                <tr>
+                  <th class="py-2.5 px-3">Vendor</th>
+                  <th class="py-2.5 px-3">Item(s)</th>
+                  <th class="py-2.5 px-3">Part #</th>
+                  <th class="py-2.5 px-3 text-right">Unit ($)</th>
+                  <th class="py-2.5 px-3 text-right">Qty</th>
+                  <th class="py-2.5 px-3 text-right">Total ($)</th>
+                  <th class="py-2.5 px-3">Subassembly</th>
+                  <th class="py-2.5 px-3">Member</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="cto-completed-orders-tbody" class="divide-y divide-slate-100 bg-white font-mono text-[11px]"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -455,8 +494,8 @@
           <p class="text-xs text-slate-500">Shop parts requisition and delivery tracker (Status approvals authorized in Executive View)</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="openOrderModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2">
-            <i data-lucide="plus" class="w-4 h-4 text-[#b59a57]"></i> Submit Purchase Request
+          <button onclick="openBulkOrderModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4 text-[#b59a57]"></i> Submit Purchase Order
           </button>
         </div>
       </div>
@@ -543,7 +582,7 @@
 
   <!-- Modals Container -->
   <div id="modal-container" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-    <div id="modal-card" class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl p-6 relative"></div>
+    <div id="modal-card" class="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-2xl p-6 relative"></div>
   </div>
 
   <!-- Notification Toast -->
@@ -553,9 +592,8 @@
   </div>
 
   <script>
-    const DATA_VERSION = "v13_strict_subsystem_team_architecture";
+    const DATA_VERSION = "v14_multipart_po_and_arrived_archive";
 
-    /* Unified Subsystems = Teams (1:1 direct mapping) */
     const DEFAULT_SUBSYSTEMS = [
       {
         id: "fabrication",
@@ -655,42 +693,29 @@
     ];
 
     const DEFAULT_TASKS = [
-      // Fabrication & Vehicle Integration
       { id: "t1", title: "Weld double-shear suspension tabs on frame", subsystemId: "fabrication", category: "Double-Shear Tabs & Internal Sleeves", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Double-shear alignment tabs for front and rear pickup points." },
       { id: "t2", title: "Weld 360-degree internal steel sleeves in frame pass-throughs", subsystemId: "fabrication", category: "Double-Shear Tabs & Internal Sleeves", priority: "High", status: "To Do", assignee: "", deadline: "2026-09-05", notes: "Internal steel sleeves required on all through-drilled frame tubes." },
       { id: "t3", title: "Fabricate & weld 5/6-point harness mounting tabs", subsystemId: "fabrication", category: "Safety Mounts & Tow Points", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-09-01", notes: "Check lap belt angle (45-80 deg) and shoulder belt heights." },
       { id: "t4", title: "Weld front & rear recovery tow points", subsystemId: "fabrication", category: "Safety Mounts & Tow Points", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-08", notes: "Recovery points must meet minimum inside diameter and shear strength rules." },
-
-      // Front Suspension & Steering
       { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-08-30", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
       { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-03", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
       { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Column & Mechanical Stops", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-08-28", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
       { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-06", notes: "Verify shock travel clearance throughout full steering sweep." },
-
-      // Rear Suspension & Rear Brakes
       { id: "t9", title: "Fabricate rear trailing arms & camber/toe links", subsystemId: "rear-suspension-brakes", category: "Trailing Arms & Geometry", priority: "High", status: "In Progress", assignee: "", deadline: "2026-09-04", notes: "Validate rear anti-squat geometry and wheel travel envelope." },
       { id: "t10", title: "Fabricate rear bearing carriers with caliper mounts", subsystemId: "rear-suspension-brakes", category: "Rear Bearing Carriers", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-04", notes: "Mounting calipers directly on trailing arms/carriers for outboard braking." },
       { id: "t11", title: "Determine rear brake rotor hat & caliper placement", subsystemId: "rear-suspension-brakes", category: "Rear Caliper Integration", priority: "High", status: "To Do", assignee: "", deadline: "2026-08-29", notes: "Coordinate rotor spacing with wheel rim inner barrel clearance." },
       { id: "t12", title: "Verify CV joint operating angles through full rear travel", subsystemId: "rear-suspension-brakes", category: "Axle Articulation & CV Engagement", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-09-07", notes: "Ensure zero bind at full droop and full bump." },
-
-      // Pedals & Driver Controls
       { id: "t13", title: "Footwell mockup, driver reach & 5.0s egress check", subsystemId: "pedals-driver-controls", category: "Footwell Placement & Ergonomics", priority: "High", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Establish heel-rest line and ensure ankle travel does not strike rack." },
       { id: "t14", title: "Design 4:1 - 6:1 brake pedal & dual master cylinder balance bar", subsystemId: "pedals-driver-controls", category: "Brake Pedal & Balance Bar", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Threaded balance bar linking independent front/rear master cylinders." },
       { id: "t15", title: "Design throttle pedal pivot & cable pull linkage", subsystemId: "pedals-driver-controls", category: "Throttle Pedal & Cable Pull", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-06", notes: "Smooth pull action with zero binding throughout travel." },
       { id: "t16", title: "Incorporate mechanical over-travel stops & dual return springs", subsystemId: "pedals-driver-controls", category: "Positive Stops & Dual Return Springs", priority: "High", status: "To Do", assignee: "", deadline: "2026-09-06", notes: "Positive pedal stop prevents master cylinder bottoming out." },
-
-      // Powertrain & Drivetrain
       { id: "t17", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "High", status: "In Progress", assignee: "", deadline: "2026-08-29", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
       { id: "t18", title: "Eliminate intermediate shaft axial play with machined alloy spacers", subsystemId: "drivetrain-fitment", category: "Axial Play & Alignment", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-09-03", notes: "Permanent machined alloy spacers replacing testing shims." },
       { id: "t19", title: "Fabricate chain tensioner bracket with locking adjustment", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-03", notes: "Slotted bracket for rapid chain tension maintenance." },
       { id: "t20", title: "Install Kohler restrictor plate & plumb 3/16\" fuel line", subsystemId: "drivetrain-fitment", category: "Engine & Fuel Line Restrictor", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-07", notes: "SAE J30R9 fuel injection hose with positive shut-off valve and catch container." },
-
-      // Shielding & Safety
       { id: "t21", title: "Construct 360-degree CVT rotating assembly guard", subsystemId: "shielding-safety", category: "CVT Rotating Assembly Guard", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Must meet min 0.063\" steel or 0.090\" 6061-T6 aluminum thickness." },
       { id: "t22", title: "Fabricate fuel tank heat deflector & splash guard divert tray", subsystemId: "shielding-safety", category: "Fuel Tank Shielding & Splash Guard", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-07", notes: "Divert fuel spillage away from hot exhaust and electrical harness." },
       { id: "t23", title: "Fit solid driver firewall & belly pan skid plates", subsystemId: "shielding-safety", category: "Driver Firewall & Underbody Belly Pan", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-09-02", notes: "Solid barrier separating cockpit from fuel, engine, and hot lines." },
-
-      // SAE Deliverables
       { id: "t24", title: "Roll Cage Spec Sheet (RCSS) & Weld Samples", subsystemId: "sae-deliverables", category: "Roll Cage Spec Sheet (RCSS)", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-15", notes: "Complete weld sample photos and material tensile test certs." },
       { id: "t25", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "High", status: "To Do", assignee: "", deadline: "2026-09-20", notes: "Cost reduction report submission." },
       { id: "t26", title: "Business Presenter Form & Slide Deck", subsystemId: "sae-deliverables", category: "Business Presentation Deck", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-10-02", notes: "Presenter confirmation and slide deck." },
@@ -745,8 +770,8 @@
     let selectedOrderIds = new Set();
     let currentTaskViewMode = 'subsystems';
     let showCompletedArchive = false;
+    let showCompletedPOArchive = false;
 
-    // Authentication States
     let ctoUnlocked = sessionStorage.getItem('bobcat_cto_unlocked') === 'true';
     let authenticatedLeadSubId = sessionStorage.getItem('bobcat_lead_authenticated_sub') || null;
 
@@ -815,7 +840,7 @@
       }
     }
 
-    /* Executive CTO Authentication (Triggered exclusively via Ctrl+Shift+X / Cmd+Shift+X) */
+    /* Executive CTO Authentication */
     function promptCtoPin() {
       const modalCard = document.getElementById('modal-card');
       modalCard.innerHTML = `
@@ -939,7 +964,6 @@
         return;
       }
 
-      // If CTO visits lead view without a specific lead login, default to first subsystem
       if (tabId === 'lead' && !authenticatedLeadSubId && ctoUnlocked) {
         authenticatedLeadSubId = taxonomy[0].id;
       }
@@ -966,7 +990,6 @@
     }
 
     function render() {
-      // Dynamic Header Visibility Checks
       const secretTab = document.getElementById('nav-cto-secret');
       const mobileSecretTab = document.getElementById('mobile-nav-cto-secret');
       if (secretTab) {
@@ -1141,7 +1164,6 @@
       const activeSub = getSubsystem(authenticatedLeadSubId || taxonomy[0].id);
       document.getElementById('lead-portal-title').innerText = `${activeSub.name} — Workspace`;
 
-      // Render Subsystem Team Roster
       const rosterList = document.getElementById('lead-roster-list');
       if (rosterList) {
         const allTeam = [activeSub.lead, ...activeSub.members.filter(m => m !== activeSub.lead)];
@@ -1160,7 +1182,6 @@
         }).join('');
       }
 
-      // Render Unassigned Team Scope
       const unassignedTasks = tasks.filter(t => t.subsystemId === activeSub.id && (!t.assignee || t.assignee.trim() === ''));
       document.getElementById('lead-unassigned-badge').innerText = `${unassignedTasks.length} Open`;
       const unassignedList = document.getElementById('lead-unassigned-list');
@@ -1177,7 +1198,6 @@
         }
       }
 
-      // Render Team Tasks Grid
       const teamTasks = tasks.filter(t => t.subsystemId === activeSub.id);
       const grid = document.getElementById('lead-task-grid');
       if (grid) {
@@ -1613,7 +1633,7 @@
       }
     }
 
-    /* Timeline Matrix Dynamically Linked 1:1 to Subsystems */
+    /* Timeline Matrix */
     function jumpToCurrentMonth() {
       const now = new Date();
       calDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -1808,7 +1828,7 @@
       render();
     }
 
-    /* Purchase Orders */
+    /* Purchase Orders Public Views */
     function renderOrders() {
       const reqCount = orders.filter(o => o.status === 'Requested').length;
       const appCount = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered').length;
@@ -1883,69 +1903,34 @@
       }
     }
 
-    function exportSelectedOrdersToExactExcel() {
-      if (typeof XLSX === 'undefined') {
-        alert("Excel export engine is loading, please try again.");
-        return;
-      }
-
-      const targetOrders = orders.filter(o => selectedOrderIds.has(o.id));
-      if (!targetOrders.length) {
-        alert("No purchase orders selected for export! Please check at least one box.");
-        return;
-      }
-
-      const headers = [
-        "Vendor", "Item(s)", "Part #", "Unit Cost ($)", "Quantity",
-        "Total Cost ($)", "Web Link", "Subassembly", "Notes", "Member Responsible"
-      ];
-
-      const rows = [];
-      targetOrders.forEach((o, idx) => {
-        const rowNum = idx + 2;
-        rows.push([
-          o.vendor || "N/A",
-          o.item || "",
-          o.partNumber || "N/A",
-          Number(o.unitPrice) || 0.0,
-          Number(o.qty) || 1,
-          { f: `D${rowNum}*E${rowNum}` },
-          o.vendorUrl || "",
-          getSubsystem(o.subsystemId).name.split('&')[0].trim(),
-          o.notes || "N/A",
-          o.requestedBy || ""
-        ]);
-      });
-
-      const totalRowIndex = rows.length + 2;
-      rows.push(["", "", "", "", "Total", { f: `SUM(F2:F${totalRowIndex - 1})` }, "", "", "", ""]);
-
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      ws['!cols'] = [
-        { wch: 22 }, { wch: 118 }, { wch: 15 }, { wch: 13 }, { wch: 9 },
-        { wch: 15 }, { wch: 128 }, { wch: 15 }, { wch: 10 }, { wch: 20 }
-      ];
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-
-      const now = new Date();
-      const dateStr = `${now.getMonth() + 1}-${now.getDate()}-${now.getFullYear()}`;
-      XLSX.writeFile(wb, `Baja_Purchase_${dateStr}.xlsx`);
-      showToast(`Exported ${targetOrders.length} orders to Baja_Purchase_${dateStr}.xlsx`);
+    /* Executive Portal & PO Archive Toggle */
+    function toggleCompletedPOArchive() {
+      showCompletedPOArchive = !showCompletedPOArchive;
+      const container = document.getElementById('cto-completed-po-container');
+      const text = document.getElementById('cto-completed-toggle-text');
+      const chevron = document.getElementById('cto-completed-chevron');
+      if (container) container.classList.toggle('hidden', !showCompletedPOArchive);
+      if (text) text.innerText = showCompletedPOArchive ? "Hide Archive" : "Show Archive";
+      if (chevron) chevron.classList.toggle('rotate-180', showCompletedPOArchive);
     }
 
-    /* Executive Portal */
     function renderCto() {
-      const approvedSpend = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered' || o.status === 'Arrived in Shop').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
-      const pendingSpend = orders.filter(o => o.status === 'Requested').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
+      const activeOrders = orders.filter(o => o.status !== 'Arrived in Shop');
+      const completedOrders = orders.filter(o => o.status === 'Arrived in Shop');
+
+      const approvedSpend = activeOrders.filter(o => o.status === 'Approved' || o.status === 'Ordered').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
+      const pendingSpend = activeOrders.filter(o => o.status === 'Requested').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
+      const arrivedSpend = completedOrders.reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
       const totalSpend = orders.reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
 
       document.getElementById('cto-stat-approved-spend').innerText = `$${approvedSpend.toFixed(2)}`;
       document.getElementById('cto-stat-pending-spend').innerText = `$${pendingSpend.toFixed(2)}`;
+      document.getElementById('cto-stat-arrived-spend').innerText = `$${arrivedSpend.toFixed(2)}`;
       document.getElementById('cto-stat-total-spend').innerText = `$${totalSpend.toFixed(2)}`;
+      document.getElementById('cto-completed-po-count').innerText = `${completedOrders.length} delivered`;
 
       renderCtoOrdersStaging();
+      renderCtoCompletedOrdersArchive();
 
       const reviewTasks = tasks.filter(t => t.status === 'Ready for CTO Review');
       document.getElementById('cto-review-count').innerText = `${reviewTasks.length} items pending`;
@@ -1995,7 +1980,7 @@
                       <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">${teamPct}% complete</span>
                     </div>
                     <span class="text-xs text-slate-500 flex items-center gap-1 mt-1 font-mono">
-                      <i data-lucide="crown" class="w-3.5 h-3.5 text-[#b59a57]"></i> Subsystem Lead: <strong class="text-slate-900">${sub.lead}</strong> (PIN: <code class="font-mono text-slate-700">${sub.leadPin || '2222'}</code>)
+                      <i data-lucide="crown" class="w-3.5 h-3.5 text-[#b59a57]"></i> Lead: <strong class="text-slate-900">${sub.lead}</strong> (PIN: <code class="font-mono text-slate-700">${sub.leadPin || '2222'}</code>)
                     </span>
                   </div>
                   <div class="flex items-center gap-1">
@@ -2027,10 +2012,18 @@
       }
     }
 
+    /* Active Orders Staging (Excludes Arrived) */
     function renderCtoOrdersStaging() {
       const tbody = document.getElementById('cto-orders-table-body');
       if (!tbody) return;
-      tbody.innerHTML = orders.map(o => {
+      const activeOrders = orders.filter(o => o.status !== 'Arrived in Shop');
+      
+      if (!activeOrders.length) {
+        tbody.innerHTML = `<tr><td colspan="11" class="py-6 text-center text-xs text-slate-400 font-mono">No active in-flight requisitions. Arrived orders are archived below.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = activeOrders.map(o => {
         const lineTotal = (o.qty * o.unitPrice).toFixed(2);
         const isChecked = selectedOrderIds.has(o.id);
         return `
@@ -2051,7 +2044,45 @@
                 <option value="Requested" ${o.status === 'Requested' ? 'selected' : ''}>Requested</option>
                 <option value="Approved" ${o.status === 'Approved' ? 'selected' : ''}>Approved</option>
                 <option value="Ordered" ${o.status === 'Ordered' ? 'selected' : ''}>Ordered</option>
-                <option value="Arrived in Shop" ${o.status === 'Arrived in Shop' ? 'selected' : ''}>Arrived in Shop</option>
+                <option value="Arrived in Shop">Arrived in Shop (Archive)</option>
+              </select>
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="deleteOrder('${o.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* Completed Orders Archive on CTO screen */
+    function renderCtoCompletedOrdersArchive() {
+      const tbody = document.getElementById('cto-completed-orders-tbody');
+      if (!tbody) return;
+      const completedOrders = orders.filter(o => o.status === 'Arrived in Shop');
+
+      if (!completedOrders.length) {
+        tbody.innerHTML = `<tr><td colspan="10" class="py-4 text-center text-xs text-slate-400 font-mono">No delivered orders in archive.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = completedOrders.map(o => {
+        const lineTotal = (o.qty * o.unitPrice).toFixed(2);
+        return `
+          <tr class="hover:bg-slate-50 bg-emerald-50/15">
+            <td class="py-2.5 px-3 font-semibold text-slate-900">${o.vendor}</td>
+            <td class="py-2.5 px-3 truncate max-w-xs font-sans text-xs" title="${o.item}">${o.item}</td>
+            <td class="py-2.5 px-3 text-slate-500 text-[11px]">${o.partNumber}</td>
+            <td class="py-2.5 px-3 text-right">$${Number(o.unitPrice).toFixed(2)}</td>
+            <td class="py-2.5 px-3 text-right font-bold">${o.qty}</td>
+            <td class="py-2.5 px-3 text-right font-bold text-slate-900">$${lineTotal}</td>
+            <td class="py-2.5 px-3 text-slate-600">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
+            <td class="py-2.5 px-3 font-bold">${o.requestedBy}</td>
+            <td class="py-2.5 px-3">
+              <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-white border border-emerald-300 text-emerald-900 rounded px-2 py-0.5 text-[10.5px] font-mono font-medium outline-none">
+                <option value="Arrived in Shop" selected>Arrived in Shop</option>
+                <option value="Ordered">Move back to Ordered</option>
+                <option value="Approved">Move back to Approved</option>
               </select>
             </td>
             <td class="py-2.5 px-3 text-right">
@@ -2068,9 +2099,10 @@
       renderCtoOrdersStaging();
     }
 
-    function toggleSelectAllOrders(checked) {
-      if (checked) orders.forEach(o => selectedOrderIds.add(o.id));
-      else selectedOrderIds.clear();
+    function toggleSelectAllActiveOrders(checked) {
+      const active = orders.filter(o => o.status !== 'Arrived in Shop');
+      if (checked) active.forEach(o => selectedOrderIds.add(o.id));
+      else active.forEach(o => selectedOrderIds.delete(o.id));
       renderCtoOrdersStaging();
     }
 
@@ -2365,88 +2397,115 @@
       }
     }
 
-    function openOrderModal() {
+    /* Multi-Item / Bulk Purchase Order Engine */
+    let bulkPOItemRows = [];
+
+    function openBulkOrderModal() {
+      bulkPOItemRows = [
+        { id: 1, item: '', partNumber: '', qty: 1, unitPrice: 0.0, notes: '', subassembly: taxonomy[0].id }
+      ];
+
       const modalCard = document.getElementById('modal-card');
       modalCard.innerHTML = `
-        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
-          <h3 class="text-sm font-bold text-slate-900">Submit Purchase Order Request</h3>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shopping-bag" class="w-4 h-4 text-blue-700"></i>
+            <h3 class="text-sm font-bold text-slate-900">Multi-Part Purchase Order Requisition</h3>
+          </div>
           <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
-        <form id="form-order" class="space-y-4 mt-4 text-xs">
-          <div>
-            <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Item(s) &amp; Description</label>
-            <input required id="f-po-item" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" placeholder="e.g. 1.0in OD Steel Tubing">
-          </div>
-          <div>
-            <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Subassembly</label>
-            <select id="f-po-subsystem" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none">
-              ${taxonomy.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
+        
+        <form id="form-bulk-order" class="space-y-4 mt-3 text-xs">
+          <!-- Common Order Metadata -->
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Vendor</label>
-              <input id="f-po-vendor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="McMaster / Summit / Amazon">
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Vendor Name</label>
+              <input required id="f-bulk-vendor" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" placeholder="McMaster / Summit / Amazon">
             </div>
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Web Link</label>
-              <input type="url" id="f-po-url" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="https://...">
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Part #</label>
-              <input id="f-po-partnum" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono">
-            </div>
-            <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Quantity</label>
-              <input type="number" min="1" id="f-po-qty" value="1" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono">
-            </div>
-            <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Unit Cost ($)</label>
-              <input type="number" step="0.01" id="f-po-price" value="0.00" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono">
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Notes</label>
-              <input id="f-po-notes" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="e.g. 3 ft, front A-Arm">
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Vendor Web Link</label>
+              <input type="url" id="f-bulk-url" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" placeholder="https://...">
             </div>
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Member Responsible</label>
-              <input required id="f-po-requester" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="Initials / Name">
+              <input required id="f-bulk-requester" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" placeholder="Initials / Name">
             </div>
           </div>
-          <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+
+          <!-- Multi-Item Line Items -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold text-slate-700 uppercase text-[10px] tracking-wider">Line Items In This Order</span>
+              <button type="button" onclick="addBulkItemRow()" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-md font-mono font-bold text-[10.5px] flex items-center gap-1">
+                <i data-lucide="plus" class="w-3 h-3"></i> Add Another Item
+              </button>
+            </div>
+
+            <div id="bulk-po-rows-container" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- Order Summary Footer -->
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between font-mono text-xs">
+            <span class="text-slate-600">Total Order Requisition Estimate:</span>
+            <span id="bulk-order-total-est" class="text-base font-bold text-slate-900">$0.00</span>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2 border-t border-slate-200">
             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Submit Request</button>
+            <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Submit Requisition Batch</button>
           </div>
         </form>
       `;
 
-      document.getElementById('form-order').onsubmit = (e) => {
-        e.preventDefault();
-        const orderData = {
-          id: 'o' + Date.now(),
-          item: document.getElementById('f-po-item').value.trim(),
-          subsystemId: document.getElementById('f-po-subsystem').value,
-          vendor: document.getElementById('f-po-vendor').value.trim(),
-          vendorUrl: document.getElementById('f-po-url').value.trim(),
-          partNumber: document.getElementById('f-po-partnum').value.trim(),
-          qty: parseInt(document.getElementById('f-po-qty').value) || 1,
-          unitPrice: parseFloat(document.getElementById('f-po-price').value) || 0.0,
-          notes: document.getElementById('f-po-notes').value.trim() || 'N/A',
-          urgency: "Immediate Need",
-          requestedBy: document.getElementById('f-po-requester').value.trim(),
-          status: 'Requested',
-          submittedAt: new Date().toISOString()
-        };
+      renderBulkItemRows();
 
-        orders.push(orderData);
-        selectedOrderIds.add(orderData.id);
+      document.getElementById('form-bulk-order').onsubmit = (e) => {
+        e.preventDefault();
+        const vendor = document.getElementById('f-bulk-vendor').value.trim();
+        const vendorUrl = document.getElementById('f-bulk-url').value.trim();
+        const requestedBy = document.getElementById('f-bulk-requester').value.trim();
+
+        const newOrders = [];
+        bulkPOItemRows.forEach((row, idx) => {
+          const itemEl = document.getElementById(`bulk-item-desc-${row.id}`);
+          const partEl = document.getElementById(`bulk-item-part-${row.id}`);
+          const qtyEl = document.getElementById(`bulk-item-qty-${row.id}`);
+          const priceEl = document.getElementById(`bulk-item-price-${row.id}`);
+          const subEl = document.getElementById(`bulk-item-sub-${row.id}`);
+          const notesEl = document.getElementById(`bulk-item-notes-${row.id}`);
+
+          if (itemEl && itemEl.value.trim()) {
+            newOrders.push({
+              id: 'o' + (Date.now() + idx),
+              item: itemEl.value.trim(),
+              subsystemId: subEl ? subEl.value : taxonomy[0].id,
+              vendor: vendor || 'Vendor',
+              vendorUrl: vendorUrl || '',
+              partNumber: partEl ? partEl.value.trim() || 'N/A' : 'N/A',
+              qty: parseInt(qtyEl?.value) || 1,
+              unitPrice: parseFloat(priceEl?.value) || 0.0,
+              notes: notesEl ? notesEl.value.trim() || 'N/A' : 'N/A',
+              urgency: "Immediate Need",
+              requestedBy: requestedBy,
+              status: 'Requested',
+              submittedAt: new Date().toISOString()
+            });
+          }
+        });
+
+        if (!newOrders.length) {
+          alert("Please enter at least one item description.");
+          return;
+        }
+
+        newOrders.forEach(o => {
+          orders.push(o);
+          selectedOrderIds.add(o.id);
+        });
+
         saveState();
         closeModal();
-        showToast('Purchase request submitted');
+        showToast(`Submitted ${newOrders.length} parts from ${vendor}`);
         render();
       };
 
@@ -2455,11 +2514,115 @@
       if (window.lucide) lucide.createIcons();
     }
 
+    function renderBulkItemRows() {
+      const container = document.getElementById('bulk-po-rows-container');
+      if (!container) return;
+
+      container.innerHTML = bulkPOItemRows.map((row, index) => `
+        <div class="p-3 bg-white border border-slate-200 rounded-lg space-y-2 relative group hover:border-slate-400 transition-colors shadow-xs">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Item #${index + 1}</span>
+            ${bulkPOItemRows.length > 1 ? `
+              <button type="button" onclick="removeBulkItemRow(${row.id})" class="text-slate-400 hover:text-rose-600 p-0.5" title="Remove this line item">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-500 uppercase">Item Description</label>
+              <input required id="bulk-item-desc-${row.id}" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none" value="${row.item}" placeholder="e.g. 1/2-20 Grade 8 Hex Bolt 4in">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-500 uppercase">Subassembly</label>
+              <select id="bulk-item-sub-${row.id}" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none">
+                ${taxonomy.map(s => `<option value="${s.id}" ${s.id === row.subassembly ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-500 uppercase">Part #</label>
+              <input id="bulk-item-part-${row.id}" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs font-mono text-slate-900 outline-none" value="${row.partNumber}" placeholder="e.g. 91286A211">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-500 uppercase">Qty</label>
+              <input type="number" min="1" oninput="calculateBulkTotalEst()" id="bulk-item-qty-${row.id}" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs font-mono text-slate-900 outline-none font-bold" value="${row.qty}">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-500 uppercase">Unit ($)</label>
+              <input type="number" step="0.01" min="0" oninput="calculateBulkTotalEst()" id="bulk-item-price-${row.id}" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs font-mono text-slate-900 outline-none" value="${row.unitPrice}">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-500 uppercase">Notes</label>
+              <input id="bulk-item-notes-${row.id}" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none" value="${row.notes}" placeholder="3 ft, pack of 5">
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      calculateBulkTotalEst();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function addBulkItemRow() {
+      // Save current input values before appending
+      bulkPOItemRows.forEach(row => {
+        const desc = document.getElementById(`bulk-item-desc-${row.id}`);
+        const part = document.getElementById(`bulk-item-part-${row.id}`);
+        const qty = document.getElementById(`bulk-item-qty-${row.id}`);
+        const price = document.getElementById(`bulk-item-price-${row.id}`);
+        const sub = document.getElementById(`bulk-item-sub-${row.id}`);
+        const notes = document.getElementById(`bulk-item-notes-${row.id}`);
+
+        if (desc) row.item = desc.value;
+        if (part) row.partNumber = part.value;
+        if (qty) row.qty = parseInt(qty.value) || 1;
+        if (price) row.unitPrice = parseFloat(price.value) || 0.0;
+        if (sub) row.subassembly = sub.value;
+        if (notes) row.notes = notes.value;
+      });
+
+      bulkPOItemRows.push({
+        id: Date.now(),
+        item: '',
+        partNumber: '',
+        qty: 1,
+        unitPrice: 0.0,
+        notes: '',
+        subassembly: taxonomy[0].id
+      });
+
+      renderBulkItemRows();
+    }
+
+    function removeBulkItemRow(id) {
+      if (bulkPOItemRows.length <= 1) return;
+      bulkPOItemRows = bulkPOItemRows.filter(r => r.id !== id);
+      renderBulkItemRows();
+    }
+
+    function calculateBulkTotalEst() {
+      let total = 0;
+      bulkPOItemRows.forEach(row => {
+        const qtyEl = document.getElementById(`bulk-item-qty-${row.id}`);
+        const priceEl = document.getElementById(`bulk-item-price-${row.id}`);
+        const q = parseInt(qtyEl?.value) || 0;
+        const p = parseFloat(priceEl?.value) || 0;
+        total += (q * p);
+      });
+      const label = document.getElementById('bulk-order-total-est');
+      if (label) label.innerText = `$${total.toFixed(2)}`;
+    }
+
     function updateOrderStatus(id, status) {
       const target = orders.find(o => o.id === id);
       if (target) {
         target.status = status;
         saveState();
+        showToast(`Order status updated to ${status}`);
         render();
       }
     }
@@ -2472,6 +2635,58 @@
         showToast('Order removed');
         render();
       }
+    }
+
+    function exportSelectedOrdersToExactExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert("Excel export engine is loading, please try again.");
+        return;
+      }
+
+      const targetOrders = orders.filter(o => selectedOrderIds.has(o.id));
+      if (!targetOrders.length) {
+        alert("No purchase orders selected for export! Please check at least one box.");
+        return;
+      }
+
+      const headers = [
+        "Vendor", "Item(s)", "Part #", "Unit Cost ($)", "Quantity",
+        "Total Cost ($)", "Web Link", "Subassembly", "Notes", "Member Responsible"
+      ];
+
+      const rows = [];
+      targetOrders.forEach((o, idx) => {
+        const rowNum = idx + 2;
+        rows.push([
+          o.vendor || "N/A",
+          o.item || "",
+          o.partNumber || "N/A",
+          Number(o.unitPrice) || 0.0,
+          Number(o.qty) || 1,
+          { f: `D${rowNum}*E${rowNum}` },
+          o.vendorUrl || "",
+          getSubsystem(o.subsystemId).name.split('&')[0].trim(),
+          o.notes || "N/A",
+          o.requestedBy || ""
+        ]);
+      });
+
+      const totalRowIndex = rows.length + 2;
+      rows.push(["", "", "", "", "Total", { f: `SUM(F2:F${totalRowIndex - 1})` }, "", "", "", ""]);
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [
+        { wch: 22 }, { wch: 118 }, { wch: 15 }, { wch: 13 }, { wch: 9 },
+        { wch: 15 }, { wch: 128 }, { wch: 15 }, { wch: 10 }, { wch: 20 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+      const now = new Date();
+      const dateStr = `${now.getMonth() + 1}-${now.getDate()}-${now.getFullYear()}`;
+      XLSX.writeFile(wb, `Baja_Purchase_${dateStr}.xlsx`);
+      showToast(`Exported ${targetOrders.length} orders to Baja_Purchase_${dateStr}.xlsx`);
     }
 
     function openRecurringEventModal() {

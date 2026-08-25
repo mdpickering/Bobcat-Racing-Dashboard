@@ -60,7 +60,7 @@
         </button>
       </nav>
 
-      <!-- Right Controls: Notifications + Status -->
+      <!-- Right Controls -->
       <div class="flex items-center gap-2.5">
         <div class="relative">
           <button id="btn-notifications" onclick="toggleNotificationPanel()" class="relative p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs">
@@ -68,7 +68,6 @@
             <span id="notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono px-1 flex items-center justify-center border-2 border-white">0</span>
           </button>
 
-          <!-- Notification Drawer -->
           <div id="notif-panel" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 space-y-3">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
@@ -281,11 +280,14 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-slate-900">Master Build Schedule &amp; Calendar</h1>
-          <p class="text-xs text-slate-500">Interactive build calendar and editable multi-week subsystem roadmap</p>
+          <p class="text-xs text-slate-500">Interactive calendar and fully editable multi-week subsystem roadmap</p>
         </div>
         <div class="flex items-center gap-2">
+          <button onclick="openColumnConfigModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+            <i data-lucide="columns-3" class="w-3.5 h-3.5 text-slate-500"></i> Edit Columns / Weeks
+          </button>
           <button onclick="openTimelineRowModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Add Subsystem Row
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Subsystem Row
           </button>
           <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
             <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Milestone
@@ -318,34 +320,14 @@
       <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div>
-            <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Subsystem Matrix (Click any cell to edit)</h3>
-            <p class="text-[11px] text-slate-500">Real-time editable fabrication &amp; testing timeline</p>
+            <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Subsystem Matrix (Click any header or cell to edit)</h3>
+            <p class="text-[11px] text-slate-500">Click column labels to rename weeks; click milestone cells to edit content</p>
           </div>
-          <span class="text-[11px] font-mono text-slate-500">Weeks 1–15 Roadmap</span>
+          <span class="text-[11px] font-mono text-slate-500">Live Roadmap</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
-            <thead>
-              <tr class="bg-[#0c2340] text-white font-mono text-[11px]">
-                <th class="py-3 px-3 w-48 sticky left-0 bg-[#0c2340] z-10 border-r border-slate-700">Subsystem</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W1</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W2</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W3</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W4</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W5</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W6</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W7</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-28 bg-amber-900/60 text-amber-200">SPRING BREAK</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W9</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24 bg-emerald-900/40 text-emerald-200">TESTING (W10)</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24 bg-emerald-900/40 text-emerald-200">TESTING (W11)</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W12</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W13</th>
-                <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W14</th>
-                <th class="py-3 px-2 text-center w-24">W15</th>
-                <th class="py-3 px-2 text-center w-16 bg-slate-800">Actions</th>
-              </tr>
-            </thead>
+            <thead id="timeline-matrix-head"></thead>
             <tbody id="timeline-matrix-body" class="divide-y divide-slate-200"></tbody>
           </table>
         </div>
@@ -424,8 +406,7 @@
   </div>
 
   <script>
-    /* Schema Versioning for Auto-Migration */
-    const DATA_VERSION = "v3_complete_build";
+    const DATA_VERSION = "v4_custom_weeks";
 
     const TAXONOMY = [
       {
@@ -557,7 +538,28 @@
       { id: "t28", title: "Online Cost Prototype BOM Finalization", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "Critical", status: "In Progress", assignee: "CFO Lead", deadline: "2026-04-10", notes: "Final vehicle costing BOM." }
     ];
 
-    let timelineRows = [
+    /* Default Configurable Columns */
+    const DEFAULT_TIMELINE_COLUMNS = [
+      { key: "W1", label: "W1" },
+      { key: "W2", label: "W2" },
+      { key: "W3", label: "W3" },
+      { key: "W4", label: "W4" },
+      { key: "W5", label: "W5" },
+      { key: "W6", label: "W6" },
+      { key: "W7", label: "W7" },
+      { key: "BREAK", label: "SPRING BREAK", highlight: "break" },
+      { key: "W9", label: "W9" },
+      { key: "W10", label: "TESTING (W10)", highlight: "test" },
+      { key: "W11", label: "TESTING (W11)", highlight: "test" },
+      { key: "W12", label: "W12" },
+      { key: "W13", label: "W13" },
+      { key: "W14", label: "W14" },
+      { key: "W15", label: "W15" }
+    ];
+
+    let timelineColumns = JSON.parse(localStorage.getItem('bobcat_timeline_cols')) || DEFAULT_TIMELINE_COLUMNS;
+
+    let timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || [
       { id: "r1", subsystem: "Frame & Chassis Finish", weeks: { W2: "Fab nose & rear", W3: "Tabs & Sleeving", W4: "Harness Mounts", W6: "FAB low weld", W7: "Finish Welding", W10: "TESTING", W11: "TESTING" } },
       { id: "r2", subsystem: "Front Suspension & Steering", weeks: { W2: "A-Arm CAD", W3: "Knuckle Caliper CAD", W4: "Fab A-Arms", W5: "Rack & Stops", W6: "Mount Knuckles", W7: "Rolling Chassis" } },
       { id: "r3", subsystem: "Rear Suspension & Brakes", weeks: { W2: "Trailing Arm CAD", W3: "Bearing Carrier CAD", W4: "Fab Trailing Arms", W5: "Mount Calipers", W6: "CV Articulation", W7: "Car on Wheels!" } },
@@ -573,22 +575,23 @@
       { id: "o3", item: "Dual Master Cylinder Balance Bar Assembly", description: "Threaded balance bar with 3/8-24 spherical center pivot", subsystemId: "pedals-driver-controls", vendor: "Wilwood", vendorUrl: "https://www.wilwood.com", partNumber: "340-1757", qty: 1, unitPrice: 54.00, urgency: "Immediate Need", requestedBy: "John", status: "Approved" }
     ];
 
-    /* Automatic Cache Check & Data Hydration */
+    /* Data Initializer with Auto-Migration */
     const storedVersion = localStorage.getItem('bobcat_schema_version');
     let tasks, subteams, orders, notifications;
 
     if (storedVersion !== DATA_VERSION) {
-      // Auto-migrate from older cache to ensure all 28 tasks display
       tasks = DEFAULT_TASKS;
       subteams = DEFAULT_SUBTEAMS;
       orders = DEFAULT_ORDERS;
+      timelineColumns = DEFAULT_TIMELINE_COLUMNS;
       notifications = [
-        { id: "n1", title: "Build Scope Updated", message: "Loaded complete 28-task roadmap across all vehicle systems", timestamp: new Date().toISOString(), read: false, type: "task" }
+        { id: "n1", title: "Build Scope Updated", message: "Loaded customizable timeline columns and updated task architecture", timestamp: new Date().toISOString(), read: false, type: "task" }
       ];
       localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
       localStorage.setItem('bobcat_orders', JSON.stringify(orders));
       localStorage.setItem('bobcat_timeline_rows', JSON.stringify(timelineRows));
+      localStorage.setItem('bobcat_timeline_cols', JSON.stringify(timelineColumns));
       localStorage.setItem('bobcat_notifications', JSON.stringify(notifications));
       localStorage.setItem('bobcat_schema_version', DATA_VERSION);
     } else {
@@ -597,6 +600,7 @@
       orders = JSON.parse(localStorage.getItem('bobcat_orders')) || DEFAULT_ORDERS;
       notifications = JSON.parse(localStorage.getItem('bobcat_notifications')) || [];
       timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || timelineRows;
+      timelineColumns = JSON.parse(localStorage.getItem('bobcat_timeline_cols')) || DEFAULT_TIMELINE_COLUMNS;
     }
     
     let settings = JSON.parse(localStorage.getItem('bobcat_settings')) || {
@@ -749,7 +753,6 @@
             notes: r.notes
           }));
         } else {
-          // If database has fewer tasks than our complete build roadmap, upsert the full 28 tasks
           for (let t of DEFAULT_TASKS) {
             await dbClient.from('tasks').upsert({
               id: t.id,
@@ -812,6 +815,7 @@
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
       localStorage.setItem('bobcat_orders', JSON.stringify(orders));
       localStorage.setItem('bobcat_timeline_rows', JSON.stringify(timelineRows));
+      localStorage.setItem('bobcat_timeline_cols', JSON.stringify(timelineColumns));
 
       if (isCloudConnected && dbClient && syncType && syncData) {
         (async () => {
@@ -869,7 +873,9 @@
     function reseedDefaultTasks() {
       if (confirm('Reset and load all 28 default engineering tasks across all vehicle domains?')) {
         tasks = DEFAULT_TASKS;
+        timelineColumns = DEFAULT_TIMELINE_COLUMNS;
         localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
+        localStorage.setItem('bobcat_timeline_cols', JSON.stringify(timelineColumns));
         localStorage.setItem('bobcat_schema_version', DATA_VERSION);
         if (isCloudConnected && dbClient) {
           (async () => {
@@ -888,7 +894,7 @@
             }
           })();
         }
-        showToast('All 28 tasks reseeded successfully');
+        showToast('All 28 tasks and columns reseeded');
         render();
       }
     }
@@ -1298,7 +1304,7 @@
       lucide.createIcons();
     }
 
-    /* 4. Calendar & Editable Timeline Matrix */
+    /* 4. Calendar & Customizable Timeline Matrix */
     function changeMonth(delta) {
       calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
       renderCalendar();
@@ -1341,9 +1347,27 @@
     }
 
     function renderTimelineMatrix() {
-      const tbody = document.getElementById('timeline-matrix-body');
-      const weeks = ['W1','W2','W3','W4','W5','W6','W7','BREAK','W9','W10','W11','W12','W13','W14','W15'];
+      // 1. Render Editable Headers
+      const thead = document.getElementById('timeline-matrix-head');
+      thead.innerHTML = `
+        <tr class="bg-[#0c2340] text-white font-mono text-[11px]">
+          <th class="py-3 px-3 w-48 sticky left-0 bg-[#0c2340] z-10 border-r border-slate-700">Subsystem</th>
+          ${timelineColumns.map(col => {
+            const isBreak = col.highlight === 'break';
+            const isTest = col.highlight === 'test';
+            const bg = isBreak ? 'bg-amber-900/60 text-amber-200' : isTest ? 'bg-emerald-900/40 text-emerald-200' : 'bg-[#0c2340] text-white';
+            return `
+              <th onclick="editColumnHeader('${col.key}')" class="py-3 px-2 text-center border-r border-slate-700 w-24 cursor-pointer hover:bg-slate-700/80 transition-colors ${bg}" title="Click to rename week">
+                <span class="block truncate">${col.label}</span>
+              </th>
+            `;
+          }).join('')}
+          <th class="py-3 px-2 text-center w-16 bg-slate-800">Actions</th>
+        </tr>
+      `;
 
+      // 2. Render Rows & Cells
+      const tbody = document.getElementById('timeline-matrix-body');
       tbody.innerHTML = timelineRows.map(row => {
         return `
           <tr class="hover:bg-slate-50 transition-colors group">
@@ -1351,14 +1375,14 @@
               <span class="truncate pr-1">${row.subsystem}</span>
               <button onclick="editTimelineRowName('${row.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-800 transition-opacity"><i data-lucide="pencil" class="w-3 h-3"></i></button>
             </td>
-            ${weeks.map(w => {
-              const taskText = row.weeks[w] || '';
-              const isBreak = w === 'BREAK';
-              const isTest = w === 'W10' || w === 'W11';
+            ${timelineColumns.map(col => {
+              const taskText = row.weeks[col.key] || '';
+              const isBreak = col.highlight === 'break';
+              const isTest = col.highlight === 'test';
               const isSaeRow = row.subsystem.includes('SAE Deliverables');
 
               return `
-                <td onclick="editTimelineCell('${row.id}', '${w}')" class="py-2 px-1.5 border-r border-slate-200 align-top cursor-pointer hover:bg-amber-50/70 transition-colors ${isBreak ? 'bg-amber-50/50' : isTest ? 'bg-emerald-50/30' : ''}">
+                <td onclick="editTimelineCell('${row.id}', '${col.key}')" class="py-2 px-1.5 border-r border-slate-200 align-top cursor-pointer hover:bg-amber-50/70 transition-colors ${isBreak ? 'bg-amber-50/50' : isTest ? 'bg-emerald-50/30' : ''}">
                   ${taskText ? `
                     <div class="p-1.5 rounded ${isSaeRow ? 'bg-indigo-50 border-indigo-300 text-indigo-900 font-bold' : 'bg-[#0c2340]/5 border-[#0c2340]/20 text-[#0c2340] font-semibold'} border text-[10px] leading-tight text-center">
                       ${taskText}
@@ -1375,12 +1399,83 @@
       }).join('');
     }
 
-    /* Editable Timeline Modals */
+    /* Column & Week Editing Functions */
+    function editColumnHeader(colKey) {
+      const col = timelineColumns.find(c => c.key === colKey);
+      if (!col) return;
+      const newLabel = prompt(`Edit column name for '${col.label}':`, col.label);
+      if (newLabel && newLabel.trim()) {
+        col.label = newLabel.trim();
+        saveState();
+        showToast('Column header updated');
+      }
+    }
+
+    function openColumnConfigModal() {
+      const modalCard = document.getElementById('modal-card');
+      modalCard.innerHTML = `
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+          <h3 class="text-sm font-bold text-slate-900">Timeline Columns &amp; Weeks Configuration</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="space-y-4 mt-4 text-xs">
+          <p class="text-slate-500">Edit any column title below or add custom dates/milestone weeks.</p>
+          <div class="max-h-72 overflow-y-auto space-y-2 pr-1 divide-y divide-slate-100">
+            ${timelineColumns.map((col, index) => `
+              <div class="flex items-center justify-between gap-2 pt-2">
+                <span class="font-mono text-slate-400 w-12 text-[10px]">${col.key}</span>
+                <input id="col-input-${index}" class="flex-1 bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none" value="${col.label}">
+                <button onclick="deleteTimelineColumn('${col.key}')" class="text-slate-400 hover:text-rose-600 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
+            <button onclick="addNewTimelineColumn()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-semibold text-xs">+ Add New Column</button>
+            <button onclick="saveAllColumnsFromModal()" class="px-4 py-1.5 bg-[#0c2340] hover:bg-slate-800 text-white rounded font-semibold text-xs shadow-xs">Save Changes</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('modal-container').classList.remove('hidden');
+      document.getElementById('modal-container').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function saveAllColumnsFromModal() {
+      timelineColumns.forEach((col, index) => {
+        const input = document.getElementById(`col-input-${index}`);
+        if (input && input.value.trim()) col.label = input.value.trim();
+      });
+      saveState();
+      closeModal();
+      showToast('Columns saved');
+    }
+
+    function addNewTimelineColumn() {
+      const name = prompt("Enter new column name (e.g. 'W16' or 'COMPETITION'):");
+      if (name && name.trim()) {
+        const key = "C_" + Date.now();
+        timelineColumns.push({ key, label: name.trim() });
+        saveState();
+        openColumnConfigModal();
+      }
+    }
+
+    function deleteTimelineColumn(colKey) {
+      if (confirm('Delete this column and its associated milestone entries?')) {
+        timelineColumns = timelineColumns.filter(c => c.key !== colKey);
+        saveState();
+        openColumnConfigModal();
+      }
+    }
+
+    /* Editable Cells & Row Modals */
     function editTimelineCell(rowId, weekKey) {
       const row = timelineRows.find(r => r.id === rowId);
       if (!row) return;
+      const col = timelineColumns.find(c => c.key === weekKey);
+      const colLabel = col ? col.label : weekKey;
       const currentVal = row.weeks[weekKey] || '';
-      const newVal = prompt(`Edit milestone for ${row.subsystem} (${weekKey}):`, currentVal);
+      const newVal = prompt(`Edit milestone for ${row.subsystem} (${colLabel}):`, currentVal);
       if (newVal !== null) {
         if (newVal.trim() === '') delete row.weeks[weekKey];
         else row.weeks[weekKey] = newVal.trim();
@@ -1857,7 +1952,7 @@
             <input id="f-set-emails" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${settings.emailList || ''}" placeholder="captain@bobcatracing.edu, lead@bobcatracing.edu">
           </div>
           <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Reseed 28 Tasks</button>
+            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Reseed All 28 Tasks</button>
             <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Save Settings</button>
           </div>
         </form>

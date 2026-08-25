@@ -34,6 +34,15 @@
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    @keyframes goldPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(181, 154, 87, 0.7); }
+      50% { box-shadow: 0 0 0 8px rgba(181, 154, 87, 0); }
+    }
+    .task-highlight {
+      animation: goldPulse 1.5s ease-in-out 3;
+      border-color: #b59a57 !important;
+      background-color: #fefce8 !important;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-[#0c2340] selection:text-white">
@@ -55,6 +64,7 @@
       <nav id="main-nav-bar" class="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="home">Overview</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="tasks">Tasks &amp; Packages</button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="roster">Team &amp; Workload</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="schedule">Timeline &amp; Calendar</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="orders">Purchase Orders</button>
         <!-- Injected Executive Tab (Revealed only via Ctrl+Shift+X) -->
@@ -64,7 +74,7 @@
         </button>
       </nav>
 
-      <!-- Sync Status Badge (Public) -->
+      <!-- Sync Status Badge -->
       <div class="flex items-center gap-2">
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-mono text-slate-600 select-none shadow-xs">
           <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
@@ -74,13 +84,14 @@
     </div>
   </header>
 
-  <!-- Mobile Navigation Bar -->
+  <!-- Mobile Tab Bar -->
   <div id="mobile-nav-bar" class="lg:hidden flex overflow-x-auto border-b border-slate-200 bg-slate-100 p-2 gap-1">
     <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 whitespace-nowrap" data-tab="home">Overview</button>
     <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 whitespace-nowrap" data-tab="tasks">Tasks</button>
+    <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 whitespace-nowrap" data-tab="roster">Roster</button>
     <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 whitespace-nowrap" data-tab="schedule">Timeline</button>
     <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 whitespace-nowrap" data-tab="orders">Orders</button>
-    <button id="mobile-nav-cto-secret" class="nav-tab hidden px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0c2340] bg-amber-100 whitespace-nowrap" data-tab="cto">Executive View</button>
+    <button id="mobile-nav-cto-secret" class="nav-tab hidden px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0c2340] bg-amber-100 whitespace-nowrap" data-tab="cto">Executive</button>
   </div>
 
   <!-- Main Viewport -->
@@ -129,7 +140,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Subsystem Build Breakdown -->
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
             <div>
@@ -145,7 +155,6 @@
           <div id="subsystem-progress-list" class="space-y-3.5"></div>
         </div>
 
-        <!-- Upcoming Deadlines & Action Feed -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
@@ -174,22 +183,24 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">Executive Portal</span>
-            <h1 class="text-lg font-bold text-slate-900">Operations, Sub-Teams &amp; Financials</h1>
+            <h1 class="text-lg font-bold text-slate-900">Operations, Sub-Teams, PO Approvals &amp; Excel</h1>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Confidential team hierarchy, budget review, Excel export, and notifications</p>
+          <p class="text-xs text-slate-500 mt-0.5">Confidential team hierarchy, budget review, Excel generation, and activity log</p>
         </div>
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <!-- Exact Excel PO Exporter Button -->
+        <div class="flex flex-wrap items-center gap-2">
           <button onclick="exportOrdersToExactExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors">
-            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel PO (.xlsx)
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Download Excel (.xlsx)
           </button>
-          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center justify-center gap-1.5">
+          <button onclick="forceUnassignAllTasks()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg px-3 py-2 text-xs font-semibold border border-amber-300 shadow-xs flex items-center gap-1">
+            <i data-lucide="user-x" class="w-3.5 h-3.5"></i> Force Unassign All
+          </button>
+          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
             <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-slate-500"></i> Settings
           </button>
-          <button onclick="openTeamModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5">
+          <button onclick="openTeamModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
             <i data-lucide="user-plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> + Sub-Team
           </button>
-          <button onclick="lockCtoPortal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg px-3 py-2 text-xs font-semibold border border-rose-200 flex items-center justify-center gap-1">
+          <button onclick="lockCtoPortal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg px-3 py-2 text-xs font-semibold border border-rose-200 flex items-center gap-1">
             <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
           </button>
         </div>
@@ -211,6 +222,43 @@
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Combined Lifetime Total</span>
           <p id="cto-stat-total-spend" class="text-2xl font-bold text-slate-900 mt-1">$0.00</p>
           <span class="text-[11px] text-slate-400 font-mono">All Purchase Orders</span>
+        </div>
+      </div>
+
+      <!-- Excel PO Live Staging Card with Direct Link -->
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+            <h3 class="text-sm font-bold text-slate-900">Purchase Orders Staging &amp; Excel Exporter (Exact Template)</h3>
+          </div>
+          <div id="excel-staging-actions" class="flex items-center gap-2">
+            <button onclick="exportOrdersToExactExcel()" class="text-xs font-mono font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 flex items-center gap-1">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Download .xlsx
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500">Generates a formatted 10-column Excel sheet matching <code class="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-800">Baja_Purchase_2-20-2026.xlsx</code> with exact column widths, multiplication formulas (<code class="font-mono">=D*E</code>), and total sums.</p>
+        
+        <!-- Live Staging Table with Executive Status Dropdowns -->
+        <div class="overflow-x-auto max-h-64 border border-slate-200 rounded-lg">
+          <table class="w-full text-left text-xs border-collapse min-w-[900px]">
+            <thead class="bg-slate-50 text-[10px] font-mono uppercase font-bold text-slate-600 border-b border-slate-200 sticky top-0">
+              <tr>
+                <th class="py-2.5 px-3">Vendor</th>
+                <th class="py-2.5 px-3">Item(s)</th>
+                <th class="py-2.5 px-3">Part #</th>
+                <th class="py-2.5 px-3 text-right">Unit ($)</th>
+                <th class="py-2.5 px-3 text-right">Qty</th>
+                <th class="py-2.5 px-3 text-right">Total ($)</th>
+                <th class="py-2.5 px-3">Subassembly</th>
+                <th class="py-2.5 px-3">Member</th>
+                <th class="py-2.5 px-3">Executive Status</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cto-orders-table-body" class="divide-y divide-slate-100 bg-white font-mono text-[11px]"></tbody>
+          </table>
         </div>
       </div>
 
@@ -238,7 +286,7 @@
         <div id="cto-review-queue" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
       </div>
 
-      <!-- Sub-Teams Cards Grid -->
+      <!-- Sub-Teams Grid -->
       <div>
         <h3 class="text-xs font-mono uppercase font-bold text-slate-600 tracking-wider mb-3 flex items-center gap-1.5">
           <i data-lucide="network" class="w-4 h-4 text-slate-500"></i> Active Engineering Sub-Teams
@@ -249,7 +297,6 @@
 
     <!-- ==================== VIEW 3: ACCORDION COLLAPSIBLE TASK BOARD ==================== -->
     <div id="view-tasks" class="space-y-6">
-      <!-- Search, Filters, & Master Expand/Collapse Toggle -->
       <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
         <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div class="relative flex-1">
@@ -282,12 +329,27 @@
       <div id="all-tasks-stream" class="space-y-4"></div>
     </div>
 
-    <!-- ==================== VIEW 4: CALENDAR & TIMELINE ==================== -->
+    <!-- ==================== VIEW 4: TEAM ROSTER & WORKLOAD ==================== -->
+    <div id="view-roster" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+          <h1 class="text-lg font-bold text-slate-900">Team Workload &amp; Task Assignment Roster</h1>
+          <p class="text-xs text-slate-500">Complete breakdown of every team member and their active claimed work packages</p>
+        </div>
+        <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5 self-start sm:self-auto">
+          <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Assign New Work
+        </button>
+      </div>
+
+      <div id="roster-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </div>
+
+    <!-- ==================== VIEW 5: CALENDAR & TIMELINE ==================== -->
     <div id="view-schedule" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-slate-900">Master Build Schedule &amp; Calendar</h1>
-          <p class="text-xs text-slate-500">Live dynamic calendar with recurring team events and customizable multi-week matrix</p>
+          <p class="text-xs text-slate-500">Live dynamic calendar with recurring team events and interactive task jumps</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <button onclick="openRecurringEventModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
@@ -302,7 +364,7 @@
         </div>
       </div>
 
-      <!-- 1. Interactive Monthly Calendar with Today Ring & Recurring Events -->
+      <!-- 1. Interactive Monthly Calendar with Today Ring & Task Jump -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
           <div class="flex items-center gap-3">
@@ -342,12 +404,12 @@
       </div>
     </div>
 
-    <!-- ==================== VIEW 5: PURCHASE ORDERS ==================== -->
+    <!-- ==================== VIEW 6: PURCHASE ORDERS (PUBLIC READ-ONLY) ==================== -->
     <div id="view-orders" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-slate-900">Purchase Orders &amp; Requisition Log</h1>
-          <p class="text-xs text-slate-500">Shop parts requisition and delivery tracker with automated alerts</p>
+          <p class="text-xs text-slate-500">Shop parts requisition and delivery tracker (Status changes authorized in Executive View)</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="openOrderModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2">
@@ -356,7 +418,6 @@
         </div>
       </div>
 
-      <!-- Public Requisition Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Requisitions Submitted</span>
@@ -387,8 +448,7 @@
                 <th class="py-3 px-4 text-right">Qty</th>
                 <th class="py-3 px-4">Urgency</th>
                 <th class="py-3 px-4">Member</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3 px-4 text-center">Status</th>
               </tr>
             </thead>
             <tbody id="orders-table-body" class="divide-y divide-slate-100"></tbody>
@@ -415,7 +475,7 @@
   </div>
 
   <script>
-    const DATA_VERSION = "v7_accordion_recurrent_xlsx";
+    const DATA_VERSION = "v8_unassigned_roster_rules";
 
     const TAXONOMY = [
       {
@@ -423,10 +483,10 @@
         name: "Chassis & Structural Finishing",
         code: "SAE B.3",
         categories: [
-          { name: "Roll Cage & Primary Members", rule: "Finish full penetration welds on primary/secondary junctions, overhead crossmembers, and FAB low." },
-          { name: "Double-Shear Tabs & Sleeving", rule: "Suspension tabs must be double-shear. Any through-drilled tube must have welded internal 360-degree steel sleeves." },
-          { name: "Safety Mounts & Harness", rule: "Fabricate 5/6-point harness tabs (45°-80° lap belt angle) and fire extinguisher quick-release bracket tabs." },
-          { name: "Component Brackets & Tow Points", rule: "Weld seat mounts, fuel tank brackets, battery tray, and front/rear recovery tow points." }
+          { name: "Roll Cage & Primary Members", rule: "Primary members (RRH, RHO, FLC) must be min 1.0\" OD x 0.120\" wall steel tubing. Roll Hoop Overhead must provide min 41.0\" clearance above seat bottom." },
+          { name: "Double-Shear Tabs & Sleeving", rule: "Suspension tabs must be double-shear configuration. Any through-drilled tubes require welded 360-degree internal steel sleeves." },
+          { name: "Safety Mounts & Harness", rule: "Fabricate 5 or 6-point SFI/FIA harness tabs. Lap belt angle 45° to 80°. Shoulder straps 0\" to 4\" below shoulder level. Fire extinguisher quick-release tabs required." },
+          { name: "Component Brackets & Tow Points", rule: "Weld seat mounts, fuel tank brackets, battery tray, and front/rear recovery tow points per minimum strength rules." }
         ]
       },
       {
@@ -434,10 +494,10 @@
         name: "Front Suspension & Steering",
         code: "SAE B.5 / B.7",
         categories: [
-          { name: "A-Arms & Spherical Bearings", rule: "Finalize upper/lower A-arm CAD, build weld jigs, install sphericals and double-shear rod ends." },
-          { name: "Front Knuckles & Caliper Mounts", rule: "Machine front uprights/knuckles, press wheel bearings, and integrate rigid caliper mounting ears." },
-          { name: "Steering Column & Mechanical Stops", rule: "Mount steering rack, machine tie-rods, install quick-release hub, and weld positive mechanical steering stops." },
-          { name: "Dampers & Travel Checks", rule: "Mount front shocks in double shear and install limit straps if internal stops can top out." }
+          { name: "A-Arms & Spherical Bearings", rule: "A-arms must withstand 4G impact bump loads. Spherical bearings and rod ends must be installed in double shear." },
+          { name: "Front Knuckles & Caliper Mounts", rule: "Wheel bearings and front uprights must have positive retention. Knuckle caliper mounting ears must eliminate brake caliper deflection under panic lockup." },
+          { name: "Steering Column & Mechanical Stops", rule: "Positive mechanical steering stops are mandatory to prevent tie-rod over-centering. Column requires quick-disconnect hub." },
+          { name: "Dampers & Travel Checks", rule: "Shock mounting bolts loaded in double shear. Limit straps required if internal shock stops can top out." }
         ]
       },
       {
@@ -445,10 +505,10 @@
         name: "Rear Suspension & Trailing Arm / Brakes",
         code: "SAE B.5 / B.7",
         categories: [
-          { name: "Trailing Arms & Geometry", rule: "Fabricate trailing arms and camber/toe links. Verify anti-squat and wheel travel clearance." },
-          { name: "Rear Bearing Carriers", rule: "Machine/fabricate rear bearing carriers to withstand full torque reaction under load." },
-          { name: "Rear Caliper Integration", rule: "Integrate caliper brackets on trailing arms / carriers (or inboard output) and align rotor hats." },
-          { name: "Axle Articulation & CV Engagement", rule: "Verify half-shaft CV joint operating angles and positive spline engagement throughout travel." }
+          { name: "Trailing Arms & Geometry", rule: "Trailing arms and camber/toe links must maintain wheel track and alignment through full travel. Validate rear anti-squat." },
+          { name: "Rear Bearing Carriers", rule: "Rear bearing carriers must withstand full dynamic torque reaction from outboard braking setup and drive torque." },
+          { name: "Rear Caliper Integration", rule: "Integrate caliper brackets securely on trailing arms/carriers and align rotor hats with wheel rim inner barrel clearance." },
+          { name: "Axle Articulation & CV Engagement", rule: "Verify half-shaft CV joint operating angles and ensure positive spline engagement through full bump and droop." }
         ]
       },
       {
@@ -503,32 +563,45 @@
       { id: "st_chassis", name: "Chassis & Shielding", lead: "Emmett", members: ["Jorge", "Matt"], subsystemId: "shielding-safety" }
     ];
 
-    /* 28 Baseline Tasks (Completely Unassigned) */
+    /* All 28 Tasks with Assignees Unassigned ("") Ready for Claiming */
     const DEFAULT_TASKS = [
+      // Chassis
       { id: "t1", title: "Complete full penetration welds on primary/secondary cage joints", subsystemId: "chassis", category: "Roll Cage & Primary Members", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Ensure 100% weld penetration and prepare sample joints for tech inspection." },
       { id: "t2", title: "Weld double-shear suspension tabs & sleeve frame through-bolts", subsystemId: "chassis", category: "Double-Shear Tabs & Sleeving", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "All drilled tube pass-throughs require 360-deg internal steel sleeves." },
       { id: "t3", title: "Fabricate & weld 5/6-point harness mounting tabs", subsystemId: "chassis", category: "Safety Mounts & Harness", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-02-10", notes: "Check lap belt mounting angle range between 45 and 80 degrees." },
       { id: "t4", title: "Weld front & rear recovery tow points", subsystemId: "chassis", category: "Component Brackets & Tow Points", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-03", notes: "Recovery points must meet minimum inside diameter and shear strength rules." },
+
+      // Front Suspension
       { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-02-03", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
       { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
       { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Column & Mechanical Stops", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-03", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
       { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Verify shock travel clearance throughout full steering sweep." },
+
+      // Rear Suspension & Brakes Team
       { id: "t9", title: "Fabricate rear trailing arms & camber/toe links", subsystemId: "rear-suspension-brakes", category: "Trailing Arms & Geometry", priority: "High", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Validate rear anti-squat geometry and wheel travel envelope." },
       { id: "t10", title: "Fabricate rear bearing carriers with caliper mounts", subsystemId: "rear-suspension-brakes", category: "Rear Bearing Carriers", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Mounting calipers directly on trailing arms/carriers for outboard braking." },
       { id: "t11", title: "Determine rear brake rotor hat & caliper placement", subsystemId: "rear-suspension-brakes", category: "Rear Caliper Integration", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-03", notes: "Coordinate rotor spacing with wheel rim inner barrel clearance." },
       { id: "t12", title: "Verify CV joint operating angles through full rear travel", subsystemId: "rear-suspension-brakes", category: "Axle Articulation & CV Engagement", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Ensure zero bind at full droop and full bump." },
+
+      // Pedals & Driver Controls
       { id: "t13", title: "Footwell mockup, driver reach & 5.0s egress check", subsystemId: "pedals-driver-controls", category: "Footwell Placement & Ergonomics", priority: "High", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Establish heel-rest line and ensure ankle travel does not strike rack." },
       { id: "t14", title: "Design 4:1 - 6:1 brake pedal & dual master cylinder balance bar", subsystemId: "pedals-driver-controls", category: "Brake Pedal & Balance Bar", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Threaded balance bar linking independent front/rear master cylinders." },
       { id: "t15", title: "Design throttle pedal pivot & cable pull linkage", subsystemId: "pedals-driver-controls", category: "Throttle Pedal & Cable Pull", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Smooth pull action with zero binding throughout travel." },
       { id: "t16", title: "Incorporate mechanical over-travel stops & dual return springs", subsystemId: "pedals-driver-controls", category: "Positive Stops & Dual Return Springs", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Positive pedal stop prevents master cylinder bottoming out under max panic load." },
+
+      // Drivetrain Fitment
       { id: "t17", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "High", status: "In Progress", assignee: "", deadline: "2026-02-03", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
       { id: "t18", title: "Eliminate intermediate shaft axial play with machined alloy spacers", subsystemId: "drivetrain-fitment", category: "Axial Play & Alignment", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-02-10", notes: "Permanent machined alloy spacers replacing testing shims." },
       { id: "t19", title: "Fabricate chain tensioner bracket with locking adjustment", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-10", notes: "Slotted bracket for rapid chain tension maintenance." },
       { id: "t20", title: "Install Kohler restrictor plate & plumb 3/16\" fuel line", subsystemId: "drivetrain-fitment", category: "Engine & Fuel Line Restrictor", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "SAE J30R9 fuel injection hose with positive shut-off valve and catch container." },
+
+      // Shielding & Safety
       { id: "t21", title: "Fabricate fuel tank heat deflector & splash guard divert tray", subsystemId: "shielding-safety", category: "Fuel Tank Shielding & Splash Guard", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Divert fuel spillage away from hot exhaust and electrical harness." },
       { id: "t22", title: "Construct 360-degree CVT rotating assembly guard", subsystemId: "shielding-safety", category: "CVT Rotating Assembly Guard", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Must meet min 0.063\" steel or 0.090\" 6061-T6 aluminum thickness." },
       { id: "t23", title: "Build full engine bay perimeter debris & heat envelope", subsystemId: "shielding-safety", category: "Full Engine Bay Enclosure", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Protective envelope around entire motor assembly to prevent track debris ingestion." },
       { id: "t24", title: "Fit solid driver firewall, front nose shielding & belly pan", subsystemId: "shielding-safety", category: "Driver Firewall & Underbody Belly Pan", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-02-10", notes: "Solid barrier separating cockpit from fuel, engine, and hot lines." },
+
+      // SAE Deliverables
       { id: "t25", title: "Roll Cage Spec Sheet (RCSS) & Weld Samples", subsystemId: "sae-deliverables", category: "Roll Cage Spec Sheet (RCSS)", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-16", notes: "Complete weld sample photos and material tensile test certs." },
       { id: "t26", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-20", notes: "Cost reduction report submission." },
       { id: "t27", title: "Business Presenter Form & Slide Deck", subsystemId: "sae-deliverables", category: "Business Presentation Deck", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-03-02", notes: "Presenter confirmation and slide deck." },
@@ -561,7 +634,6 @@
       { key: "W15", label: "W15", highlight: "none" }
     ];
 
-    /* Weekly Recurring Events (Tuesdays & Thursdays) */
     const DEFAULT_RECURRING_EVENTS = [
       { id: "rec_tue", title: "Team Build Meeting", dayOfWeek: 2, time: "6:00 PM", color: "navy" },
       { id: "rec_thu", title: "Shop & Fab Session", dayOfWeek: 4, time: "6:00 PM", color: "gold" }
@@ -584,7 +656,7 @@
       { id: "r7", subsystem: "SAE Deliverables & Costing", weeks: { W3: "RCSS Prep", W4: "RCSS Due (Feb 16)", W5: "Cost Reduction (Feb 20)", W6: "Biz Form (Mar 2)", W11: "Cost BOM (Apr 10)" } }
     ];
 
-    /* Data Hydration */
+    /* Data Hydration & Version Control */
     const storedVersion = localStorage.getItem('bobcat_schema_version');
     let tasks, subteams, orders, notifications, timelineColumns, recurringEvents;
     let collapsedSubsystems = JSON.parse(localStorage.getItem('bobcat_collapsed_subsystems')) || {};
@@ -596,7 +668,7 @@
       timelineColumns = DEFAULT_TIMELINE_COLUMNS;
       recurringEvents = DEFAULT_RECURRING_EVENTS;
       notifications = [
-        { id: "n1", title: "Workspace Synchronized", message: "Task accordions, live dynamic calendar, and exact Excel PO exporter loaded.", timestamp: new Date().toISOString(), read: false, type: "task" }
+        { id: "n1", title: "Workspace Synchronized", message: "Task accordions, live dynamic calendar, roster workload, and exact Excel PO exporter loaded.", timestamp: new Date().toISOString(), read: false, type: "task" }
       ];
       localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
@@ -630,9 +702,28 @@
     let currentTab = 'home';
     let activeSubsystemFilter = 'all';
     
-    // Initialize calendar to current real date
+    // Auto sync to current real date
     const today = new Date();
     let calDate = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    /* Force Cloud & Local Unassigner */
+    async function forceUnassignAllTasks() {
+      if (confirm('Are you sure you want to unassign ALL tasks across both local storage and the cloud database?')) {
+        tasks.forEach(t => t.assignee = "");
+        saveState();
+        if (isCloudConnected && dbClient) {
+          try {
+            for (let t of tasks) {
+              await dbClient.from('tasks').update({ assignee: "" }).eq('id', t.id);
+            }
+          } catch (e) {
+            console.error("Cloud unassign error:", e);
+          }
+        }
+        showToast("All tasks unassigned across all clients");
+        render();
+      }
+    }
 
     /* Notification Engine */
     function addNotification(title, message, type = "task") {
@@ -751,7 +842,7 @@
               category: t.category,
               priority: t.priority,
               status: t.status,
-              assignee: t.assignee || "",
+              assignee: "",
               deadline: t.deadline,
               notes: t.notes
             });
@@ -881,7 +972,7 @@
       }
 
       currentTab = tabId;
-      ['home', 'cto', 'tasks', 'schedule', 'orders'].forEach(t => {
+      ['home', 'cto', 'tasks', 'roster', 'schedule', 'orders'].forEach(t => {
         const view = document.getElementById(`view-${t}`);
         if (view) view.classList.toggle('hidden', t !== tabId);
       });
@@ -910,6 +1001,7 @@
       if (currentTab === 'home') renderHome();
       if (currentTab === 'cto' && ctoUnlocked) renderCto();
       if (currentTab === 'tasks') renderStreamlinedTasks();
+      if (currentTab === 'roster') renderRosterView();
       if (currentTab === 'schedule') {
         renderCalendar();
         renderTimelineMatrix();
@@ -1015,7 +1107,6 @@
 
     function filterBySubsystem(subId) {
       activeSubsystemFilter = subId;
-      // Auto expand the chosen subsystem
       collapsedSubsystems[subId] = false;
       saveState();
       switchTab('tasks');
@@ -1080,6 +1171,7 @@
       document.getElementById('cto-stat-pending-spend').innerText = `$${pendingSpend.toFixed(2)}`;
       document.getElementById('cto-stat-total-spend').innerText = `$${totalSpend.toFixed(2)}`;
 
+      renderCtoOrdersStaging();
       renderCtoNotifications();
 
       const reviewTasks = tasks.filter(t => t.status === 'Ready for CTO Review');
@@ -1175,6 +1267,37 @@
       lucide.createIcons();
     }
 
+    function renderCtoOrdersStaging() {
+      const tbody = document.getElementById('cto-orders-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = orders.map(o => {
+        const lineTotal = (o.qty * o.unitPrice).toFixed(2);
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2.5 px-3 font-semibold text-slate-900">${o.vendor}</td>
+            <td class="py-2.5 px-3 truncate max-w-xs font-sans text-xs" title="${o.item}">${o.item}</td>
+            <td class="py-2.5 px-3 text-slate-500 text-[11px]">${o.partNumber}</td>
+            <td class="py-2.5 px-3 text-right">$${Number(o.unitPrice).toFixed(2)}</td>
+            <td class="py-2.5 px-3 text-right font-bold">${o.qty}</td>
+            <td class="py-2.5 px-3 text-right font-bold text-slate-900">$${lineTotal}</td>
+            <td class="py-2.5 px-3 text-slate-600">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
+            <td class="py-2.5 px-3 font-bold">${o.requestedBy}</td>
+            <td class="py-2.5 px-3">
+              <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-white border border-slate-300 rounded px-2 py-0.5 text-[10.5px] font-mono font-medium text-slate-800 outline-none">
+                <option value="Requested" ${o.status === 'Requested' ? 'selected' : ''}>Requested</option>
+                <option value="Approved" ${o.status === 'Approved' ? 'selected' : ''}>Approved</option>
+                <option value="Ordered" ${o.status === 'Ordered' ? 'selected' : ''}>Ordered</option>
+                <option value="Arrived in Shop" ${o.status === 'Arrived in Shop' ? 'selected' : ''}>Arrived in Shop</option>
+              </select>
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="deleteOrder('${o.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
     function signOffTask(id, newStatus) {
       const target = tasks.find(t => t.id === id);
       if (target) {
@@ -1200,6 +1323,37 @@
       });
       saveState();
       renderStreamlinedTasks();
+      lucide.createIcons();
+    }
+
+    function openRulesModal(subId) {
+      const sub = getSubsystem(subId);
+      const modalCard = document.getElementById('modal-card');
+      modalCard.innerHTML = `
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">${sub.code}</span>
+            <h3 class="text-sm font-bold text-slate-900">${sub.name} — SAE Rules &amp; Specs</h3>
+          </div>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="space-y-3.5 mt-4 text-xs">
+          <p class="text-slate-500">Official technical specification excerpts and mandatory inspection requirements for this subsystem:</p>
+          <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+            ${sub.categories.map(c => `
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                <span class="font-bold text-slate-900 block">${c.name}</span>
+                <p class="text-[11.5px] text-slate-600 leading-relaxed font-sans">${c.rule}</p>
+              </div>
+            `).join('')}
+          </div>
+          <div class="flex justify-end pt-3 border-t border-slate-200">
+            <button onclick="closeModal()" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold">Got it</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('modal-container').classList.remove('hidden');
+      document.getElementById('modal-container').classList.add('flex');
       lucide.createIcons();
     }
 
@@ -1269,8 +1423,11 @@
                 </div>
               </div>
 
-              <!-- Accordion Header Stats & Quick Add -->
+              <!-- Header Controls: Rules Button, Unclaimed Tag, & Quick Add -->
               <div class="flex items-center gap-2 self-end sm:self-auto" onclick="event.stopPropagation()">
+                <button onclick="openRulesModal('${sub.id}')" class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-medium text-xs shadow-xs flex items-center gap-1 font-mono">
+                  <i data-lucide="book-open" class="w-3 h-3 text-[#b59a57]"></i> Rules
+                </button>
                 ${subUnassigned > 0 ? `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-mono text-[10px] font-bold">${subUnassigned} unclaimed</span>` : ''}
                 <span class="text-xs font-mono font-semibold text-slate-600 px-2 py-0.5 rounded bg-white border border-slate-200">${subDone}/${subTasks.length} done</span>
                 <button onclick="openTaskModal(null, '${sub.id}')" class="px-2.5 py-1 rounded bg-[#0c2340] hover:bg-slate-800 text-white font-semibold text-xs shadow-xs flex items-center gap-1 font-mono">
@@ -1299,7 +1456,7 @@
                   }[t.status] || 'bg-slate-100 text-slate-700';
 
                   return `
-                    <div class="bg-slate-50/50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between hover:border-slate-400 shadow-xs transition-colors space-y-3">
+                    <div id="task-card-${t.id}" class="bg-slate-50/50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between hover:border-slate-400 shadow-xs transition-all space-y-3">
                       <div class="space-y-1.5">
                         <div class="flex items-start justify-between gap-1.5">
                           <span class="text-[9.5px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${priorityColor}">${t.priority}</span>
@@ -1354,7 +1511,105 @@
       lucide.createIcons();
     }
 
-    /* 4. Live Calendar & Recurring Events Engine */
+    /* 4. Team Roster & Member Workload Breakdown */
+    function renderRosterView() {
+      const container = document.getElementById('roster-grid-container');
+      if (!container) return;
+
+      const unassignedTasks = tasks.filter(t => !t.assignee || t.assignee.trim() === '');
+
+      let html = `
+        <!-- Unassigned Work Pool Card -->
+        <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-amber-200/80">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                <h3 class="text-sm font-bold text-slate-900">Unclaimed Work Packages</h3>
+              </div>
+              <span class="text-xs font-mono font-bold text-amber-800">${unassignedTasks.length} available</span>
+            </div>
+            <div class="mt-3 space-y-2 max-h-80 overflow-y-auto pr-1">
+              ${unassignedTasks.length ? unassignedTasks.map(t => `
+                <div class="p-2.5 bg-white border border-amber-200/80 rounded-lg text-xs space-y-1 shadow-2xs flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <span class="font-bold text-slate-900 block truncate">${t.title}</span>
+                    <span class="text-[10px] font-mono text-slate-500 block">${getSubsystem(t.subsystemId).name.split('&')[0]}</span>
+                  </div>
+                  <button onclick="claimTaskPrompt('${t.id}')" class="px-2 py-1 bg-[#0c2340] hover:bg-slate-800 text-white rounded text-[10.5px] font-bold font-mono flex-shrink-0">+ Claim</button>
+                </div>
+              `).join('') : `<p class="text-xs font-mono text-slate-400 py-4 text-center">All work packages have been claimed!</p>`}
+            </div>
+          </div>
+        </div>
+      `;
+
+      subteams.forEach(st => {
+        const teamAllMembers = [st.lead, ...st.members.filter(m => m !== st.lead)];
+        html += `
+          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">${st.name}</h3>
+                <span class="text-[10px] font-mono text-slate-500">Subsystem: ${getSubsystem(st.subsystemId).name.split('&')[0]}</span>
+              </div>
+              <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${teamAllMembers.length} engineers</span>
+            </div>
+
+            <div class="space-y-3">
+              ${teamAllMembers.map(member => {
+                const memberTasks = tasks.filter(t => (t.assignee || '').toLowerCase() === member.toLowerCase());
+                const isLead = member === st.lead;
+                return `
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1.5">
+                        <i data-lucide="${isLead ? 'crown' : 'user'}" class="w-3.5 h-3.5 ${isLead ? 'text-[#b59a57]' : 'text-slate-400'}"></i>
+                        <span class="text-xs font-bold text-slate-900 font-mono">${member} ${isLead ? '<span class="text-[9px] text-[#b59a57] font-bold">(Lead)</span>' : ''}</span>
+                      </div>
+                      <span class="text-[10px] font-mono text-slate-500 font-semibold">${memberTasks.length} assigned</span>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      ${memberTasks.length ? memberTasks.map(t => `
+                        <div class="flex items-center justify-between text-[11px] bg-white p-1.5 rounded border border-slate-200 gap-1.5">
+                          <span class="truncate text-slate-800">${t.title}</span>
+                          <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${t.status==='Complete'?'bg-emerald-100 text-emerald-800':t.status==='In Progress'?'bg-sky-100 text-sky-800':'bg-slate-100 text-slate-700'}">${t.status}</span>
+                        </div>
+                      `).join('') : `<span class="text-[10px] font-mono text-slate-400 block italic">No tasks currently claimed.</span>`}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    /* 5. Live Calendar & Quick Task Jump Engine */
+    function jumpToTaskFromCalendar(taskId, subId) {
+      // 1. Switch to tasks tab
+      switchTab('tasks');
+      // 2. Expand accordion
+      collapsedSubsystems[subId] = false;
+      saveState();
+      renderStreamlinedTasks();
+
+      // 3. Scroll to task card and trigger gold glow
+      setTimeout(() => {
+        const el = document.getElementById(`task-card-${taskId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('task-highlight');
+          setTimeout(() => el.classList.remove('task-highlight'), 4500);
+        }
+      }, 150);
+    }
+
     function jumpToCurrentMonth() {
       const now = new Date();
       calDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -1412,7 +1667,7 @@
               `).join('')}
 
               ${dayTasks.map(t => `
-                <div class="px-1 py-0.5 rounded text-[9px] font-semibold truncate ${t.status==='Complete'?'bg-emerald-100 text-emerald-800':t.priority==='Critical'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}" title="${t.title} (${t.assignee || 'Unassigned'})">
+                <div onclick="jumpToTaskFromCalendar('${t.id}', '${t.subsystemId}')" class="px-1 py-0.5 rounded text-[9px] font-semibold truncate cursor-pointer hover:opacity-80 transition-opacity ${t.status==='Complete'?'bg-emerald-100 text-emerald-800':t.priority==='Critical'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}" title="Click to jump: ${t.title}">
                   ${t.title}
                 </div>
               `).join('')}
@@ -1599,7 +1854,7 @@
       });
       saveState();
       closeModal();
-      showToast('Columns saved');
+      showToast('Columns & colors saved');
     }
 
     function addNewTimelineColumn() {
@@ -1667,7 +1922,7 @@
       }
     }
 
-    /* 5. Purchase Orders & EXACT Excel Export Generator */
+    /* 6. Purchase Orders (Public Read-Only Table) & EXACT Excel Exporter */
     function renderOrders() {
       const reqCount = orders.filter(o => o.status === 'Requested').length;
       const appCount = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered').length;
@@ -1680,6 +1935,13 @@
       const tbody = document.getElementById('orders-table-body');
       tbody.innerHTML = orders.map(o => {
         const urgColor = o.urgency === 'Immediate Need' ? 'text-rose-700 bg-rose-50 border-rose-200 font-bold' : 'text-slate-600 bg-slate-100 border-slate-200';
+        const statusBadge = {
+          'Requested': 'bg-slate-100 text-slate-700 border-slate-200',
+          'Approved': 'bg-sky-100 text-sky-800 border-sky-200',
+          'Ordered': 'bg-amber-100 text-amber-800 border-amber-200 font-semibold',
+          'Arrived in Shop': 'bg-emerald-100 text-emerald-800 border-emerald-200 font-bold'
+        }[o.status] || 'bg-slate-100 text-slate-700';
+
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="py-3 px-4 font-semibold text-slate-900">${o.vendor || 'Vendor'}</td>
@@ -1692,16 +1954,8 @@
             <td class="py-3 px-4 text-right font-mono text-slate-800 font-bold">${o.qty}</td>
             <td class="py-3 px-4"><span class="text-[10px] font-mono px-2 py-0.5 rounded border ${urgColor}">${o.urgency}</span></td>
             <td class="py-3 px-4 text-slate-700 font-mono text-[11px] font-bold">${o.requestedBy || 'Team'}</td>
-            <td class="py-3 px-4">
-              <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-white border border-slate-300 rounded px-2 py-1 text-[11px] font-mono font-medium text-slate-700 outline-none shadow-xs">
-                <option value="Requested" ${o.status === 'Requested' ? 'selected' : ''}>Requested</option>
-                <option value="Approved" ${o.status === 'Approved' ? 'selected' : ''}>Approved</option>
-                <option value="Ordered" ${o.status === 'Ordered' ? 'selected' : ''}>Ordered</option>
-                <option value="Arrived in Shop" ${o.status === 'Arrived in Shop' ? 'selected' : ''}>Arrived in Shop</option>
-              </select>
-            </td>
-            <td class="py-3 px-4 text-right">
-              <button onclick="deleteOrder('${o.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            <td class="py-3 px-4 text-center">
+              <span class="text-[10.5px] font-mono px-2.5 py-1 rounded border ${statusBadge}">${o.status}</span>
             </td>
           </tr>
         `;
@@ -1711,7 +1965,7 @@
     /* Exact Excel (.xlsx) Formatter matching Baja_Purchase_2-20-2026.xlsx */
     function exportOrdersToExactExcel() {
       if (typeof XLSX === 'undefined') {
-        alert("Excel export library is loading, please try again in a second.");
+        alert("Excel export engine is loading, please try again in a moment.");
         return;
       }
 
@@ -1737,7 +1991,7 @@
           o.partNumber || "N/A",
           Number(o.unitPrice) || 0.0,
           Number(o.qty) || 1,
-          { f: `D${rowNumber}*E${rowNumber}` }, // Exact Excel multiplication formula
+          { f: `D${rowNumber}*E${rowNumber}` },
           o.vendorUrl || "",
           getSubsystem(o.subsystemId).name.split('&')[0].trim(),
           o.notes || "N/A",
@@ -1745,11 +1999,10 @@
         ]);
       });
 
-      // Total Summary row
       const totalRowIndex = rows.length + 2;
       rows.push([
         "", "", "", "", "Total",
-        { f: `SUM(F2:F${totalRowIndex - 1})` }, // Exact Excel summation formula
+        { f: `SUM(F2:F${totalRowIndex - 1})` },
         "", "", "", ""
       ]);
 
@@ -1778,7 +2031,7 @@
       showToast(`Exported Baja_Purchase_${dateStr}.xlsx`);
     }
 
-    /* Modal Handlers */
+    /* Modal Handlers with Smart Rule Injection */
     function closeModal() {
       document.getElementById('modal-container').classList.add('hidden');
       document.getElementById('modal-container').classList.remove('flex');
@@ -1820,6 +2073,15 @@
               <select id="f-task-category" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]"></select>
             </div>
           </div>
+
+          <!-- Dynamic Live SAE Rule Injection Banner -->
+          <div id="form-task-rule-banner" class="p-3 bg-amber-50/70 border border-amber-200 rounded-lg space-y-1">
+            <span class="font-bold font-mono text-[10px] uppercase text-amber-900 flex items-center gap-1">
+              <i data-lucide="book-open" class="w-3 h-3 text-[#b59a57]"></i> SAE Design Constraints &amp; Rules
+            </span>
+            <p id="form-task-rule-text" class="text-[11px] text-slate-700 leading-snug font-sans">Loading rule specifications...</p>
+          </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Priority</label>
@@ -1864,12 +2126,25 @@
 
       const subSelect = document.getElementById('f-task-subsystem');
       const catSelect = document.getElementById('f-task-category');
-      const updateCats = () => {
+      const ruleText = document.getElementById('form-task-rule-text');
+
+      const updateCatsAndRules = () => {
         const sub = getSubsystem(subSelect.value);
         catSelect.innerHTML = sub.categories.map(c => `<option value="${c.name}" ${c.name === t.category ? 'selected' : ''}>${c.name}</option>`).join('');
+        const activeCat = sub.categories.find(c => c.name === catSelect.value) || sub.categories[0];
+        if (ruleText && activeCat) {
+          ruleText.innerText = activeCat.rule;
+        }
       };
-      subSelect.addEventListener('change', updateCats);
-      updateCats();
+
+      subSelect.addEventListener('change', updateCatsAndRules);
+      catSelect.addEventListener('change', () => {
+        const sub = getSubsystem(subSelect.value);
+        const activeCat = sub.categories.find(c => c.name === catSelect.value) || sub.categories[0];
+        if (ruleText && activeCat) ruleText.innerText = activeCat.rule;
+      });
+
+      updateCatsAndRules();
 
       document.getElementById('form-task').onsubmit = (e) => {
         e.preventDefault();
@@ -1888,7 +2163,7 @@
         else tasks.push(data);
         
         saveState('task_upsert', data);
-        addNotification(isEdit ? "Task Updated" : "New Task Assigned", `${data.title} (${data.assignee || 'Unassigned'})`, "task");
+        addNotification(isEdit ? "Task Updated" : "New Task Created", `${data.title} (${data.assignee || 'Unassigned'})`, "task");
         closeModal();
         showToast(isEdit ? 'Task updated' : 'Task created');
       };
@@ -1991,7 +2266,7 @@
     }
 
     function claimTaskPrompt(id) {
-      const name = prompt('Enter your initials or name to claim this work package:');
+      const name = prompt('Enter your name or initials to claim this work package:');
       if (name && name.trim()) {
         const target = tasks.find(t => t.id === id);
         if (target) {
@@ -2150,7 +2425,7 @@
             <input id="f-set-emails" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${settings.emailList || ''}" placeholder="captain@bobcatracing.edu, lead@bobcatracing.edu">
           </div>
           <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Baseline Data Reset</button>
+            <button type="button" onclick="forceUnassignAllTasks()" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-xs font-semibold">Force Cloud Unassign</button>
             <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Save Settings</button>
           </div>
         </form>
@@ -2178,15 +2453,6 @@
         e.preventDefault();
         if (!ctoUnlocked) promptSecretPin();
         else switchTab('cto');
-      }
-    });
-
-    /* Global Click Listener */
-    document.addEventListener('click', (e) => {
-      const panel = document.getElementById('notif-panel');
-      const btn = document.getElementById('btn-notifications');
-      if (panel && !panel.contains(e.target) && !btn?.contains(e.target)) {
-        panel.classList.add('hidden');
       }
     });
 

@@ -50,12 +50,13 @@
   <!-- Top Header Navigation -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3 select-none">
-        <div class="h-9 w-9 rounded-lg bg-[#0c2340] flex items-center justify-center text-[#b59a57] shadow-md font-bold">
+      <!-- Clickable Logo Authentication Trigger -->
+      <div onclick="promptSecretPin()" class="flex items-center gap-3 select-none cursor-pointer group" title="Click to unlock Executive View">
+        <div class="h-9 w-9 rounded-lg bg-[#0c2340] group-hover:bg-slate-800 flex items-center justify-center text-[#b59a57] shadow-md font-bold transition-colors">
           <i data-lucide="gauge" class="w-5 h-5"></i>
         </div>
         <div>
-          <span class="font-bold text-slate-900 tracking-tight block leading-none text-base">Bobcat Racing</span>
+          <span class="font-bold text-slate-900 group-hover:text-[#0c2340] tracking-tight block leading-none text-base transition-colors">Bobcat Racing</span>
           <span class="text-[11px] font-mono font-semibold text-[#b59a57]">BAJA SAE WORKSPACE</span>
         </div>
       </div>
@@ -66,7 +67,7 @@
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="tasks">Tasks &amp; Team Board</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="schedule">Timeline &amp; Calendar</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="orders">Purchase Orders</button>
-        <!-- Injected Executive Tab (Revealed only via Ctrl+Shift+X) -->
+        <!-- Injected Executive Tab -->
         <button id="nav-cto-secret" class="nav-tab hidden px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all text-[#0c2340] bg-amber-50 border border-amber-200 hover:bg-amber-100 items-center gap-1.5" data-tab="cto">
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#0c2340]"></i>
           <span>Executive View</span>
@@ -177,7 +178,7 @@
       </div>
     </div>
 
-    <!-- ==================== VIEW 2: EXECUTIVE / CTO PORTAL (SECRET) ==================== -->
+    <!-- ==================== VIEW 2: EXECUTIVE / CTO PORTAL ==================== -->
     <div id="view-cto" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
@@ -299,12 +300,8 @@
 
     <!-- ==================== VIEW 3: UNIFIED TASKS & TEAM BOARD ==================== -->
     <div id="view-tasks" class="hidden space-y-6">
-      
-      <!-- Unified View Switcher & Controls Bar -->
       <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
         <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-          
-          <!-- View Toggle -->
           <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 self-start">
             <button onclick="setTaskViewMode('subsystems')" id="btn-viewmode-subsystems" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-white text-slate-900 shadow-xs flex items-center gap-1.5">
               <i data-lucide="layers" class="w-3.5 h-3.5"></i> By Subsystem
@@ -330,7 +327,6 @@
           </div>
         </div>
 
-        <!-- Subsystem Quick Filter Pills -->
         <div id="subsystem-pill-bar-container" class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
           <div class="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1" id="subsystem-pill-bar"></div>
           <button onclick="toggleAllTaskAccordions()" id="btn-toggle-all-accordions" class="text-xs font-mono font-semibold text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center gap-1 flex-shrink-0 pl-2 border-l border-slate-200">
@@ -340,10 +336,7 @@
         </div>
       </div>
 
-      <!-- Mode 1: Subsystem Accordion Container -->
       <div id="all-tasks-stream" class="space-y-4"></div>
-
-      <!-- Mode 2: Sub-Team Scoped Workload Container -->
       <div id="team-tasks-stream" class="hidden grid grid-cols-1 md:grid-cols-2 gap-5"></div>
     </div>
 
@@ -367,7 +360,6 @@
         </div>
       </div>
 
-      <!-- 1. Interactive Monthly Calendar -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
           <div class="flex items-center gap-3">
@@ -389,7 +381,6 @@
         <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
       </div>
 
-      <!-- 2. Multi-Week Editable Timeline Matrix -->
       <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div>
@@ -498,7 +489,9 @@
 
   <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-slate-400 font-mono flex items-center justify-between border-t border-slate-200/60 mt-auto">
     <span>&copy; Bobcat Racing SAE Team</span>
-    <span class="text-slate-400">Engineering Workspace</span>
+    <button onclick="promptSecretPin()" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-xs">
+      <i data-lucide="lock" class="w-3.5 h-3.5"></i> Executive Access
+    </button>
   </footer>
 
   <!-- Modals Container -->
@@ -513,7 +506,7 @@
   </div>
 
   <script>
-    const DATA_VERSION = "v10_hardened_stable_release";
+    const DATA_VERSION = "v11_restored_auth_and_routing";
 
     const TAXONOMY = [
       {
@@ -601,45 +594,31 @@
       { id: "st_chassis", name: "Chassis & Shielding", lead: "Emmett", members: ["Jorge", "Matt"], subsystemId: "shielding-safety" }
     ];
 
-    /* 28 Baseline Tasks completely unassigned */
     const DEFAULT_TASKS = [
-      // Chassis
       { id: "t1", title: "Complete full penetration welds on primary/secondary cage joints", subsystemId: "chassis", category: "Roll Cage & Primary Members", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Ensure 100% weld penetration and prepare sample joints for tech inspection." },
       { id: "t2", title: "Weld double-shear suspension tabs & sleeve frame through-bolts", subsystemId: "chassis", category: "Double-Shear Tabs & Sleeving", priority: "High", status: "To Do", assignee: "", deadline: "2026-09-05", notes: "All drilled tube pass-throughs require 360-deg internal steel sleeves." },
       { id: "t3", title: "Fabricate & weld 5/6-point harness mounting tabs", subsystemId: "chassis", category: "Safety Mounts & Harness", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-09-01", notes: "Check lap belt mounting angle range between 45 and 80 degrees." },
       { id: "t4", title: "Weld front & rear recovery tow points", subsystemId: "chassis", category: "Component Brackets & Tow Points", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-08", notes: "Recovery points must meet minimum inside diameter and shear strength rules." },
-
-      // Front Suspension
       { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-08-30", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
       { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-03", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
       { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Column & Mechanical Stops", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-08-28", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
       { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-06", notes: "Verify shock travel clearance throughout full steering sweep." },
-
-      // Rear Suspension & Brakes
       { id: "t9", title: "Fabricate rear trailing arms & camber/toe links", subsystemId: "rear-suspension-brakes", category: "Trailing Arms & Geometry", priority: "High", status: "In Progress", assignee: "", deadline: "2026-09-04", notes: "Validate rear anti-squat geometry and wheel travel envelope." },
       { id: "t10", title: "Fabricate rear bearing carriers with caliper mounts", subsystemId: "rear-suspension-brakes", category: "Rear Bearing Carriers", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-04", notes: "Mounting calipers directly on trailing arms/carriers for outboard braking." },
       { id: "t11", title: "Determine rear brake rotor hat & caliper placement", subsystemId: "rear-suspension-brakes", category: "Rear Caliper Integration", priority: "High", status: "To Do", assignee: "", deadline: "2026-08-29", notes: "Coordinate rotor spacing with wheel rim inner barrel clearance." },
       { id: "t12", title: "Verify CV joint operating angles through full rear travel", subsystemId: "rear-suspension-brakes", category: "Axle Articulation & CV Engagement", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-09-07", notes: "Ensure zero bind at full droop and full bump." },
-
-      // Pedals & Driver Controls
       { id: "t13", title: "Footwell mockup, driver reach & 5.0s egress check", subsystemId: "pedals-driver-controls", category: "Footwell Placement & Ergonomics", priority: "High", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Establish heel-rest line and ensure ankle travel does not strike rack." },
       { id: "t14", title: "Design 4:1 - 6:1 brake pedal & dual master cylinder balance bar", subsystemId: "pedals-driver-controls", category: "Brake Pedal & Balance Bar", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Threaded balance bar linking independent front/rear master cylinders." },
       { id: "t15", title: "Design throttle pedal pivot & cable pull linkage", subsystemId: "pedals-driver-controls", category: "Throttle Pedal & Cable Pull", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-06", notes: "Smooth pull action with zero binding throughout travel." },
       { id: "t16", title: "Incorporate mechanical over-travel stops & dual return springs", subsystemId: "pedals-driver-controls", category: "Positive Stops & Dual Return Springs", priority: "High", status: "To Do", assignee: "", deadline: "2026-09-06", notes: "Positive pedal stop prevents master cylinder bottoming out under max panic load." },
-
-      // Drivetrain Fitment
       { id: "t17", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "High", status: "In Progress", assignee: "", deadline: "2026-08-29", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
       { id: "t18", title: "Eliminate intermediate shaft axial play with machined alloy spacers", subsystemId: "drivetrain-fitment", category: "Axial Play & Alignment", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-09-03", notes: "Permanent machined alloy spacers replacing testing shims." },
       { id: "t19", title: "Fabricate chain tensioner bracket with locking adjustment", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-03", notes: "Slotted bracket for rapid chain tension maintenance." },
       { id: "t20", title: "Install Kohler restrictor plate & plumb 3/16\" fuel line", subsystemId: "drivetrain-fitment", category: "Engine & Fuel Line Restrictor", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-07", notes: "SAE J30R9 fuel injection hose with positive shut-off valve and catch container." },
-
-      // Shielding & Safety
       { id: "t21", title: "Fabricate fuel tank heat deflector & splash guard divert tray", subsystemId: "shielding-safety", category: "Fuel Tank Shielding & Splash Guard", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-09-07", notes: "Divert fuel spillage away from hot exhaust and electrical harness." },
       { id: "t22", title: "Construct 360-degree CVT rotating assembly guard", subsystemId: "shielding-safety", category: "CVT Rotating Assembly Guard", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-02", notes: "Must meet min 0.063\" steel or 0.090\" 6061-T6 aluminum thickness." },
       { id: "t23", title: "Build full engine bay perimeter debris & heat envelope", subsystemId: "shielding-safety", category: "Full Engine Bay Enclosure", priority: "High", status: "To Do", assignee: "", deadline: "2026-09-07", notes: "Protective envelope around entire motor assembly to prevent track debris ingestion." },
       { id: "t24", title: "Fit solid driver firewall, front nose shielding & belly pan", subsystemId: "shielding-safety", category: "Driver Firewall & Underbody Belly Pan", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-09-02", notes: "Solid barrier separating cockpit from fuel, engine, and hot lines." },
-
-      // SAE Deliverables
       { id: "t25", title: "Roll Cage Spec Sheet (RCSS) & Weld Samples", subsystemId: "sae-deliverables", category: "Roll Cage Spec Sheet (RCSS)", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-09-15", notes: "Complete weld sample photos and material tensile test certs." },
       { id: "t26", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "High", status: "To Do", assignee: "", deadline: "2026-09-20", notes: "Cost reduction report submission." },
       { id: "t27", title: "Business Presenter Form & Slide Deck", subsystemId: "sae-deliverables", category: "Business Presentation Deck", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-10-02", notes: "Presenter confirmation and slide deck." },
@@ -694,7 +673,6 @@
       { id: "r7", subsystem: "SAE Deliverables & Costing", weeks: { W3: "RCSS Prep", W4: "RCSS Due", W5: "Cost Reduction", W6: "Biz Form", W11: "Cost BOM" } }
     ];
 
-    /* Data Initializer with Auto-Migration & Null-Safety Guard */
     let tasks = DEFAULT_TASKS;
     let subteams = DEFAULT_SUBTEAMS;
     let orders = DEFAULT_ORDERS;
@@ -722,7 +700,7 @@
         saveState();
       }
     } catch (e) {
-      console.warn("Storage hydration reset to defaults:", e);
+      console.warn("Storage hydration reset:", e);
     }
 
     orders.forEach(o => { if (o && o.id) selectedOrderIds.add(o.id); });
@@ -745,7 +723,7 @@
     let calDate = new Date(realNow.getFullYear(), realNow.getMonth(), 1);
 
     function getSubsystem(id) {
-      return TAXONOMY.find(s => s.id === id) || { id: 'other', name: 'Uncategorized Work', code: 'SAE GEN', categories: [{ name: 'General', rule: 'General SAE Requirements' }] };
+      return TAXONOMY.find(s => s.id === id) || { id: 'other', name: 'Uncategorized Work', code: 'SAE GEN', categories: [{ name: 'General', rule: 'General SAE Specifications' }] };
     }
 
     function saveState(syncType = null, syncData = null) {
@@ -770,6 +748,56 @@
         toast.classList.remove('translate-y-20', 'opacity-0');
         setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
       }
+    }
+
+    /* Executive PIN Authentication Handlers */
+    function promptSecretPin() {
+      const modalCard = document.getElementById('modal-card');
+      modalCard.innerHTML = `
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-[#0c2340]"></i>
+            <h3 class="text-sm font-bold text-slate-900">Executive Authentication</h3>
+          </div>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <form id="form-secret-pin" class="space-y-4 mt-4 text-xs">
+          <p class="text-slate-500 text-xs">Enter your 4-digit executive PIN to access financials, team assignments, and approvals.</p>
+          <div class="flex justify-center my-3">
+            <input type="password" maxlength="4" pattern="[0-9]{4}" id="f-secret-pin-input" autofocus required placeholder="&bull;&bull;&bull;&bull;" class="w-44 text-center font-mono text-2xl tracking-widest bg-slate-50 border border-slate-300 rounded-lg py-2.5 outline-none focus:border-[#0c2340] focus:bg-white">
+          </div>
+          <div class="flex justify-end gap-2 pt-2 border-t border-slate-200">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Verify PIN</button>
+          </div>
+        </form>
+      `;
+
+      document.getElementById('form-secret-pin').onsubmit = (e) => {
+        e.preventDefault();
+        const entered = document.getElementById('f-secret-pin-input').value.trim();
+        const correct = settings.ctoPin || '1111';
+        if (entered === correct) {
+          ctoUnlocked = true;
+          sessionStorage.setItem('bobcat_cto_unlocked', 'true');
+          closeModal();
+          showToast('Executive Portal Unlocked');
+          switchTab('cto');
+        } else {
+          alert('Incorrect PIN.');
+        }
+      };
+
+      document.getElementById('modal-container').classList.remove('hidden');
+      document.getElementById('modal-container').classList.add('flex');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function lockCtoPortal() {
+      ctoUnlocked = false;
+      sessionStorage.removeItem('bobcat_cto_unlocked');
+      showToast('Portal Locked & Hidden');
+      switchTab('home');
     }
 
     /* Core Tab Switcher */
@@ -879,7 +907,7 @@
                   <span class="text-slate-900 font-semibold">${sub.name}</span>
                   <span class="text-[10px] font-mono px-2 py-0.5 rounded-md font-bold ${badgeClass}">${statusBadge}</span>
                 </div>
-                <span class="text-slate-500 font-mono text-[11px] font-medium">${subDone}/${subTasks.length} done (${subPct}%</span>
+                <span class="text-slate-500 font-mono text-[11px] font-medium">${subDone}/${subTasks.length} done (${subPct}%)</span>
               </div>
               <div class="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden">
                 <div class="bg-[#0c2340] h-full rounded-full transition-all duration-500" style="width: ${subPct}%"></div>
@@ -1627,8 +1655,8 @@
                 </div>
               </div>
 
-              <div class="pt-3 border-t border-slate-100">
-                <button onclick="openTaskModal(null, '${st.subsystemId}')" class="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1">
+              <div class="pt-3 border-t border-slate-100 flex gap-2">
+                <button onclick="openTaskModal(null, '${st.subsystemId}')" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1">
                   <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign Task to Team
                 </button>
               </div>

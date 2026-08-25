@@ -51,18 +51,36 @@
       <!-- Public Navigation Tabs -->
       <nav id="main-nav-bar" class="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="home">Overview</button>
-        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="tasks">Tasks &amp; Work Packages</button>
-        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="schedule">Master Timeline &amp; Calendar</button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="tasks">Tasks &amp; Packages</button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="schedule">Timeline &amp; Calendar</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="orders">Purchase Orders</button>
-        <!-- Injected Executive Tab (Revealed only via Ctrl+Shift+X) -->
         <button id="nav-cto-secret" class="nav-tab hidden px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all text-[#0c2340] bg-amber-50 border border-amber-200 hover:bg-amber-100 items-center gap-1.5" data-tab="cto">
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#0c2340]"></i>
           <span>Executive View</span>
         </button>
       </nav>
 
-      <!-- Sync Status Indicator -->
-      <div class="flex items-center gap-2">
+      <!-- Right Controls: Notifications + Status -->
+      <div class="flex items-center gap-2.5">
+        <div class="relative">
+          <button id="btn-notifications" onclick="toggleNotificationPanel()" class="relative p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs">
+            <i data-lucide="bell" class="w-4 h-4 text-slate-600"></i>
+            <span id="notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono px-1 flex items-center justify-center border-2 border-white">0</span>
+          </button>
+
+          <!-- Notification Drawer -->
+          <div id="notif-panel" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <i data-lucide="bell-ring" class="w-4 h-4 text-[#0c2340]"></i>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">Team Activity &amp; Alerts</h3>
+              </div>
+              <button onclick="markAllNotificationsRead()" class="text-[11px] font-mono text-[#0c2340] hover:text-[#b59a57] font-semibold">Mark read</button>
+            </div>
+            <div id="notif-list" class="max-h-72 overflow-y-auto space-y-2 divide-y divide-slate-100 pr-1"></div>
+          </div>
+        </div>
+
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-mono text-slate-600 select-none shadow-xs">
           <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
           <span id="sync-status-text">Checking...</span>
@@ -170,19 +188,22 @@
           <p class="text-xs text-slate-500 mt-0.5">Confidential team hierarchy, budget review, and technical sign-offs</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3.5 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
-            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-slate-500"></i> Admin Settings
+          <button onclick="exportOrdersToCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export POs (.CSV)
+          </button>
+          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-slate-500"></i> Settings
           </button>
           <button onclick="openTeamModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
-            <i data-lucide="user-plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> + Add Sub-Team
+            <i data-lucide="user-plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> + Sub-Team
           </button>
           <button onclick="lockCtoPortal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg px-3 py-2 text-xs font-semibold border border-rose-200 flex items-center gap-1">
-            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock &amp; Hide
+            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
           </button>
         </div>
       </div>
 
-      <!-- Executive Financial Summary Cards (Only visible here) -->
+      <!-- Financial Tracking Summary -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Total PO Approved Spend</span>
@@ -201,7 +222,7 @@
         </div>
       </div>
 
-      <!-- Technical Sign-Off / Review Queue -->
+      <!-- Technical Sign-Off Review Queue -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
           <div class="flex items-center gap-2">
@@ -225,7 +246,7 @@
     <!-- ==================== VIEW 3: STREAMLINED TASK BOARD ==================== -->
     <div id="view-tasks" class="space-y-6">
       
-      <!-- Streamlined Search & Quick Filter Controls -->
+      <!-- Search & Filters -->
       <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
         <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div class="relative flex-1">
@@ -247,11 +268,11 @@
           </div>
         </div>
 
-        <!-- Subsystem Quick Filter Pills (No Cascading Dropdowns) -->
+        <!-- Subsystem Quick Filter Pills -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="subsystem-pill-bar"></div>
       </div>
 
-      <!-- Clean Work Packages Container -->
+      <!-- Work Packages Container -->
       <div id="all-tasks-stream" class="space-y-6"></div>
     </div>
 
@@ -260,11 +281,16 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-slate-900">Master Build Schedule &amp; Calendar</h1>
-          <p class="text-xs text-slate-500">Interactive build calendar and multi-week subsystem matrix</p>
+          <p class="text-xs text-slate-500">Interactive build calendar and editable multi-week subsystem roadmap</p>
         </div>
-        <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5 self-start sm:self-auto">
-          <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Milestone / Task
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="openTimelineRowModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Add Subsystem Row
+          </button>
+          <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Milestone
+          </button>
+        </div>
       </div>
 
       <!-- 1. Interactive Monthly Calendar -->
@@ -282,24 +308,26 @@
           </div>
         </div>
 
-        <!-- Calendar Days Grid -->
         <div class="grid grid-cols-7 gap-1 text-center font-mono text-[11px] font-bold text-slate-400 mb-1">
           <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
         </div>
         <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
       </div>
 
-      <!-- 2. Multi-Week Timeline Matrix (Below the Calendar) -->
+      <!-- 2. Multi-Week Editable Timeline Matrix -->
       <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-          <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Fabrication &amp; Milestone Matrix</h3>
+          <div>
+            <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Subsystem Matrix (Click any cell to edit)</h3>
+            <p class="text-[11px] text-slate-500">Real-time editable fabrication &amp; testing timeline</p>
+          </div>
           <span class="text-[11px] font-mono text-slate-500">Weeks 1–15 Roadmap</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
             <thead>
               <tr class="bg-[#0c2340] text-white font-mono text-[11px]">
-                <th class="py-3 px-3 w-44 sticky left-0 bg-[#0c2340] z-10 border-r border-slate-700">Subsystem</th>
+                <th class="py-3 px-3 w-48 sticky left-0 bg-[#0c2340] z-10 border-r border-slate-700">Subsystem</th>
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W1</th>
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W2</th>
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W3</th>
@@ -315,6 +343,7 @@
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W13</th>
                 <th class="py-3 px-2 text-center border-r border-slate-700 w-24">W14</th>
                 <th class="py-3 px-2 text-center w-24">W15</th>
+                <th class="py-3 px-2 text-center w-16 bg-slate-800">Actions</th>
               </tr>
             </thead>
             <tbody id="timeline-matrix-body" class="divide-y divide-slate-200"></tbody>
@@ -327,27 +356,32 @@
     <div id="view-orders" class="hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-lg font-bold text-slate-900">Purchase Orders &amp; Parts Tracker</h1>
-          <p class="text-xs text-slate-500">Shop parts requisition and delivery tracker</p>
+          <h1 class="text-lg font-bold text-slate-900">Purchase Orders &amp; Requisition Log</h1>
+          <p class="text-xs text-slate-500">Shop parts requisition and delivery tracker with automated alerts</p>
         </div>
-        <button onclick="openOrderModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2 self-start sm:self-auto">
-          <i data-lucide="plus" class="w-4 h-4 text-[#b59a57]"></i> Submit Purchase Request
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="openOrderModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4 text-[#b59a57]"></i> Submit Purchase Request
+          </button>
+        </div>
       </div>
 
-      <!-- Public Requisition Stats (No dollar values) -->
+      <!-- Public Requisition Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Requisitions Submitted</span>
           <p id="po-stat-requested-count" class="text-xl font-bold text-slate-900 mt-1">0 Requests</p>
+          <span class="text-[11px] text-slate-400 font-mono">Pending Review</span>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Approved / In Transit</span>
           <p id="po-stat-approved-count" class="text-xl font-bold text-amber-600 mt-1">0 Orders</p>
+          <span class="text-[11px] text-slate-400 font-mono">En Route to Shop</span>
         </div>
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
           <span class="text-xs font-semibold font-mono text-slate-500 uppercase">Delivered To Shop</span>
           <p id="po-stat-received" class="text-xl font-bold text-emerald-600 mt-1">0 Items</p>
+          <span class="text-[11px] text-slate-400 font-mono">Ready for Fabrication</span>
         </div>
       </div>
 
@@ -390,27 +424,17 @@
   </div>
 
   <script>
+    /* Complete Revised Subsystems Taxonomy */
     const TAXONOMY = [
       {
         id: "chassis",
-        name: "Chassis & Structural Envelope",
+        name: "Chassis & Structural Finishing",
         code: "SAE B.3",
         categories: [
-          { name: "Primary Members", rule: "Primary members (RRH, RHO, FLC) must be min 1.0\" OD x 0.120\" wall steel tubing. Roll Hoop Overhead must provide min 41.0\" clearance above seat bottom." },
-          { name: "Secondary Members & Bracing", rule: "Secondary members (lateral diagonals, FAB low) must be min 1.0\" OD x 0.035\" wall steel. Ensure FAB low members do NOT block CVT pulley." },
-          { name: "Mounting Brackets & Tabs", rule: "Suspension tabs must be double-shear configuration. Through-drilled tubes require welded 360-degree internal steel sleeves." },
-          { name: "Welding & Tube Prep", rule: "All roll cage joints require full penetration welds. Prepare test weld samples for tech inspection." }
-        ]
-      },
-      {
-        id: "drivetrain",
-        name: "Drivetrain & Powertrain",
-        code: "SAE B.6 / B.9",
-        categories: [
-          { name: "Engine & Fuel", rule: "Stock Kohler/Rehlko CH440 engine with official restrictor. Fuel line 3/16\" with positive shut-off and catch bottle." },
-          { name: "CVT Primary/Secondary", rule: "All rotating clutch components require containment guards (min 0.063\" steel or 0.090\" 6061-T6 aluminum)." },
-          { name: "Reduction & Gearbox", rule: "Intermediate shafts must have zero axial play under load. Replace 3D-printed testing spacers with machined alloy." },
-          { name: "Final Drive & Axles", rule: "Half-shafts, CV joints, and wheel couplers must maintain positive engagement through full suspension travel." }
+          { name: "Roll Cage & Primary Members", rule: "Finish full penetration welds on primary/secondary junctions, overhead crossmembers, and FAB low." },
+          { name: "Double-Shear Tabs & Sleeving", rule: "Suspension tabs must be double-shear. Any through-drilled tube must have welded internal 360-degree steel sleeves." },
+          { name: "Safety Mounts & Harness", rule: "Fabricate 5/6-point harness tabs (45°-80° lap belt angle) and fire extinguisher quick-release bracket tabs." },
+          { name: "Component Brackets & Tow Points", rule: "Weld seat mounts, fuel tank brackets, battery tray, and front/rear recovery tow points." }
         ]
       },
       {
@@ -418,100 +442,148 @@
         name: "Front Suspension & Steering",
         code: "SAE B.5 / B.7",
         categories: [
-          { name: "Control Arms", rule: "A-arms must withstand 4G impact loads. Spherical bearings and rod ends must be installed in double shear." },
-          { name: "Uprights & Hubs", rule: "Wheel bearings and front uprights must have positive retention. Fasteners must meet min Grade 8 or AN standard." },
-          { name: "Damping & Shocks", rule: "Shock mounting bolts must be loaded in double shear. Limit straps required if damper internal stops can top out." },
-          { name: "Steering Mechanism", rule: "Positive mechanical steering stops to prevent tie-rod over-centering. Column requires quick-disconnect hub." }
+          { name: "A-Arms & Spherical Bearings", rule: "Finalize upper/lower A-arm CAD, build weld jigs, install sphericals and double-shear rod ends." },
+          { name: "Front Knuckles & Caliper Mounts", rule: "Machine front uprights/knuckles, press wheel bearings, and integrate rigid caliper mounting ears." },
+          { name: "Steering Column & Mechanical Stops", rule: "Mount steering rack, machine tie-rods, install quick-release hub, and weld positive mechanical steering stops." },
+          { name: "Dampers & Travel Checks", rule: "Mount front shocks in double shear and install limit straps if internal stops can top out." }
         ]
       },
       {
-        id: "rear-suspension",
-        name: "Rear Suspension",
-        code: "SAE B.5",
+        id: "rear-suspension-brakes",
+        name: "Rear Suspension & Trailing Arm / Brakes",
+        code: "SAE B.5 / B.7",
         categories: [
-          { name: "Suspension Links", rule: "Trailing arms and camber/toe links must maintain wheel track and alignment through full articulation." },
-          { name: "Bearing Carriers & Uprights", rule: "Rear bearing carriers must withstand torque reaction from inboard or outboard braking setups." },
-          { name: "Shocks & Geometry", rule: "Validate rear anti-squat and wheel travel clearance against frame members and half-shaft CV joint operating angles." }
+          { name: "Trailing Arms & Geometry", rule: "Fabricate trailing arms and camber/toe links. Verify anti-squat and wheel travel clearance." },
+          { name: "Rear Bearing Carriers", rule: "Machine/fabricate rear bearing carriers to withstand full torque reaction under load." },
+          { name: "Rear Caliper Integration", rule: "Integrate caliper brackets on trailing arms / carriers (or inboard output) and align rotor hats." },
+          { name: "Axle Articulation & CV Engagement", rule: "Verify half-shaft CV joint operating angles and positive spline engagement throughout travel." }
         ]
       },
       {
-        id: "brakes",
-        name: "Braking System & Pedals",
+        id: "pedals-driver-controls",
+        name: "Pedal Box & Driver Controls",
         code: "SAE B.7",
         categories: [
-          { name: "Pedal Box Assembly", rule: "Dual master cylinders mounted with an adjustable balance bar. Brake pedal requires positive mechanical over-travel stop." },
-          { name: "Hydraulics & Lines", rule: "Two completely independent hydraulic circuits (front/rear split) with steel hardline or braided flex hose." },
-          { name: "Calipers & Rotors", rule: "System must achieve 4-wheel simultaneous lockup on dry pavement from speed during dynamic brake test." }
+          { name: "Footwell Placement & Ergonomics", rule: "Mock up heel-rest line, pedal reach, footwell tube clearance, and verify 5.0-second driver egress." },
+          { name: "Brake Pedal & Balance Bar", rule: "Design 4:1 to 6:1 leverage pedal arm, pivot bushing, and integrate threaded balance bar for dual master cylinders." },
+          { name: "Throttle Pedal & Cable Pull", rule: "Design throttle pedal pivot, cable pull linkage, and return spring anchor points." },
+          { name: "Positive Stops & Dual Return Springs", rule: "Incorporate mechanical over-travel stops (prevent master cylinder bottoming) and dual independent return springs." }
         ]
       },
       {
-        id: "electrical-safety",
-        name: "Electrical, Safety & Shielding",
+        id: "drivetrain-fitment",
+        name: "Powertrain & Drivetrain Tuning",
+        code: "SAE B.6 / B.9",
+        categories: [
+          { name: "Axial Play & Alignment", rule: "Eliminate intermediate shaft axial play and align primary/secondary CVT pulleys." },
+          { name: "CV Couplers & Tensioners", rule: "Machine final CV drive couplers and fabricate chain/belt tensioner brackets with locking adjustment." },
+          { name: "Engine & Fuel Line Restrictor", rule: "Install official Kohler restrictor plate, route 3/16\" approved fuel line with inline filter, positive shut-off, and catch container." }
+        ]
+      },
+      {
+        id: "shielding-safety",
+        name: "Shielding & Protective Enclosures",
         code: "SAE B.4 / B.8 / B.10",
         categories: [
-          { name: "Electrical Controls & Switches", rule: "Two kill switches wired in series: one cockpit switch within belted driver reach, one external on rear roll hoop." },
-          { name: "Driver Cell & Harness", rule: "5 or 6-point SFI/FIA harness. Lap belts angled 45° to 80°. Shoulder straps 0\" to 4\" below shoulder level. 5.0s egress." },
-          { name: "Cockpit Protection & Guards", rule: "Solid firewall separating driver from fuel/engine. Front nose shielding and belly pan splash guards required." }
+          { name: "Fuel Tank Shielding & Splash Guard", rule: "Rigid heat/impact barrier between tank and exhaust header, plus sealed splash neck divert tray." },
+          { name: "CVT Rotating Assembly Guard", rule: "Full 360-degree containment guard around primary/secondary clutches (min 0.063\" steel or 0.090\" 6061-T6 aluminum)." },
+          { name: "Full Engine Bay Enclosure", rule: "Perimeter debris shield around motor assembly to prevent track debris ingestion and isolate exhaust." },
+          { name: "Driver Firewall & Underbody Belly Pan", rule: "Solid cockpit firewall separating driver from fuel/powertrain, plus front nose and underbody splash panels." }
         ]
       },
       {
         id: "sae-deliverables",
-        name: "SAE Submissions & Costing",
+        name: "SAE Deliverables & Costing (Exec)",
         code: "SAE Admin / Cost",
         categories: [
-          { name: "Technical Reports & RCSS", rule: "Roll Cage Specification Sheet (RCSS), material documentation receipts, and weld sample photos. Prerequisite." },
-          { name: "Cost Prototype & BOM", rule: "Online Cost Prototype BOM and Written Cost Reduction Report. Managed directly with CFO." },
-          { name: "Business Presentation & Formalities", rule: "Business Presenter form, team roster confirmation, and static event presentation deck." }
+          { name: "Roll Cage Spec Sheet (RCSS)", rule: "Material certs, weld sample photos, and structural documentation for technical prerequisite." },
+          { name: "Cost Prototype & Written Report", rule: "Online Cost Prototype BOM and Written Cost Reduction Report. Managed directly with CFO." },
+          { name: "Business Presentation Deck", rule: "Business Presenter form registration and static event presentation slide preparation." }
         ]
       }
     ];
 
+    /* Sub-Teams Breakdown */
     const DEFAULT_SUBTEAMS = [
-      { id: "st_drivetrain", name: "Drivetrain & Powertrain", lead: "John", members: ["Chris", "Spence"], subsystemId: "drivetrain" },
-      { id: "st_suspension", name: "Suspension & Steering", lead: "Andy", members: ["Matt"], subsystemId: "front-suspension" },
-      { id: "st_brakes", name: "Braking & Driver Controls", lead: "Chris", members: ["John"], subsystemId: "brakes" },
-      { id: "st_chassis", name: "Chassis, Shielding & Safety", lead: "Emmett", members: ["Jorge", "Matt"], subsystemId: "chassis" }
+      { id: "st_rear", name: "Rear Suspension & Rear Brakes", lead: "Andy", members: ["Matt", "Jorge"], subsystemId: "rear-suspension-brakes" },
+      { id: "st_front", name: "Front Suspension & Steering", lead: "Matt", members: ["Andy"], subsystemId: "front-suspension" },
+      { id: "st_pedals", name: "Pedals & Driver Ergonomics", lead: "John", members: ["Chris"], subsystemId: "pedals-driver-controls" },
+      { id: "st_drivetrain", name: "Drivetrain & Powertrain", lead: "John", members: ["Chris", "Spence"], subsystemId: "drivetrain-fitment" },
+      { id: "st_chassis", name: "Chassis & Shielding", lead: "Emmett", members: ["Jorge", "Matt"], subsystemId: "shielding-safety" }
     ];
 
+    /* Complete Revised Tasks List */
     const DEFAULT_TASKS = [
-      { id: "t1", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain", category: "Final Drive & Axles", priority: "High", status: "In Progress", assignee: "Chris", deadline: "2026-02-03", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
-      { id: "t2", title: "Add bearings & screw adjustment to tensioners", subsystemId: "drivetrain", category: "Reduction & Gearbox", priority: "Medium", status: "To Do", assignee: "John", deadline: "2026-02-10", notes: "Fabricate slotted bracket for easy chain tensioning." },
-      { id: "t3", title: "Inspect 1/16\" intermediate shaft axial play", subsystemId: "drivetrain", category: "Reduction & Gearbox", priority: "High", status: "Ready for CTO Review", assignee: "John", deadline: "2026-02-10", notes: "Machined alloy spacer ready for inspection." },
-      { id: "t4", title: "Final Front and Rear Suspension CAD", subsystemId: "front-suspension", category: "Control Arms", priority: "High", status: "Ready for CTO Review", assignee: "Andy", deadline: "2026-02-03", notes: "Finalized geometry and shock eyelet mounting angles in SolidWorks." },
-      { id: "t5", title: "Final Knuckle & Upright Design", subsystemId: "front-suspension", category: "Uprights & Hubs", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Coordinating fixture machining and bearing press fit with Matt." },
-      { id: "t6", title: "Final Steering Geometry & Rack Mount CAD", subsystemId: "front-suspension", category: "Steering Mechanism", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-03", notes: "Confirm zero bump steer and clear tie-rod articulation envelope." },
-      { id: "t7", title: "Braking System & Master Cylinder Mounts", subsystemId: "brakes", category: "Hydraulics & Lines", priority: "High", status: "In Progress", assignee: "Chris", deadline: "2026-03-03", notes: "Dual split hydraulic circuit with John." },
-      { id: "t8", title: "Gas and Brake Pedal Assembly", subsystemId: "brakes", category: "Pedal Box Assembly", priority: "Medium", status: "In Progress", assignee: "John", deadline: "2026-02-10", notes: "Positive pedal stop and dual return springs." },
-      { id: "t9", title: "Firewall & Cockpit Shielding CAD", subsystemId: "electrical-safety", category: "Cockpit Protection & Guards", priority: "Medium", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Solid barrier separating cockpit from fuel/exhaust." },
-      { id: "t10", title: "Fire Extinguisher & Kill Switch Mounts", subsystemId: "electrical-safety", category: "Electrical Controls & Switches", priority: "High", status: "Ready for CTO Review", assignee: "Jorge", deadline: "2026-02-03", notes: "Quick release bracket tabs fabbed for inspection." },
-      { id: "t11", title: "Tow Point Fabrication CAD", subsystemId: "chassis", category: "Mounting Brackets & Tabs", priority: "Medium", status: "In Progress", assignee: "Jorge", deadline: "2026-02-03", notes: "Front and rear recovery points per rulebook." },
-      { id: "t12", title: "Gas Tank Mount & Splash Shielding", subsystemId: "drivetrain", category: "Engine & Fuel", priority: "Medium", status: "To Do", assignee: "Spence", deadline: "2026-02-17", notes: "Secure Briggs/Kohler tank and seal splash deflector." },
-      { id: "t13", title: "Seatbelt & 5-Point Harness Tabs", subsystemId: "electrical-safety", category: "Driver Cell & Harness", priority: "Critical", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Verify harness expiration and tab angles (45-80 deg)." },
-      { id: "t14", title: "Notch & weld FAB low frame members", subsystemId: "chassis", category: "Secondary Members & Bracing", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-10", notes: "Ensure clearance around CVT drive pulley!" },
-      { id: "t15", title: "Roll Cage Documentation & RCSS Submission", subsystemId: "sae-deliverables", category: "Technical Reports & RCSS", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-16", notes: "Complete weld sample photos and material test certs." },
-      { id: "t16", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & BOM", priority: "High", status: "To Do", assignee: "CFO Lead", deadline: "2026-02-20", notes: "Cost reduction strategy report." },
-      { id: "t17", title: "Business Presenter Form & Deck", subsystemId: "sae-deliverables", category: "Business Presentation & Formalities", priority: "Medium", status: "To Do", assignee: "CCO Lead", deadline: "2026-03-02", notes: "Register official presenters and presentation deck." },
-      { id: "t18", title: "Online Cost Prototype BOM Finalization", subsystemId: "sae-deliverables", category: "Cost Prototype & BOM", priority: "Critical", status: "In Progress", assignee: "CFO Lead", deadline: "2026-04-10", notes: "BOM costing sheet update." }
+      // Chassis
+      { id: "t1", title: "Complete full penetration welds on primary/secondary cage joints", subsystemId: "chassis", category: "Roll Cage & Primary Members", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-10", notes: "Ensure 100% weld penetration and prepare sample joints for tech inspection." },
+      { id: "t2", title: "Weld double-shear suspension tabs & sleeve frame through-bolts", subsystemId: "chassis", category: "Double-Shear Tabs & Sleeving", priority: "High", status: "To Do", assignee: "Matt", deadline: "2026-02-17", notes: "All drilled tube pass-throughs require 360-deg internal steel sleeves." },
+      { id: "t3", title: "Fabricate & weld 5/6-point harness mounting tabs", subsystemId: "chassis", category: "Safety Mounts & Harness", priority: "Critical", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Check lap belt mounting angle range between 45 and 80 degrees." },
+      { id: "t4", title: "Weld front & rear recovery tow points", subsystemId: "chassis", category: "Component Brackets & Tow Points", priority: "Medium", status: "In Progress", assignee: "Jorge", deadline: "2026-02-03", notes: "Recovery points must meet minimum inside diameter and shear strength rules." },
+
+      // Front Suspension
+      { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "Andy", deadline: "2026-02-03", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
+      { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
+      { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Mechanism", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-03", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
+      { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "Andy", deadline: "2026-02-17", notes: "Verify shock travel clearance throughout full steering sweep." },
+
+      // Rear Suspension & Brakes Team
+      { id: "t9", title: "Fabricate rear trailing arms & camber/toe links", subsystemId: "rear-suspension-brakes", category: "Trailing Arms & Geometry", priority: "High", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Validate rear anti-squat geometry and wheel travel envelope." },
+      { id: "t10", title: "Fabricate rear bearing carriers with caliper mounts", subsystemId: "rear-suspension-brakes", category: "Rear Bearing Carriers", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Mounting calipers directly on trailing arms/carriers for outboard braking." },
+      { id: "t11", title: "Determine rear brake rotor hat & caliper placement", subsystemId: "rear-suspension-brakes", category: "Rear Caliper Integration", priority: "High", status: "In Progress", assignee: "Andy", deadline: "2026-02-03", notes: "Coordinate rotor spacing with wheel rim inner barrel clearance." },
+      { id: "t12", title: "Verify CV joint operating angles through full rear travel", subsystemId: "rear-suspension-brakes", category: "Axle Articulation & CV Engagement", priority: "Critical", status: "To Do", assignee: "Matt", deadline: "2026-02-17", notes: "Ensure zero bind at full droop and full bump." },
+
+      // Pedals & Driver Controls
+      { id: "t13", title: "Footwell mockup, driver reach & 5.0s egress check", subsystemId: "pedals-driver-controls", category: "Footwell Placement & Ergonomics", priority: "High", status: "In Progress", assignee: "John", deadline: "2026-02-10", notes: "Establish heel-rest line and ensure ankle travel does not strike rack." },
+      { id: "t14", title: "Design 4:1 - 6:1 brake pedal & dual master cylinder balance bar", subsystemId: "pedals-driver-controls", category: "Brake Pedal & Balance Bar", priority: "Critical", status: "In Progress", assignee: "John", deadline: "2026-02-10", notes: "Threaded balance bar linking independent front/rear master cylinders." },
+      { id: "t15", title: "Design throttle pedal pivot & cable pull linkage", subsystemId: "pedals-driver-controls", category: "Throttle Pedal & Cable Pull", priority: "Medium", status: "To Do", assignee: "Chris", deadline: "2026-02-17", notes: "Smooth pull action with zero binding throughout travel." },
+      { id: "t16", title: "Incorporate mechanical over-travel stops & dual return springs", subsystemId: "pedals-driver-controls", category: "Positive Stops & Dual Return Springs", priority: "High", status: "To Do", assignee: "John", deadline: "2026-02-17", notes: "Positive pedal stop prevents master cylinder bottoming out under max panic load." },
+
+      // Drivetrain Fitment
+      { id: "t17", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "High", status: "In Progress", assignee: "Chris", deadline: "2026-02-03", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
+      { id: "t18", title: "Eliminate intermediate shaft axial play with machined alloy spacers", subsystemId: "drivetrain-fitment", category: "Axial Play & Alignment", priority: "High", status: "Ready for CTO Review", assignee: "John", deadline: "2026-02-10", notes: "Permanent machined alloy spacers replacing testing shims." },
+      { id: "t19", title: "Fabricate chain tensioner bracket with locking adjustment", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "Medium", status: "To Do", assignee: "John", deadline: "2026-02-10", notes: "Slotted bracket for rapid chain tension maintenance." },
+      { id: "t20", title: "Install Kohler restrictor plate & plumb 3/16\" fuel line", subsystemId: "drivetrain-fitment", category: "Engine & Fuel Line Restrictor", priority: "Medium", status: "To Do", assignee: "Spence", deadline: "2026-02-17", notes: "SAE J30R9 fuel injection hose with positive shut-off valve and catch container." },
+
+      // Shielding & Safety
+      { id: "t21", title: "Fabricate fuel tank heat deflector & splash guard divert tray", subsystemId: "shielding-safety", category: "Fuel Tank Shielding & Splash Guard", priority: "Medium", status: "To Do", assignee: "Spence", deadline: "2026-02-17", notes: "Divert fuel spillage away from hot exhaust and electrical harness." },
+      { id: "t22", title: "Construct 360-degree CVT rotating assembly guard", subsystemId: "shielding-safety", category: "CVT Rotating Assembly Guard", priority: "Critical", status: "In Progress", assignee: "Jorge", deadline: "2026-02-10", notes: "Must meet min 0.063\" steel or 0.090\" 6061-T6 aluminum thickness." },
+      { id: "t23", title: "Build full engine bay perimeter debris & heat envelope", subsystemId: "shielding-safety", category: "Full Engine Bay Enclosure", priority: "High", status: "To Do", assignee: "Emmett", deadline: "2026-02-17", notes: "Protective envelope around entire motor assembly to prevent track debris ingestion." },
+      { id: "t24", title: "Fit solid driver firewall, front nose shielding & belly pan", subsystemId: "shielding-safety", category: "Driver Firewall & Underbody Belly Pan", priority: "Critical", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Solid barrier separating cockpit from fuel, engine, and hot lines." },
+
+      // SAE Deliverables
+      { id: "t25", title: "Roll Cage Spec Sheet (RCSS) & Weld Samples", subsystemId: "sae-deliverables", category: "Roll Cage Spec Sheet (RCSS)", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-16", notes: "Complete weld sample photos and material tensile test certs." },
+      { id: "t26", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "High", status: "To Do", assignee: "CFO Lead", deadline: "2026-02-20", notes: "Cost reduction report submission." },
+      { id: "t27", title: "Business Presenter Form & Slide Deck", subsystemId: "sae-deliverables", category: "Business Presentation Deck", priority: "Medium", status: "To Do", assignee: "CCO Lead", deadline: "2026-03-02", notes: "Presenter confirmation and slide deck." },
+      { id: "t28", title: "Online Cost Prototype BOM Finalization", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "Critical", status: "In Progress", assignee: "CFO Lead", deadline: "2026-04-10", notes: "Final vehicle costing BOM." }
     ];
 
-    const TIMELINE_ROWS = [
-      { subsystem: "Frame & Chassis", weeks: { W2: "Fab nose & rear", W3: "Fab SIM Members", W4: "Fix RHO Crossmember", W6: "FAB + Shock Members", W7: "Make shock tabs", W10: "TESTING", W11: "TESTING" } },
-      { subsystem: "Front & Rear Suspension", weeks: { W2: "Suspension Design", W3: "A-Arm Template", W4: "A-Arm Design", W5: "Drill Frame Holes", W6: "Trailing Arm Template", W7: "Finish Suspension" } },
-      { subsystem: "Steering & Knuckles", weeks: { W3: "Knuckle & Steering CAD", W5: "Dorito in Nose / Mounts", W6: "Fab Knuckles", W7: "Car Rolls!" } },
-      { subsystem: "Driver Cell & Mounts", weeks: { W4: "Seat & Seatbelt Mount", W6: "Mount Seat in Car", W7: "Kill Switch Mount", W9: "Mount Gas Tank" } },
-      { subsystem: "Shielding & Body Panels", weeks: { W9: "Gas Splash Shield", W10: "Nose Panels", W11: "SIM Panels", W12: "Mount Numbers" } },
-      { subsystem: "SAE Deliverables & Costing", weeks: { W3: "RCSS Prep", W4: "RCSS Due (Feb 16)", W5: "Cost Reduction (Feb 20)", W6: "Biz Form (Mar 2)", W11: "Final Cost BOM (Apr 10)" } }
+    /* Editable Multi-Week Timeline Roadmap */
+    let timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || [
+      { id: "r1", subsystem: "Frame & Chassis Finish", weeks: { W2: "Fab nose & rear", W3: "Tabs & Sleeving", W4: "Harness Mounts", W6: "FAB low weld", W7: "Finish Welding", W10: "TESTING", W11: "TESTING" } },
+      { id: "r2", subsystem: "Front Suspension & Steering", weeks: { W2: "A-Arm CAD", W3: "Knuckle Caliper CAD", W4: "Fab A-Arms", W5: "Rack & Stops", W6: "Mount Knuckles", W7: "Rolling Chassis" } },
+      { id: "r3", subsystem: "Rear Suspension & Brakes", weeks: { W2: "Trailing Arm CAD", W3: "Bearing Carrier CAD", W4: "Fab Trailing Arms", W5: "Mount Calipers", W6: "CV Articulation", W7: "Car on Wheels!" } },
+      { id: "r4", subsystem: "Pedal Box & Hydraulics", weeks: { W3: "Footwell Mockup", W4: "Pedal Box Fab", W5: "Mount Cylinders", W6: "Hardline Plumb", W7: "Bleed Brakes" } },
+      { id: "r5", subsystem: "Drivetrain & Engine Bay", weeks: { W3: "Turn Shafts", W4: "Spacers / Tensioner", W5: "Align CVT", W6: "Restrictor & Fuel", W7: "First Engine Idle" } },
+      { id: "r6", subsystem: "Shielding & Cockpit Safety", weeks: { W4: "Firewall Template", W5: "CVT Shield Fab", W6: "Gas Tank Shield", W7: "Engine Bay Envelope", W9: "Belly Pan" } },
+      { id: "r7", subsystem: "SAE Deliverables & Costing", weeks: { W3: "RCSS Prep", W4: "RCSS Due (Feb 16)", W5: "Cost Reduction (Feb 20)", W6: "Biz Form (Mar 2)", W11: "Cost BOM (Apr 10)" } }
     ];
 
     const DEFAULT_ORDERS = [
-      { id: "o1", item: "Grade 8 Suspension Fastener Assortment", description: "AN/Grade 8 bolts & locknuts for A-arms", subsystemId: "front-suspension", vendor: "McMaster-Carr", vendorUrl: "https://www.mcmaster.com", partNumber: "91251A", qty: 2, unitPrice: 38.50, urgency: "Immediate Need", requestedBy: "Matt", status: "Approved" },
-      { id: "o2", item: "3/16\" High-Pressure Fuel Line (10ft)", description: "SAE J30R9 fuel injection hose", subsystemId: "drivetrain", vendor: "Summit Racing", vendorUrl: "https://www.summitracing.com", partNumber: "SUM-2200", qty: 1, unitPrice: 24.99, urgency: "Next Batch Order", requestedBy: "Spence", status: "Ordered" }
+      { id: "o1", item: "Grade 8 Suspension Fastener Assortment", description: "AN/Grade 8 bolts & locknuts for A-arms & Trailing Arms", subsystemId: "front-suspension", vendor: "McMaster-Carr", vendorUrl: "https://www.mcmaster.com", partNumber: "91251A", qty: 2, unitPrice: 38.50, urgency: "Immediate Need", requestedBy: "Matt", status: "Approved" },
+      { id: "o2", item: "3/16\" High-Pressure Fuel Line (10ft)", description: "SAE J30R9 fuel injection hose", subsystemId: "drivetrain-fitment", vendor: "Summit Racing", vendorUrl: "https://www.summitracing.com", partNumber: "SUM-2200", qty: 1, unitPrice: 24.99, urgency: "Next Batch Order", requestedBy: "Spence", status: "Ordered" },
+      { id: "o3", item: "Dual Master Cylinder Balance Bar Assembly", description: "Threaded balance bar with 3/8-24 spherical center pivot", subsystemId: "pedals-driver-controls", vendor: "Wilwood", vendorUrl: "https://www.wilwood.com", partNumber: "340-1757", qty: 1, unitPrice: 54.00, urgency: "Immediate Need", requestedBy: "John", status: "Approved" }
     ];
 
-    /* Application State */
+    const DEFAULT_NOTIFICATIONS = [
+      { id: "n1", title: "New Architecture", message: "Rear Suspension & Rear Brakes Team configured with trailing arm mounts", timestamp: new Date().toISOString(), read: false, type: "task" },
+      { id: "n2", title: "Task Ready for Review", message: "Andy submitted 'Final Front A-Arm CAD' for CTO sign-off", timestamp: new Date(Date.now() - 3600000).toISOString(), read: false, type: "review" }
+    ];
+
+    /* State Initialization */
     let tasks = JSON.parse(localStorage.getItem('bobcat_tasks')) || DEFAULT_TASKS;
     let subteams = JSON.parse(localStorage.getItem('bobcat_subteams')) || DEFAULT_SUBTEAMS;
     let orders = JSON.parse(localStorage.getItem('bobcat_orders')) || DEFAULT_ORDERS;
+    let notifications = JSON.parse(localStorage.getItem('bobcat_notifications')) || DEFAULT_NOTIFICATIONS;
     
     let settings = JSON.parse(localStorage.getItem('bobcat_settings')) || {
       ctoPin: '1111',
@@ -526,7 +598,92 @@
     let ctoUnlocked = sessionStorage.getItem('bobcat_cto_unlocked') === 'true';
     let currentTab = 'home';
     let activeSubsystemFilter = 'all';
-    let calDate = new Date(2026, 1, 1); // February 2026 Build Phase
+    let calDate = new Date(2026, 1, 1);
+
+    /* Notification System Engine */
+    function addNotification(title, message, type = "task") {
+      const notif = {
+        id: "n_" + Date.now(),
+        title,
+        message,
+        timestamp: new Date().toISOString(),
+        read: false,
+        type
+      };
+      notifications.unshift(notif);
+      if (notifications.length > 30) notifications.pop();
+      localStorage.setItem('bobcat_notifications', JSON.stringify(notifications));
+      updateNotificationBadge();
+    }
+
+    function updateNotificationBadge() {
+      const unreadCount = notifications.filter(n => !n.read).length;
+      const badge = document.getElementById('notif-badge');
+      if (badge) {
+        if (unreadCount > 0) {
+          badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+    }
+
+    function toggleNotificationPanel() {
+      const panel = document.getElementById('notif-panel');
+      const isHidden = panel.classList.contains('hidden');
+      if (isHidden) {
+        renderNotificationList();
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+
+    function renderNotificationList() {
+      const list = document.getElementById('notif-list');
+      if (!notifications.length) {
+        list.innerHTML = `<div class="py-6 text-center text-xs font-mono text-slate-400">No new notifications.</div>`;
+        return;
+      }
+
+      list.innerHTML = notifications.map(n => {
+        const timeAgo = formatTimeAgo(new Date(n.timestamp));
+        const icon = n.type === 'order' ? 'shopping-cart' : n.type === 'review' ? 'shield-check' : 'check-circle-2';
+        const bgIcon = n.type === 'order' ? 'bg-emerald-100 text-emerald-800' : n.type === 'review' ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800';
+
+        return `
+          <div class="py-2.5 flex items-start gap-2.5 ${n.read ? 'opacity-65' : 'bg-slate-50/70 p-2 rounded-lg'}">
+            <div class="w-7 h-7 rounded-lg ${bgIcon} flex items-center justify-center flex-shrink-0 mt-0.5">
+              <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="space-y-0.5 flex-1">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-900">${n.title}</span>
+                <span class="text-[10px] font-mono text-slate-400">${timeAgo}</span>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-snug">${n.message}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function markAllNotificationsRead() {
+      notifications = notifications.map(n => ({ ...n, read: true }));
+      localStorage.setItem('bobcat_notifications', JSON.stringify(notifications));
+      updateNotificationBadge();
+      renderNotificationList();
+    }
+
+    function formatTimeAgo(date) {
+      const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+      if (secs < 60) return "Just now";
+      if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+      if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
+      return `${Math.floor(secs / 86400)}d ago`;
+    }
 
     /* Cloud Sync Engine */
     async function initCloudSync() {
@@ -624,6 +781,7 @@
       localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
       localStorage.setItem('bobcat_orders', JSON.stringify(orders));
+      localStorage.setItem('bobcat_timeline_rows', JSON.stringify(timelineRows));
 
       if (isCloudConnected && dbClient && syncType && syncData) {
         (async () => {
@@ -721,6 +879,8 @@
       if (mobileSecretTab) {
         mobileSecretTab.classList.toggle('hidden', !ctoUnlocked);
       }
+
+      updateNotificationBadge();
 
       if (currentTab === 'home') renderHome();
       if (currentTab === 'cto' && ctoUnlocked) renderCto();
@@ -842,7 +1002,6 @@
     }
 
     function renderCto() {
-      // 1. Executive Financial Tracking
       const approvedSpend = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered' || o.status === 'Arrived in Shop').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
       const pendingSpend = orders.filter(o => o.status === 'Requested').reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
       const totalSpend = orders.reduce((sum, o) => sum + (o.qty * o.unitPrice), 0);
@@ -851,7 +1010,6 @@
       document.getElementById('cto-stat-pending-spend').innerText = `$${pendingSpend.toFixed(2)}`;
       document.getElementById('cto-stat-total-spend').innerText = `$${totalSpend.toFixed(2)}`;
 
-      // 2. Engineering Sign-Off Review Queue
       const reviewTasks = tasks.filter(t => t.status === 'Ready for CTO Review');
       document.getElementById('cto-review-count').innerText = `${reviewTasks.length} items pending`;
       const reviewQueue = document.getElementById('cto-review-queue');
@@ -881,7 +1039,6 @@
         `).join('');
       }
 
-      // 3. Sub-Teams Roster
       const subteamsGrid = document.getElementById('subteams-grid');
       subteamsGrid.innerHTML = subteams.map(st => {
         const teamTasks = tasks.filter(t => t.subsystemId === st.subsystemId);
@@ -951,13 +1108,13 @@
       if (target) {
         target.status = newStatus;
         saveState('task_upsert', target);
+        addNotification("CTO Decision", `Deliverable '${target.title}' set to ${newStatus}`, "review");
         showToast(newStatus === 'Complete' ? 'Component Approved & Released' : 'Sent back for revision');
       }
     }
 
-    /* 3. Streamlined & Unified Task Board (Zero Cascading Dropdowns) */
+    /* 3. Streamlined Task Board */
     function renderStreamlinedTasks() {
-      // 1. Render Subsystem Filter Pills
       const pillBar = document.getElementById('subsystem-pill-bar');
       const allCount = tasks.length;
       pillBar.innerHTML = `
@@ -976,7 +1133,6 @@
         }).join('')}
       `;
 
-      // 2. Filter & Render Task Cards Stream
       const query = (document.getElementById('task-search-input')?.value || '').toLowerCase().trim();
       const statusFilter = document.getElementById('task-status-filter')?.value || 'All';
 
@@ -997,7 +1153,7 @@
         }
 
         matchedTotal += subTasks.length;
-        if (!subTasks.length && query) return ''; // Hide empty categories when actively searching
+        if (!subTasks.length && query) return '';
 
         return `
           <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
@@ -1014,7 +1170,6 @@
               </button>
             </div>
 
-            <!-- Task Cards Grid for this subsystem -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
               ${subTasks.length ? subTasks.map(t => {
                 const priorityColor = {
@@ -1086,7 +1241,7 @@
       lucide.createIcons();
     }
 
-    /* 4. Interactive Calendar Engine */
+    /* 4. Calendar & Editable Timeline Matrix */
     function changeMonth(delta) {
       calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
       renderCalendar();
@@ -1132,31 +1287,84 @@
       const tbody = document.getElementById('timeline-matrix-body');
       const weeks = ['W1','W2','W3','W4','W5','W6','W7','BREAK','W9','W10','W11','W12','W13','W14','W15'];
 
-      tbody.innerHTML = TIMELINE_ROWS.map(row => {
+      tbody.innerHTML = timelineRows.map(row => {
         return `
-          <tr class="hover:bg-slate-50 transition-colors">
-            <td class="py-3 px-3 font-bold text-slate-900 border-r border-slate-200 sticky left-0 bg-white shadow-xs z-10">${row.subsystem}</td>
+          <tr class="hover:bg-slate-50 transition-colors group">
+            <td class="py-3 px-3 font-bold text-slate-900 border-r border-slate-200 sticky left-0 bg-white shadow-xs z-10 flex items-center justify-between">
+              <span class="truncate pr-1">${row.subsystem}</span>
+              <button onclick="editTimelineRowName('${row.id}')" class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-800 transition-opacity"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+            </td>
             ${weeks.map(w => {
-              const taskText = row.weeks[w];
+              const taskText = row.weeks[w] || '';
               const isBreak = w === 'BREAK';
               const isTest = w === 'W10' || w === 'W11';
               const isSaeRow = row.subsystem.includes('SAE Deliverables');
+
               return `
-                <td class="py-2.5 px-2 border-r border-slate-200 align-top ${isBreak ? 'bg-amber-50/50' : isTest ? 'bg-emerald-50/30' : ''}">
+                <td onclick="editTimelineCell('${row.id}', '${w}')" class="py-2 px-1.5 border-r border-slate-200 align-top cursor-pointer hover:bg-amber-50/70 transition-colors ${isBreak ? 'bg-amber-50/50' : isTest ? 'bg-emerald-50/30' : ''}">
                   ${taskText ? `
-                    <div class="p-1.5 rounded ${isSaeRow ? 'bg-indigo-50 border-indigo-300 text-indigo-900 font-bold' : 'bg-[#0c2340]/5 border-[#0c2340]/20 text-[#0c2340] font-semibold'} border text-[10.5px] leading-tight text-center">
+                    <div class="p-1.5 rounded ${isSaeRow ? 'bg-indigo-50 border-indigo-300 text-indigo-900 font-bold' : 'bg-[#0c2340]/5 border-[#0c2340]/20 text-[#0c2340] font-semibold'} border text-[10px] leading-tight text-center">
                       ${taskText}
                     </div>
-                  ` : ''}
+                  ` : `<div class="h-6 flex items-center justify-center opacity-0 group-hover:opacity-40 text-slate-400 font-mono text-[9px]">+</div>`}
                 </td>
               `;
             }).join('')}
+            <td class="py-2 px-2 text-center bg-slate-50">
+              <button onclick="deleteTimelineRow('${row.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </td>
           </tr>
         `;
       }).join('');
     }
 
-    /* 5. Purchase Orders View (Public: No Dollar Values) */
+    /* Editable Timeline Modals */
+    function editTimelineCell(rowId, weekKey) {
+      const row = timelineRows.find(r => r.id === rowId);
+      if (!row) return;
+      const currentVal = row.weeks[weekKey] || '';
+      const newVal = prompt(`Edit milestone for ${row.subsystem} (${weekKey}):`, currentVal);
+      if (newVal !== null) {
+        if (newVal.trim() === '') delete row.weeks[weekKey];
+        else row.weeks[weekKey] = newVal.trim();
+        saveState();
+        showToast('Timeline updated');
+      }
+    }
+
+    function editTimelineRowName(rowId) {
+      const row = timelineRows.find(r => r.id === rowId);
+      if (!row) return;
+      const newName = prompt("Edit Subsystem Row Name:", row.subsystem);
+      if (newName && newName.trim()) {
+        row.subsystem = newName.trim();
+        saveState();
+        showToast('Subsystem name updated');
+      }
+    }
+
+    function openTimelineRowModal() {
+      const name = prompt("Enter new subsystem row name:");
+      if (name && name.trim()) {
+        timelineRows.push({
+          id: "r_" + Date.now(),
+          subsystem: name.trim(),
+          weeks: {}
+        });
+        saveState();
+        showToast('New timeline row added');
+      }
+    }
+
+    function deleteTimelineRow(rowId) {
+      if (confirm('Delete this subsystem row from timeline?')) {
+        timelineRows = timelineRows.filter(r => r.id !== rowId);
+        saveState();
+        showToast('Timeline row removed');
+      }
+    }
+
+    /* 5. Purchase Orders View */
     function renderOrders() {
       const reqCount = orders.filter(o => o.status === 'Requested').length;
       const appCount = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered').length;
@@ -1197,6 +1405,23 @@
           </tr>
         `;
       }).join('');
+    }
+
+    function exportOrdersToCSV() {
+      let csv = "ID,Item,Description,Subsystem,Vendor,Part Number,Qty,Unit Price,Total Price,Urgency,Requester,Status\n";
+      orders.forEach(o => {
+        const total = (o.qty * o.unitPrice).toFixed(2);
+        csv += `"${o.id}","${o.item}","${o.description || ''}","${getSubsystem(o.subsystemId).name}","${o.vendor || ''}","${o.partNumber || ''}",${o.qty},${o.unitPrice},${total},"${o.urgency}","${o.requestedBy || ''}","${o.status}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `bobcat_racing_purchase_orders_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Exported purchase orders CSV');
     }
 
     /* Modal Handlers */
@@ -1309,6 +1534,7 @@
         else tasks.push(data);
         
         saveState('task_upsert', data);
+        addNotification(isEdit ? "Task Updated" : "New Task Assigned", `${data.title} (${data.assignee || 'Unassigned'})`, "task");
         closeModal();
         showToast(isEdit ? 'Task updated' : 'Task created');
       };
@@ -1336,12 +1562,12 @@
         <form id="form-subteam" class="space-y-4 mt-4 text-xs">
           <div>
             <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Sub-Team Name</label>
-            <input required id="f-team-name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 outline-none focus:border-[#0c2340]" value="${st.name}" placeholder="e.g. Drivetrain & Powertrain">
+            <input required id="f-team-name" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 outline-none focus:border-[#0c2340]" value="${st.name}" placeholder="e.g. Rear Suspension & Brakes">
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Subsystem Lead</label>
-              <input required id="f-team-lead" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" value="${st.lead}" placeholder="e.g. John">
+              <input required id="f-team-lead" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" value="${st.lead}" placeholder="e.g. Andy">
             </div>
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Associated Subsystem</label>
@@ -1352,7 +1578,7 @@
           </div>
           <div>
             <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Assigned Members (Comma-Separated)</label>
-            <input id="f-team-members" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" value="${st.members.join(', ')}" placeholder="Chris, Spence, Matt...">
+            <input id="f-team-members" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" value="${st.members.join(', ')}" placeholder="Matt, Jorge, Andy...">
           </div>
           <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Cancel</button>
@@ -1393,8 +1619,10 @@
 
     function deleteTask(id) {
       if (confirm('Delete this task?')) {
+        const target = tasks.find(t => t.id === id);
         tasks = tasks.filter(t => t.id !== id);
         saveState('task_delete', id);
+        if (target) addNotification("Task Removed", `Task '${target.title}' was deleted`, "task");
         showToast('Task removed');
       }
     }
@@ -1404,6 +1632,7 @@
       if (target) {
         target.status = newStatus;
         saveState('task_upsert', target);
+        addNotification("Status Changed", `'${target.title}' is now ${newStatus}`, newStatus === 'Ready for CTO Review' ? 'review' : 'task');
       }
     }
 
@@ -1414,6 +1643,7 @@
         if (target) {
           target.assignee = name.trim();
           saveState('task_upsert', target);
+          addNotification("Task Claimed", `${name} took ownership of '${target.title}'`, "task");
           showToast(`Task assigned to ${name}`);
         }
       }
@@ -1440,7 +1670,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Vendor Name</label>
-              <input id="f-po-vendor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="McMaster / Summit">
+              <input id="f-po-vendor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="McMaster / Summit / Wilwood">
             </div>
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Direct Web Link</label>
@@ -1500,8 +1730,9 @@
 
         orders.push(orderData);
         saveState('order_upsert', orderData);
+        addNotification("New PO Requisition", `${orderData.requestedBy} requested ${orderData.item}`, "order");
         closeModal();
-        showToast('Order submitted');
+        showToast('Purchase request submitted');
 
         if (settings.webhookUrl) {
           fetch(settings.webhookUrl, {
@@ -1525,6 +1756,7 @@
       if (target) {
         target.status = status;
         saveState('order_upsert', target);
+        addNotification("PO Status Update", `Order for '${target.item}' updated to ${status}`, "order");
       }
     }
 
@@ -1536,7 +1768,7 @@
       }
     }
 
-    /* Admin Settings Modal (Accessible ONLY inside Executive View) */
+    /* Admin Settings Modal */
     function openSettingsModal() {
       const modalCard = document.getElementById('modal-card');
       modalCard.innerHTML = `
@@ -1563,7 +1795,7 @@
             </div>
           </div>
           <div class="pt-2 border-t border-slate-200">
-            <span class="text-[11px] font-mono text-slate-700 font-bold block mb-1">Purchase Order Alerts (Optional)</span>
+            <span class="text-[11px] font-mono text-slate-700 font-bold block mb-1">Purchase Order Alerts (Optional Webhook)</span>
             <input id="f-set-webhook" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono mb-2" value="${settings.webhookUrl || ''}" placeholder="Webhook URL (OneDrive / Power Automate)">
             <input id="f-set-emails" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${settings.emailList || ''}" placeholder="captain@bobcatracing.edu, lead@bobcatracing.edu">
           </div>
@@ -1589,12 +1821,21 @@
       lucide.createIcons();
     }
 
-    /* Secret Ghost Hotkey Trigger (Ctrl+Shift+X or Cmd+Shift+X) ONLY */
+    /* Secret Ghost Hotkey Trigger */
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
         if (!ctoUnlocked) promptSecretPin();
         else switchTab('cto');
+      }
+    });
+
+    /* Global Click Listener */
+    document.addEventListener('click', (e) => {
+      const panel = document.getElementById('notif-panel');
+      const btn = document.getElementById('btn-notifications');
+      if (panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.add('hidden');
       }
     });
 

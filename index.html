@@ -54,13 +54,14 @@
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="tasks">Tasks &amp; Packages</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="schedule">Timeline &amp; Calendar</button>
         <button class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 hover:text-slate-900" data-tab="orders">Purchase Orders</button>
+        <!-- Injected Executive Tab (Revealed only via Ctrl+Shift+X) -->
         <button id="nav-cto-secret" class="nav-tab hidden px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all text-[#0c2340] bg-amber-50 border border-amber-200 hover:bg-amber-100 items-center gap-1.5" data-tab="cto">
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#0c2340]"></i>
           <span>Executive View</span>
         </button>
       </nav>
 
-      <!-- Right Controls -->
+      <!-- Right Controls: Notifications + Status -->
       <div class="flex items-center gap-2.5">
         <div class="relative">
           <button id="btn-notifications" onclick="toggleNotificationPanel()" class="relative p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs">
@@ -68,6 +69,7 @@
             <span id="notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono px-1 flex items-center justify-center border-2 border-white">0</span>
           </button>
 
+          <!-- Notification Drawer -->
           <div id="notif-panel" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 space-y-3">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
@@ -280,7 +282,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-slate-900">Master Build Schedule &amp; Calendar</h1>
-          <p class="text-xs text-slate-500">Interactive calendar and fully editable multi-week subsystem roadmap</p>
+          <p class="text-xs text-slate-500">Interactive calendar and fully customizable multi-week subsystem roadmap</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="openColumnConfigModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
@@ -288,9 +290,6 @@
           </button>
           <button onclick="openTimelineRowModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Subsystem Row
-          </button>
-          <button onclick="openTaskModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
-            <i data-lucide="plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> Add Milestone
           </button>
         </div>
       </div>
@@ -320,8 +319,8 @@
       <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div>
-            <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Subsystem Matrix (Click any header or cell to edit)</h3>
-            <p class="text-[11px] text-slate-500">Click column labels to rename weeks; click milestone cells to edit content</p>
+            <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Subsystem Matrix (Click any cell to edit)</h3>
+            <p class="text-[11px] text-slate-500">To rename columns or change colors, click "Edit Columns / Weeks" above.</p>
           </div>
           <span class="text-[11px] font-mono text-slate-500">Live Roadmap</span>
         </div>
@@ -406,7 +405,8 @@
   </div>
 
   <script>
-    const DATA_VERSION = "v4_custom_weeks";
+    /* Schema Versioning for Auto-Migration */
+    const DATA_VERSION = "v5_column_colors";
 
     const TAXONOMY = [
       {
@@ -495,69 +495,70 @@
     ];
 
     const DEFAULT_TASKS = [
-      // Chassis
       { id: "t1", title: "Complete full penetration welds on primary/secondary cage joints", subsystemId: "chassis", category: "Roll Cage & Primary Members", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-10", notes: "Ensure 100% weld penetration and prepare sample joints for tech inspection." },
       { id: "t2", title: "Weld double-shear suspension tabs & sleeve frame through-bolts", subsystemId: "chassis", category: "Double-Shear Tabs & Sleeving", priority: "High", status: "To Do", assignee: "Matt", deadline: "2026-02-17", notes: "All drilled tube pass-throughs require 360-deg internal steel sleeves." },
       { id: "t3", title: "Fabricate & weld 5/6-point harness mounting tabs", subsystemId: "chassis", category: "Safety Mounts & Harness", priority: "Critical", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Check lap belt mounting angle range between 45 and 80 degrees." },
       { id: "t4", title: "Weld front & rear recovery tow points", subsystemId: "chassis", category: "Component Brackets & Tow Points", priority: "Medium", status: "In Progress", assignee: "Jorge", deadline: "2026-02-03", notes: "Recovery points must meet minimum inside diameter and shear strength rules." },
-
-      // Front Suspension
       { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "Andy", deadline: "2026-02-03", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
       { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
       { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Column & Mechanical Stops", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-03", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
       { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "Andy", deadline: "2026-02-17", notes: "Verify shock travel clearance throughout full steering sweep." },
-
-      // Rear Suspension & Brakes Team
       { id: "t9", title: "Fabricate rear trailing arms & camber/toe links", subsystemId: "rear-suspension-brakes", category: "Trailing Arms & Geometry", priority: "High", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Validate rear anti-squat geometry and wheel travel envelope." },
       { id: "t10", title: "Fabricate rear bearing carriers with caliper mounts", subsystemId: "rear-suspension-brakes", category: "Rear Bearing Carriers", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Mounting calipers directly on trailing arms/carriers for outboard braking." },
       { id: "t11", title: "Determine rear brake rotor hat & caliper placement", subsystemId: "rear-suspension-brakes", category: "Rear Caliper Integration", priority: "High", status: "In Progress", assignee: "Andy", deadline: "2026-02-03", notes: "Coordinate rotor spacing with wheel rim inner barrel clearance." },
       { id: "t12", title: "Verify CV joint operating angles through full rear travel", subsystemId: "rear-suspension-brakes", category: "Axle Articulation & CV Engagement", priority: "Critical", status: "To Do", assignee: "Matt", deadline: "2026-02-17", notes: "Ensure zero bind at full droop and full bump." },
-
-      // Pedals & Driver Controls
       { id: "t13", title: "Footwell mockup, driver reach & 5.0s egress check", subsystemId: "pedals-driver-controls", category: "Footwell Placement & Ergonomics", priority: "High", status: "In Progress", assignee: "John", deadline: "2026-02-10", notes: "Establish heel-rest line and ensure ankle travel does not strike rack." },
       { id: "t14", title: "Design 4:1 - 6:1 brake pedal & dual master cylinder balance bar", subsystemId: "pedals-driver-controls", category: "Brake Pedal & Balance Bar", priority: "Critical", status: "In Progress", assignee: "John", deadline: "2026-02-10", notes: "Threaded balance bar linking independent front/rear master cylinders." },
       { id: "t15", title: "Design throttle pedal pivot & cable pull linkage", subsystemId: "pedals-driver-controls", category: "Throttle Pedal & Cable Pull", priority: "Medium", status: "To Do", assignee: "Chris", deadline: "2026-02-17", notes: "Smooth pull action with zero binding throughout travel." },
       { id: "t16", title: "Incorporate mechanical over-travel stops & dual return springs", subsystemId: "pedals-driver-controls", category: "Positive Stops & Dual Return Springs", priority: "High", status: "To Do", assignee: "John", deadline: "2026-02-17", notes: "Positive pedal stop prevents master cylinder bottoming out under max panic load." },
-
-      // Drivetrain Fitment
       { id: "t17", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "High", status: "In Progress", assignee: "Chris", deadline: "2026-02-03", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
       { id: "t18", title: "Eliminate intermediate shaft axial play with machined alloy spacers", subsystemId: "drivetrain-fitment", category: "Axial Play & Alignment", priority: "High", status: "Ready for CTO Review", assignee: "John", deadline: "2026-02-10", notes: "Permanent machined alloy spacers replacing testing shims." },
       { id: "t19", title: "Fabricate chain tensioner bracket with locking adjustment", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "Medium", status: "To Do", assignee: "John", deadline: "2026-02-10", notes: "Slotted bracket for rapid chain tension maintenance." },
       { id: "t20", title: "Install Kohler restrictor plate & plumb 3/16\" fuel line", subsystemId: "drivetrain-fitment", category: "Engine & Fuel Line Restrictor", priority: "Medium", status: "To Do", assignee: "Spence", deadline: "2026-02-17", notes: "SAE J30R9 fuel injection hose with positive shut-off valve and catch container." },
-
-      // Shielding & Safety
       { id: "t21", title: "Fabricate fuel tank heat deflector & splash guard divert tray", subsystemId: "shielding-safety", category: "Fuel Tank Shielding & Splash Guard", priority: "Medium", status: "To Do", assignee: "Spence", deadline: "2026-02-17", notes: "Divert fuel spillage away from hot exhaust and electrical harness." },
       { id: "t22", title: "Construct 360-degree CVT rotating assembly guard", subsystemId: "shielding-safety", category: "CVT Rotating Assembly Guard", priority: "Critical", status: "In Progress", assignee: "Jorge", deadline: "2026-02-10", notes: "Must meet min 0.063\" steel or 0.090\" 6061-T6 aluminum thickness." },
       { id: "t23", title: "Build full engine bay perimeter debris & heat envelope", subsystemId: "shielding-safety", category: "Full Engine Bay Enclosure", priority: "High", status: "To Do", assignee: "Emmett", deadline: "2026-02-17", notes: "Protective envelope around entire motor assembly to prevent track debris ingestion." },
       { id: "t24", title: "Fit solid driver firewall, front nose shielding & belly pan", subsystemId: "shielding-safety", category: "Driver Firewall & Underbody Belly Pan", priority: "Critical", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Solid barrier separating cockpit from fuel, engine, and hot lines." },
-
-      // SAE Deliverables
       { id: "t25", title: "Roll Cage Spec Sheet (RCSS) & Weld Samples", subsystemId: "sae-deliverables", category: "Roll Cage Spec Sheet (RCSS)", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-16", notes: "Complete weld sample photos and material tensile test certs." },
       { id: "t26", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "High", status: "To Do", assignee: "CFO Lead", deadline: "2026-02-20", notes: "Cost reduction report submission." },
       { id: "t27", title: "Business Presenter Form & Slide Deck", subsystemId: "sae-deliverables", category: "Business Presentation Deck", priority: "Medium", status: "To Do", assignee: "CCO Lead", deadline: "2026-03-02", notes: "Presenter confirmation and slide deck." },
       { id: "t28", title: "Online Cost Prototype BOM Finalization", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "Critical", status: "In Progress", assignee: "CFO Lead", deadline: "2026-04-10", notes: "Final vehicle costing BOM." }
     ];
 
-    /* Default Configurable Columns */
+    /* Timeline Columns Mapping with Highlights */
+    const HIGHLIGHT_STYLES = {
+      none: { header: 'bg-[#0c2340] text-white', cell: '' },
+      amber: { header: 'bg-amber-800 text-amber-100', cell: 'bg-amber-50/50' },
+      emerald: { header: 'bg-emerald-800 text-emerald-100', cell: 'bg-emerald-50/30' },
+      rose: { header: 'bg-rose-800 text-rose-100', cell: 'bg-rose-50/30' },
+      sky: { header: 'bg-sky-800 text-sky-100', cell: 'bg-sky-50/30' }
+    };
+
     const DEFAULT_TIMELINE_COLUMNS = [
-      { key: "W1", label: "W1" },
-      { key: "W2", label: "W2" },
-      { key: "W3", label: "W3" },
-      { key: "W4", label: "W4" },
-      { key: "W5", label: "W5" },
-      { key: "W6", label: "W6" },
-      { key: "W7", label: "W7" },
-      { key: "BREAK", label: "SPRING BREAK", highlight: "break" },
-      { key: "W9", label: "W9" },
-      { key: "W10", label: "TESTING (W10)", highlight: "test" },
-      { key: "W11", label: "TESTING (W11)", highlight: "test" },
-      { key: "W12", label: "W12" },
-      { key: "W13", label: "W13" },
-      { key: "W14", label: "W14" },
-      { key: "W15", label: "W15" }
+      { key: "W1", label: "W1", highlight: "none" },
+      { key: "W2", label: "W2", highlight: "none" },
+      { key: "W3", label: "W3", highlight: "none" },
+      { key: "W4", label: "W4", highlight: "none" },
+      { key: "W5", label: "W5", highlight: "none" },
+      { key: "W6", label: "W6", highlight: "none" },
+      { key: "W7", label: "W7", highlight: "none" },
+      { key: "BREAK", label: "SPRING BREAK", highlight: "amber" },
+      { key: "W9", label: "W9", highlight: "none" },
+      { key: "W10", label: "TESTING (W10)", highlight: "emerald" },
+      { key: "W11", label: "TESTING (W11)", highlight: "emerald" },
+      { key: "W12", label: "W12", highlight: "none" },
+      { key: "W13", label: "W13", highlight: "none" },
+      { key: "W14", label: "W14", highlight: "none" },
+      { key: "W15", label: "W15", highlight: "none" }
     ];
 
     let timelineColumns = JSON.parse(localStorage.getItem('bobcat_timeline_cols')) || DEFAULT_TIMELINE_COLUMNS;
+    // Backwards compatibility mapping for old cache
+    timelineColumns = timelineColumns.map(c => {
+      if(c.highlight === 'break') c.highlight = 'amber';
+      if(c.highlight === 'test') c.highlight = 'emerald';
+      return c;
+    });
 
     let timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || [
       { id: "r1", subsystem: "Frame & Chassis Finish", weeks: { W2: "Fab nose & rear", W3: "Tabs & Sleeving", W4: "Harness Mounts", W6: "FAB low weld", W7: "Finish Welding", W10: "TESTING", W11: "TESTING" } },
@@ -585,7 +586,7 @@
       orders = DEFAULT_ORDERS;
       timelineColumns = DEFAULT_TIMELINE_COLUMNS;
       notifications = [
-        { id: "n1", title: "Build Scope Updated", message: "Loaded customizable timeline columns and updated task architecture", timestamp: new Date().toISOString(), read: false, type: "task" }
+        { id: "n1", title: "Timeline Upgraded", message: "You can now assign custom colors and rename timeline column headers.", timestamp: new Date().toISOString(), read: false, type: "task" }
       ];
       localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
@@ -871,7 +872,7 @@
     }
 
     function reseedDefaultTasks() {
-      if (confirm('Reset and load all 28 default engineering tasks across all vehicle domains?')) {
+      if (confirm('Reset and load all 28 default engineering tasks and column layouts?')) {
         tasks = DEFAULT_TASKS;
         timelineColumns = DEFAULT_TIMELINE_COLUMNS;
         localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
@@ -894,7 +895,7 @@
             }
           })();
         }
-        showToast('All 28 tasks and columns reseeded');
+        showToast('All tasks and columns reseeded');
         render();
       }
     }
@@ -1353,11 +1354,9 @@
         <tr class="bg-[#0c2340] text-white font-mono text-[11px]">
           <th class="py-3 px-3 w-48 sticky left-0 bg-[#0c2340] z-10 border-r border-slate-700">Subsystem</th>
           ${timelineColumns.map(col => {
-            const isBreak = col.highlight === 'break';
-            const isTest = col.highlight === 'test';
-            const bg = isBreak ? 'bg-amber-900/60 text-amber-200' : isTest ? 'bg-emerald-900/40 text-emerald-200' : 'bg-[#0c2340] text-white';
+            const style = HIGHLIGHT_STYLES[col.highlight] || HIGHLIGHT_STYLES.none;
             return `
-              <th onclick="editColumnHeader('${col.key}')" class="py-3 px-2 text-center border-r border-slate-700 w-24 cursor-pointer hover:bg-slate-700/80 transition-colors ${bg}" title="Click to rename week">
+              <th onclick="editColumnHeader('${col.key}')" class="py-3 px-2 text-center border-r border-slate-700 w-24 cursor-pointer hover:opacity-80 transition-opacity ${style.header}" title="Click to rename week">
                 <span class="block truncate">${col.label}</span>
               </th>
             `;
@@ -1377,12 +1376,11 @@
             </td>
             ${timelineColumns.map(col => {
               const taskText = row.weeks[col.key] || '';
-              const isBreak = col.highlight === 'break';
-              const isTest = col.highlight === 'test';
+              const style = HIGHLIGHT_STYLES[col.highlight] || HIGHLIGHT_STYLES.none;
               const isSaeRow = row.subsystem.includes('SAE Deliverables');
 
               return `
-                <td onclick="editTimelineCell('${row.id}', '${col.key}')" class="py-2 px-1.5 border-r border-slate-200 align-top cursor-pointer hover:bg-amber-50/70 transition-colors ${isBreak ? 'bg-amber-50/50' : isTest ? 'bg-emerald-50/30' : ''}">
+                <td onclick="editTimelineCell('${row.id}', '${col.key}')" class="py-2 px-1.5 border-r border-slate-200 align-top cursor-pointer hover:brightness-95 transition-all ${style.cell}">
                   ${taskText ? `
                     <div class="p-1.5 rounded ${isSaeRow ? 'bg-indigo-50 border-indigo-300 text-indigo-900 font-bold' : 'bg-[#0c2340]/5 border-[#0c2340]/20 text-[#0c2340] font-semibold'} border text-[10px] leading-tight text-center">
                       ${taskText}
@@ -1419,12 +1417,19 @@
           <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
         <div class="space-y-4 mt-4 text-xs">
-          <p class="text-slate-500">Edit any column title below or add custom dates/milestone weeks.</p>
+          <p class="text-slate-500">Edit any column title or change its color highlighting.</p>
           <div class="max-h-72 overflow-y-auto space-y-2 pr-1 divide-y divide-slate-100">
             ${timelineColumns.map((col, index) => `
-              <div class="flex items-center justify-between gap-2 pt-2">
-                <span class="font-mono text-slate-400 w-12 text-[10px]">${col.key}</span>
-                <input id="col-input-${index}" class="flex-1 bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none" value="${col.label}">
+              <div class="flex items-center justify-between gap-2 pt-2 pb-1">
+                <span class="font-mono text-slate-400 w-10 text-[10px] truncate" title="${col.key}">${col.key.replace('C_','')}</span>
+                <input id="col-label-${index}" class="flex-1 bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none" value="${col.label}" placeholder="Title">
+                <select id="col-color-${index}" class="w-28 bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-700 outline-none">
+                  <option value="none" ${col.highlight === 'none' || !col.highlight ? 'selected' : ''}>Standard</option>
+                  <option value="amber" ${col.highlight === 'amber' ? 'selected' : ''}>Amber (Break)</option>
+                  <option value="emerald" ${col.highlight === 'emerald' ? 'selected' : ''}>Green (Test)</option>
+                  <option value="rose" ${col.highlight === 'rose' ? 'selected' : ''}>Red (Urgent)</option>
+                  <option value="sky" ${col.highlight === 'sky' ? 'selected' : ''}>Blue (Info)</option>
+                </select>
                 <button onclick="deleteTimelineColumn('${col.key}')" class="text-slate-400 hover:text-rose-600 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
               </div>
             `).join('')}
@@ -1442,19 +1447,21 @@
 
     function saveAllColumnsFromModal() {
       timelineColumns.forEach((col, index) => {
-        const input = document.getElementById(`col-input-${index}`);
-        if (input && input.value.trim()) col.label = input.value.trim();
+        const labelInput = document.getElementById(`col-label-${index}`);
+        const colorSelect = document.getElementById(`col-color-${index}`);
+        if (labelInput && labelInput.value.trim()) col.label = labelInput.value.trim();
+        if (colorSelect) col.highlight = colorSelect.value;
       });
       saveState();
       closeModal();
-      showToast('Columns saved');
+      showToast('Columns & colors saved');
     }
 
     function addNewTimelineColumn() {
       const name = prompt("Enter new column name (e.g. 'W16' or 'COMPETITION'):");
       if (name && name.trim()) {
         const key = "C_" + Date.now();
-        timelineColumns.push({ key, label: name.trim() });
+        timelineColumns.push({ key, label: name.trim(), highlight: "none" });
         saveState();
         openColumnConfigModal();
       }
@@ -1952,7 +1959,7 @@
             <input id="f-set-emails" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${settings.emailList || ''}" placeholder="captain@bobcatracing.edu, lead@bobcatracing.edu">
           </div>
           <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Reseed All 28 Tasks</button>
+            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Default Data Reset</button>
             <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Save Settings</button>
           </div>
         </form>

@@ -21,7 +21,10 @@
     }
   </script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SheetJS CDN for Exact Excel (.xlsx) Generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -61,27 +64,8 @@
         </button>
       </nav>
 
-      <!-- Right Controls: Notifications + Status -->
-      <div class="flex items-center gap-2.5">
-        <div class="relative">
-          <button id="btn-notifications" onclick="toggleNotificationPanel()" class="relative p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs">
-            <i data-lucide="bell" class="w-4 h-4 text-slate-600"></i>
-            <span id="notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono px-1 flex items-center justify-center border-2 border-white">0</span>
-          </button>
-
-          <!-- Notification Drawer -->
-          <div id="notif-panel" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 space-y-3">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div class="flex items-center gap-2">
-                <i data-lucide="bell-ring" class="w-4 h-4 text-[#0c2340]"></i>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">Team Activity &amp; Alerts</h3>
-              </div>
-              <button onclick="markAllNotificationsRead()" class="text-[11px] font-mono text-[#0c2340] hover:text-[#b59a57] font-semibold">Mark read</button>
-            </div>
-            <div id="notif-list" class="max-h-72 overflow-y-auto space-y-2 divide-y divide-slate-100 pr-1"></div>
-          </div>
-        </div>
-
+      <!-- Sync Status Badge (Public) -->
+      <div class="flex items-center gap-2">
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-mono text-slate-600 select-none shadow-xs">
           <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
           <span id="sync-status-text">Checking...</span>
@@ -90,7 +74,7 @@
     </div>
   </header>
 
-  <!-- Mobile Tab Bar -->
+  <!-- Mobile Navigation Bar -->
   <div id="mobile-nav-bar" class="lg:hidden flex overflow-x-auto border-b border-slate-200 bg-slate-100 p-2 gap-1">
     <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 whitespace-nowrap" data-tab="home">Overview</button>
     <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 whitespace-nowrap" data-tab="tasks">Tasks</button>
@@ -102,69 +86,75 @@
   <!-- Main Viewport -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
     
-    <!-- ==================== VIEW 1: HOME ==================== -->
+    <!-- ==================== VIEW 1: OVERVIEW DASHBOARD ==================== -->
     <div id="view-home" class="space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Build Progress</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Overall Vehicle Build</span>
           <div class="flex items-baseline justify-between mt-2">
-            <span id="stat-progress-pct" class="text-2xl font-bold tracking-tight text-slate-900">0%</span>
-            <span id="stat-completed-count" class="text-xs font-mono text-slate-500">0/0 done</span>
+            <span id="stat-progress-pct" class="text-2xl font-bold tracking-tight text-slate-900">42%</span>
+            <span class="text-xs font-mono text-[#b59a57] font-semibold">Fab / Assembly</span>
           </div>
           <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden border border-slate-200">
-            <div id="stat-progress-bar" class="bg-[#0c2340] h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+            <div id="stat-progress-bar" class="bg-[#0c2340] h-full rounded-full transition-all duration-500" style="width: 42%"></div>
           </div>
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Shop Blockers</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Unclaimed Work</span>
           <div class="flex items-baseline justify-between mt-2">
-            <span id="stat-blockers-count" class="text-2xl font-bold tracking-tight text-rose-600">0</span>
-            <i data-lucide="octagon-alert" class="w-4 h-4 text-rose-600"></i>
+            <span id="stat-unassigned-count" class="text-2xl font-bold tracking-tight text-amber-600">0</span>
+            <i data-lucide="user-plus" class="w-4 h-4 text-amber-600"></i>
           </div>
-          <p class="text-[11px] text-slate-500 mt-2">Active design &amp; fab blockers</p>
+          <p class="text-[11px] text-slate-500 mt-2">Open packages ready to claim</p>
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Active Subsystems</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Shop Parts Readiness</span>
           <div class="flex items-baseline justify-between mt-2">
-            <span id="stat-teams-count" class="text-2xl font-bold tracking-tight text-slate-900">7</span>
-            <i data-lucide="layers" class="w-4 h-4 text-[#0c2340]"></i>
+            <span id="stat-parts-ready" class="text-2xl font-bold tracking-tight text-emerald-600">0 / 0</span>
+            <i data-lucide="package-check" class="w-4 h-4 text-emerald-600"></i>
           </div>
-          <p class="text-[11px] text-slate-500 mt-2">Core build packages</p>
+          <p class="text-[11px] text-slate-500 mt-2">Orders arrived in shop</p>
         </div>
 
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Open Deliverables</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider font-mono">Next Target</span>
           <div class="flex items-baseline justify-between mt-2">
-            <span id="stat-open-count" class="text-2xl font-bold tracking-tight text-sky-600">0</span>
-            <i data-lucide="clock" class="w-4 h-4 text-sky-600"></i>
+            <span id="stat-target-date" class="text-lg font-bold tracking-tight text-slate-900 truncate">Upcoming</span>
+            <i data-lucide="flag" class="w-4 h-4 text-[#0c2340]"></i>
           </div>
-          <p class="text-[11px] text-slate-500 mt-2">Pending shop completion</p>
+          <p class="text-[11px] text-slate-500 mt-2 truncate" id="stat-target-name">Upcoming Build Milestone</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Subsystem Build Breakdown -->
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <i data-lucide="layers" class="w-4 h-4 text-[#0c2340]"></i> Subsystem Progress Breakdown
-            </h2>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4 text-[#0c2340]"></i> Vehicle Subsystems Status
+              </h2>
+              <p class="text-[11px] text-slate-500 mt-0.5">Click any subsystem to view or claim work packages</p>
+            </div>
             <button class="text-xs text-[#0c2340] hover:text-[#b59a57] font-semibold flex items-center gap-1 transition-colors" onclick="switchTab('tasks')">
-              View Work Packages &rarr;
+              View All Tasks &rarr;
             </button>
           </div>
           <div id="subsystem-progress-list" class="space-y-3.5"></div>
         </div>
 
+        <!-- Upcoming Deadlines & Action Feed -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i> High-Priority Shop Queue
+                <i data-lucide="calendar-clock" class="w-4 h-4 text-[#0c2340]"></i> Upcoming Schedule
               </h2>
+              <span class="text-[10px] font-mono text-slate-400 uppercase font-semibold">Next 14 Days</span>
             </div>
-            <div id="urgent-tasks-list" class="space-y-2.5"></div>
+            <div id="upcoming-deadlines-list" class="space-y-2.5"></div>
           </div>
           <div class="mt-6 pt-4 border-t border-slate-100 flex gap-2">
             <button onclick="openTaskModal()" class="flex-1 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3 py-2.5 text-xs font-semibold shadow-xs transition-colors flex items-center justify-center gap-1.5">
@@ -186,19 +176,20 @@
             <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">Executive Portal</span>
             <h1 class="text-lg font-bold text-slate-900">Operations, Sub-Teams &amp; Financials</h1>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Confidential team hierarchy, budget review, and technical sign-offs</p>
+          <p class="text-xs text-slate-500 mt-0.5">Confidential team hierarchy, budget review, Excel export, and notifications</p>
         </div>
-        <div class="flex items-center gap-2">
-          <button onclick="exportOrdersToCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export POs (.CSV)
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <!-- Exact Excel PO Exporter Button -->
+          <button onclick="exportOrdersToExactExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel PO (.xlsx)
           </button>
-          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center justify-center gap-1.5">
             <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-slate-500"></i> Settings
           </button>
-          <button onclick="openTeamModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center gap-1.5">
+          <button onclick="openTeamModal()" class="bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg px-3.5 py-2 text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5">
             <i data-lucide="user-plus" class="w-3.5 h-3.5 text-[#b59a57]"></i> + Sub-Team
           </button>
-          <button onclick="lockCtoPortal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg px-3 py-2 text-xs font-semibold border border-rose-200 flex items-center gap-1">
+          <button onclick="lockCtoPortal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg px-3 py-2 text-xs font-semibold border border-rose-200 flex items-center justify-center gap-1">
             <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
           </button>
         </div>
@@ -223,6 +214,18 @@
         </div>
       </div>
 
+      <!-- Relocated CTO Activity Feed & Notifications Panel -->
+      <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <i data-lucide="bell-ring" class="w-4 h-4 text-[#0c2340]"></i>
+            <h3 class="text-sm font-bold text-slate-900">Executive Activity &amp; Team Alerts Log</h3>
+          </div>
+          <button onclick="markAllNotificationsRead()" class="text-xs font-mono text-[#0c2340] hover:text-[#b59a57] font-semibold">Mark all as read</button>
+        </div>
+        <div id="cto-notifications-container" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+      </div>
+
       <!-- Technical Sign-Off Review Queue -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
@@ -244,22 +247,24 @@
       </div>
     </div>
 
-    <!-- ==================== VIEW 3: STREAMLINED TASK BOARD ==================== -->
+    <!-- ==================== VIEW 3: ACCORDION COLLAPSIBLE TASK BOARD ==================== -->
     <div id="view-tasks" class="space-y-6">
-      
-      <!-- Search & Filters -->
+      <!-- Search, Filters, & Master Expand/Collapse Toggle -->
       <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
         <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div class="relative flex-1">
             <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
-            <input type="text" id="task-search-input" placeholder="Search any task, person, or part name..." class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0c2340] focus:bg-white transition-colors">
+            <input type="text" id="task-search-input" placeholder="Search any task, person, or category..." class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0c2340] focus:bg-white transition-colors">
           </div>
           <div class="flex items-center gap-2">
+            <button onclick="toggleAllTaskAccordions()" id="btn-toggle-all-accordions" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+              <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5"></i>
+              <span id="btn-toggle-all-text">Collapse All</span>
+            </button>
             <select id="task-status-filter" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-mono font-medium text-slate-700 outline-none">
               <option value="All">All Statuses</option>
-              <option value="To Do">To Do</option>
+              <option value="To Do">To Do (Open)</option>
               <option value="In Progress">In Progress</option>
-              <option value="Blocked">Blocked</option>
               <option value="Ready for CTO Review">Ready for Review</option>
               <option value="Complete">Complete</option>
             </select>
@@ -273,8 +278,8 @@
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="subsystem-pill-bar"></div>
       </div>
 
-      <!-- Work Packages Container -->
-      <div id="all-tasks-stream" class="space-y-6"></div>
+      <!-- Accordion Work Packages Container -->
+      <div id="all-tasks-stream" class="space-y-4"></div>
     </div>
 
     <!-- ==================== VIEW 4: CALENDAR & TIMELINE ==================== -->
@@ -282,9 +287,12 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-lg font-bold text-slate-900">Master Build Schedule &amp; Calendar</h1>
-          <p class="text-xs text-slate-500">Interactive calendar and fully customizable multi-week subsystem roadmap</p>
+          <p class="text-xs text-slate-500">Live dynamic calendar with recurring team events and customizable multi-week matrix</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openRecurringEventModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
+            <i data-lucide="repeat" class="w-3.5 h-3.5 text-slate-500"></i> + Recurring Event
+          </button>
           <button onclick="openColumnConfigModal()" class="bg-white hover:bg-slate-50 text-slate-700 rounded-lg px-3 py-2 text-xs font-semibold border border-slate-300 shadow-xs flex items-center gap-1.5">
             <i data-lucide="columns-3" class="w-3.5 h-3.5 text-slate-500"></i> Edit Columns / Weeks
           </button>
@@ -294,14 +302,15 @@
         </div>
       </div>
 
-      <!-- 1. Interactive Monthly Calendar -->
+      <!-- 1. Interactive Monthly Calendar with Today Ring & Recurring Events -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
           <div class="flex items-center gap-3">
             <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
               <i data-lucide="calendar" class="w-4 h-4 text-[#0c2340]"></i>
-              <span id="calendar-month-title">February 2026</span>
+              <span id="calendar-month-title">Loading Calendar...</span>
             </h2>
+            <button onclick="jumpToCurrentMonth()" class="text-[11px] font-mono text-[#0c2340] hover:text-[#b59a57] font-semibold underline">Jump to Today</button>
           </div>
           <div class="flex items-center gap-1.5">
             <button onclick="changeMonth(-1)" class="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
@@ -320,7 +329,7 @@
         <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div>
             <h3 class="text-xs font-bold font-mono text-slate-700 uppercase tracking-wider">Multi-Week Subsystem Matrix (Click any cell to edit)</h3>
-            <p class="text-[11px] text-slate-500">To rename columns or change colors, click "Edit Columns / Weeks" above.</p>
+            <p class="text-[11px] text-slate-500">To rename columns or adjust color highlighting, click "Edit Columns / Weeks" above.</p>
           </div>
           <span class="text-[11px] font-mono text-slate-500">Live Roadmap</span>
         </div>
@@ -371,12 +380,13 @@
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-mono font-bold text-slate-500">
-                <th class="py-3 px-4">Item &amp; Description</th>
-                <th class="py-3 px-4">Subsystem</th>
-                <th class="py-3 px-4">Vendor &amp; Part #</th>
+                <th class="py-3 px-4">Vendor</th>
+                <th class="py-3 px-4">Item(s) &amp; Description</th>
+                <th class="py-3 px-4">Part #</th>
+                <th class="py-3 px-4">Subassembly</th>
                 <th class="py-3 px-4 text-right">Qty</th>
                 <th class="py-3 px-4">Urgency</th>
-                <th class="py-3 px-4">Requester</th>
+                <th class="py-3 px-4">Member</th>
                 <th class="py-3 px-4">Status</th>
                 <th class="py-3 px-4 text-right">Actions</th>
               </tr>
@@ -405,8 +415,7 @@
   </div>
 
   <script>
-    /* Schema Versioning for Auto-Migration */
-    const DATA_VERSION = "v5_column_colors";
+    const DATA_VERSION = "v7_accordion_recurrent_xlsx";
 
     const TAXONOMY = [
       {
@@ -494,38 +503,38 @@
       { id: "st_chassis", name: "Chassis & Shielding", lead: "Emmett", members: ["Jorge", "Matt"], subsystemId: "shielding-safety" }
     ];
 
+    /* 28 Baseline Tasks (Completely Unassigned) */
     const DEFAULT_TASKS = [
-      { id: "t1", title: "Complete full penetration welds on primary/secondary cage joints", subsystemId: "chassis", category: "Roll Cage & Primary Members", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-10", notes: "Ensure 100% weld penetration and prepare sample joints for tech inspection." },
-      { id: "t2", title: "Weld double-shear suspension tabs & sleeve frame through-bolts", subsystemId: "chassis", category: "Double-Shear Tabs & Sleeving", priority: "High", status: "To Do", assignee: "Matt", deadline: "2026-02-17", notes: "All drilled tube pass-throughs require 360-deg internal steel sleeves." },
-      { id: "t3", title: "Fabricate & weld 5/6-point harness mounting tabs", subsystemId: "chassis", category: "Safety Mounts & Harness", priority: "Critical", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Check lap belt mounting angle range between 45 and 80 degrees." },
-      { id: "t4", title: "Weld front & rear recovery tow points", subsystemId: "chassis", category: "Component Brackets & Tow Points", priority: "Medium", status: "In Progress", assignee: "Jorge", deadline: "2026-02-03", notes: "Recovery points must meet minimum inside diameter and shear strength rules." },
-      { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "Andy", deadline: "2026-02-03", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
-      { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
-      { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Column & Mechanical Stops", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-03", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
-      { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "Andy", deadline: "2026-02-17", notes: "Verify shock travel clearance throughout full steering sweep." },
-      { id: "t9", title: "Fabricate rear trailing arms & camber/toe links", subsystemId: "rear-suspension-brakes", category: "Trailing Arms & Geometry", priority: "High", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Validate rear anti-squat geometry and wheel travel envelope." },
-      { id: "t10", title: "Fabricate rear bearing carriers with caliper mounts", subsystemId: "rear-suspension-brakes", category: "Rear Bearing Carriers", priority: "Critical", status: "In Progress", assignee: "Andy", deadline: "2026-02-10", notes: "Mounting calipers directly on trailing arms/carriers for outboard braking." },
-      { id: "t11", title: "Determine rear brake rotor hat & caliper placement", subsystemId: "rear-suspension-brakes", category: "Rear Caliper Integration", priority: "High", status: "In Progress", assignee: "Andy", deadline: "2026-02-03", notes: "Coordinate rotor spacing with wheel rim inner barrel clearance." },
-      { id: "t12", title: "Verify CV joint operating angles through full rear travel", subsystemId: "rear-suspension-brakes", category: "Axle Articulation & CV Engagement", priority: "Critical", status: "To Do", assignee: "Matt", deadline: "2026-02-17", notes: "Ensure zero bind at full droop and full bump." },
-      { id: "t13", title: "Footwell mockup, driver reach & 5.0s egress check", subsystemId: "pedals-driver-controls", category: "Footwell Placement & Ergonomics", priority: "High", status: "In Progress", assignee: "John", deadline: "2026-02-10", notes: "Establish heel-rest line and ensure ankle travel does not strike rack." },
-      { id: "t14", title: "Design 4:1 - 6:1 brake pedal & dual master cylinder balance bar", subsystemId: "pedals-driver-controls", category: "Brake Pedal & Balance Bar", priority: "Critical", status: "In Progress", assignee: "John", deadline: "2026-02-10", notes: "Threaded balance bar linking independent front/rear master cylinders." },
-      { id: "t15", title: "Design throttle pedal pivot & cable pull linkage", subsystemId: "pedals-driver-controls", category: "Throttle Pedal & Cable Pull", priority: "Medium", status: "To Do", assignee: "Chris", deadline: "2026-02-17", notes: "Smooth pull action with zero binding throughout travel." },
-      { id: "t16", title: "Incorporate mechanical over-travel stops & dual return springs", subsystemId: "pedals-driver-controls", category: "Positive Stops & Dual Return Springs", priority: "High", status: "To Do", assignee: "John", deadline: "2026-02-17", notes: "Positive pedal stop prevents master cylinder bottoming out under max panic load." },
-      { id: "t17", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "High", status: "In Progress", assignee: "Chris", deadline: "2026-02-03", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
-      { id: "t18", title: "Eliminate intermediate shaft axial play with machined alloy spacers", subsystemId: "drivetrain-fitment", category: "Axial Play & Alignment", priority: "High", status: "Ready for CTO Review", assignee: "John", deadline: "2026-02-10", notes: "Permanent machined alloy spacers replacing testing shims." },
-      { id: "t19", title: "Fabricate chain tensioner bracket with locking adjustment", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "Medium", status: "To Do", assignee: "John", deadline: "2026-02-10", notes: "Slotted bracket for rapid chain tension maintenance." },
-      { id: "t20", title: "Install Kohler restrictor plate & plumb 3/16\" fuel line", subsystemId: "drivetrain-fitment", category: "Engine & Fuel Line Restrictor", priority: "Medium", status: "To Do", assignee: "Spence", deadline: "2026-02-17", notes: "SAE J30R9 fuel injection hose with positive shut-off valve and catch container." },
-      { id: "t21", title: "Fabricate fuel tank heat deflector & splash guard divert tray", subsystemId: "shielding-safety", category: "Fuel Tank Shielding & Splash Guard", priority: "Medium", status: "To Do", assignee: "Spence", deadline: "2026-02-17", notes: "Divert fuel spillage away from hot exhaust and electrical harness." },
-      { id: "t22", title: "Construct 360-degree CVT rotating assembly guard", subsystemId: "shielding-safety", category: "CVT Rotating Assembly Guard", priority: "Critical", status: "In Progress", assignee: "Jorge", deadline: "2026-02-10", notes: "Must meet min 0.063\" steel or 0.090\" 6061-T6 aluminum thickness." },
-      { id: "t23", title: "Build full engine bay perimeter debris & heat envelope", subsystemId: "shielding-safety", category: "Full Engine Bay Enclosure", priority: "High", status: "To Do", assignee: "Emmett", deadline: "2026-02-17", notes: "Protective envelope around entire motor assembly to prevent track debris ingestion." },
-      { id: "t24", title: "Fit solid driver firewall, front nose shielding & belly pan", subsystemId: "shielding-safety", category: "Driver Firewall & Underbody Belly Pan", priority: "Critical", status: "To Do", assignee: "Emmett", deadline: "2026-02-10", notes: "Solid barrier separating cockpit from fuel, engine, and hot lines." },
-      { id: "t25", title: "Roll Cage Spec Sheet (RCSS) & Weld Samples", subsystemId: "sae-deliverables", category: "Roll Cage Spec Sheet (RCSS)", priority: "Critical", status: "In Progress", assignee: "Matt", deadline: "2026-02-16", notes: "Complete weld sample photos and material tensile test certs." },
-      { id: "t26", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "High", status: "To Do", assignee: "CFO Lead", deadline: "2026-02-20", notes: "Cost reduction report submission." },
-      { id: "t27", title: "Business Presenter Form & Slide Deck", subsystemId: "sae-deliverables", category: "Business Presentation Deck", priority: "Medium", status: "To Do", assignee: "CCO Lead", deadline: "2026-03-02", notes: "Presenter confirmation and slide deck." },
-      { id: "t28", title: "Online Cost Prototype BOM Finalization", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "Critical", status: "In Progress", assignee: "CFO Lead", deadline: "2026-04-10", notes: "Final vehicle costing BOM." }
+      { id: "t1", title: "Complete full penetration welds on primary/secondary cage joints", subsystemId: "chassis", category: "Roll Cage & Primary Members", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Ensure 100% weld penetration and prepare sample joints for tech inspection." },
+      { id: "t2", title: "Weld double-shear suspension tabs & sleeve frame through-bolts", subsystemId: "chassis", category: "Double-Shear Tabs & Sleeving", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "All drilled tube pass-throughs require 360-deg internal steel sleeves." },
+      { id: "t3", title: "Fabricate & weld 5/6-point harness mounting tabs", subsystemId: "chassis", category: "Safety Mounts & Harness", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-02-10", notes: "Check lap belt mounting angle range between 45 and 80 degrees." },
+      { id: "t4", title: "Weld front & rear recovery tow points", subsystemId: "chassis", category: "Component Brackets & Tow Points", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-03", notes: "Recovery points must meet minimum inside diameter and shear strength rules." },
+      { id: "t5", title: "Final Front A-Arm CAD & Welding Jigs", subsystemId: "front-suspension", category: "A-Arms & Spherical Bearings", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-02-03", notes: "Geometry validated for 4G bump load; spherical rod ends in double shear." },
+      { id: "t6", title: "Machine front uprights / knuckles with caliper mount ears", subsystemId: "front-suspension", category: "Front Knuckles & Caliper Mounts", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Integrate rigid brake caliper mounting ears directly into knuckle CAD." },
+      { id: "t7", title: "Mount steering rack & weld positive mechanical stops", subsystemId: "front-suspension", category: "Steering Column & Mechanical Stops", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-03", notes: "Positive stops required to eliminate any risk of tie-rod over-centering." },
+      { id: "t8", title: "Front damper double-shear mounts & travel verification", subsystemId: "front-suspension", category: "Dampers & Travel Checks", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Verify shock travel clearance throughout full steering sweep." },
+      { id: "t9", title: "Fabricate rear trailing arms & camber/toe links", subsystemId: "rear-suspension-brakes", category: "Trailing Arms & Geometry", priority: "High", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Validate rear anti-squat geometry and wheel travel envelope." },
+      { id: "t10", title: "Fabricate rear bearing carriers with caliper mounts", subsystemId: "rear-suspension-brakes", category: "Rear Bearing Carriers", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Mounting calipers directly on trailing arms/carriers for outboard braking." },
+      { id: "t11", title: "Determine rear brake rotor hat & caliper placement", subsystemId: "rear-suspension-brakes", category: "Rear Caliper Integration", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-03", notes: "Coordinate rotor spacing with wheel rim inner barrel clearance." },
+      { id: "t12", title: "Verify CV joint operating angles through full rear travel", subsystemId: "rear-suspension-brakes", category: "Axle Articulation & CV Engagement", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Ensure zero bind at full droop and full bump." },
+      { id: "t13", title: "Footwell mockup, driver reach & 5.0s egress check", subsystemId: "pedals-driver-controls", category: "Footwell Placement & Ergonomics", priority: "High", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Establish heel-rest line and ensure ankle travel does not strike rack." },
+      { id: "t14", title: "Design 4:1 - 6:1 brake pedal & dual master cylinder balance bar", subsystemId: "pedals-driver-controls", category: "Brake Pedal & Balance Bar", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Threaded balance bar linking independent front/rear master cylinders." },
+      { id: "t15", title: "Design throttle pedal pivot & cable pull linkage", subsystemId: "pedals-driver-controls", category: "Throttle Pedal & Cable Pull", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Smooth pull action with zero binding throughout travel." },
+      { id: "t16", title: "Incorporate mechanical over-travel stops & dual return springs", subsystemId: "pedals-driver-controls", category: "Positive Stops & Dual Return Springs", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Positive pedal stop prevents master cylinder bottoming out under max panic load." },
+      { id: "t17", title: "Turn down rear driveshaft for CV coupler", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "High", status: "In Progress", assignee: "", deadline: "2026-02-03", notes: "Turn down on lathe to match CV spline sleeve tolerances." },
+      { id: "t18", title: "Eliminate intermediate shaft axial play with machined alloy spacers", subsystemId: "drivetrain-fitment", category: "Axial Play & Alignment", priority: "High", status: "Ready for CTO Review", assignee: "", deadline: "2026-02-10", notes: "Permanent machined alloy spacers replacing testing shims." },
+      { id: "t19", title: "Fabricate chain tensioner bracket with locking adjustment", subsystemId: "drivetrain-fitment", category: "CV Couplers & Tensioners", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-10", notes: "Slotted bracket for rapid chain tension maintenance." },
+      { id: "t20", title: "Install Kohler restrictor plate & plumb 3/16\" fuel line", subsystemId: "drivetrain-fitment", category: "Engine & Fuel Line Restrictor", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "SAE J30R9 fuel injection hose with positive shut-off valve and catch container." },
+      { id: "t21", title: "Fabricate fuel tank heat deflector & splash guard divert tray", subsystemId: "shielding-safety", category: "Fuel Tank Shielding & Splash Guard", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Divert fuel spillage away from hot exhaust and electrical harness." },
+      { id: "t22", title: "Construct 360-degree CVT rotating assembly guard", subsystemId: "shielding-safety", category: "CVT Rotating Assembly Guard", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-10", notes: "Must meet min 0.063\" steel or 0.090\" 6061-T6 aluminum thickness." },
+      { id: "t23", title: "Build full engine bay perimeter debris & heat envelope", subsystemId: "shielding-safety", category: "Full Engine Bay Enclosure", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-17", notes: "Protective envelope around entire motor assembly to prevent track debris ingestion." },
+      { id: "t24", title: "Fit solid driver firewall, front nose shielding & belly pan", subsystemId: "shielding-safety", category: "Driver Firewall & Underbody Belly Pan", priority: "Critical", status: "To Do", assignee: "", deadline: "2026-02-10", notes: "Solid barrier separating cockpit from fuel, engine, and hot lines." },
+      { id: "t25", title: "Roll Cage Spec Sheet (RCSS) & Weld Samples", subsystemId: "sae-deliverables", category: "Roll Cage Spec Sheet (RCSS)", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-02-16", notes: "Complete weld sample photos and material tensile test certs." },
+      { id: "t26", title: "Written Cost Reduction Report", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "High", status: "To Do", assignee: "", deadline: "2026-02-20", notes: "Cost reduction report submission." },
+      { id: "t27", title: "Business Presenter Form & Slide Deck", subsystemId: "sae-deliverables", category: "Business Presentation Deck", priority: "Medium", status: "To Do", assignee: "", deadline: "2026-03-02", notes: "Presenter confirmation and slide deck." },
+      { id: "t28", title: "Online Cost Prototype BOM Finalization", subsystemId: "sae-deliverables", category: "Cost Prototype & Written Report", priority: "Critical", status: "In Progress", assignee: "", deadline: "2026-04-10", notes: "Final vehicle costing BOM." }
     ];
 
-    /* Timeline Columns Mapping with Highlights */
     const HIGHLIGHT_STYLES = {
       none: { header: 'bg-[#0c2340] text-white', cell: '' },
       amber: { header: 'bg-amber-800 text-amber-100', cell: 'bg-amber-50/50' },
@@ -552,13 +561,18 @@
       { key: "W15", label: "W15", highlight: "none" }
     ];
 
-    let timelineColumns = JSON.parse(localStorage.getItem('bobcat_timeline_cols')) || DEFAULT_TIMELINE_COLUMNS;
-    // Backwards compatibility mapping for old cache
-    timelineColumns = timelineColumns.map(c => {
-      if(c.highlight === 'break') c.highlight = 'amber';
-      if(c.highlight === 'test') c.highlight = 'emerald';
-      return c;
-    });
+    /* Weekly Recurring Events (Tuesdays & Thursdays) */
+    const DEFAULT_RECURRING_EVENTS = [
+      { id: "rec_tue", title: "Team Build Meeting", dayOfWeek: 2, time: "6:00 PM", color: "navy" },
+      { id: "rec_thu", title: "Shop & Fab Session", dayOfWeek: 4, time: "6:00 PM", color: "gold" }
+    ];
+
+    /* Sample Orders matching template format */
+    const DEFAULT_ORDERS = [
+      { id: "o1", item: "Super-Corrosion-Resistant 316 Stainless Steel Hex Head Screw 1/2\"-20 Thread, 4\" Long", partNumber: "92186A394", subsystemId: "chassis", vendor: "McMaster", vendorUrl: "https://www.mcmaster.com/92186A394/", qty: 5, unitPrice: 3.56, notes: "N/A", requestedBy: "JL", urgency: "Immediate Need", status: "Approved" },
+      { id: "o2", item: "Easy-to-Weld 4130 Alloy Steel Round Tube 0.065\" Wall, 1\" OD", partNumber: "89955K639", subsystemId: "chassis", vendor: "McMaster", vendorUrl: "https://www.mcmaster.com/89955K639/", qty: 1, unitPrice: 35.49, notes: "3 ft", requestedBy: "MP", urgency: "Immediate Need", status: "Ordered" },
+      { id: "o3", item: "Super-Swivel Ball Joint Rod End Zinc Plated, 3/8\"-24 Thread", partNumber: "6960T23", subsystemId: "front-suspension", vendor: "McMaster", vendorUrl: "https://www.mcmaster.com/6960T23/", qty: 4, unitPrice: 15.07, notes: "front A-Arm", requestedBy: "AM", urgency: "Immediate Need", status: "Arrived in Shop" }
+    ];
 
     let timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || [
       { id: "r1", subsystem: "Frame & Chassis Finish", weeks: { W2: "Fab nose & rear", W3: "Tabs & Sleeving", W4: "Harness Mounts", W6: "FAB low weld", W7: "Finish Welding", W10: "TESTING", W11: "TESTING" } },
@@ -570,29 +584,26 @@
       { id: "r7", subsystem: "SAE Deliverables & Costing", weeks: { W3: "RCSS Prep", W4: "RCSS Due (Feb 16)", W5: "Cost Reduction (Feb 20)", W6: "Biz Form (Mar 2)", W11: "Cost BOM (Apr 10)" } }
     ];
 
-    const DEFAULT_ORDERS = [
-      { id: "o1", item: "Grade 8 Suspension Fastener Assortment", description: "AN/Grade 8 bolts & locknuts for A-arms & Trailing Arms", subsystemId: "front-suspension", vendor: "McMaster-Carr", vendorUrl: "https://www.mcmaster.com", partNumber: "91251A", qty: 2, unitPrice: 38.50, urgency: "Immediate Need", requestedBy: "Matt", status: "Approved" },
-      { id: "o2", item: "3/16\" High-Pressure Fuel Line (10ft)", description: "SAE J30R9 fuel injection hose", subsystemId: "drivetrain-fitment", vendor: "Summit Racing", vendorUrl: "https://www.summitracing.com", partNumber: "SUM-2200", qty: 1, unitPrice: 24.99, urgency: "Next Batch Order", requestedBy: "Spence", status: "Ordered" },
-      { id: "o3", item: "Dual Master Cylinder Balance Bar Assembly", description: "Threaded balance bar with 3/8-24 spherical center pivot", subsystemId: "pedals-driver-controls", vendor: "Wilwood", vendorUrl: "https://www.wilwood.com", partNumber: "340-1757", qty: 1, unitPrice: 54.00, urgency: "Immediate Need", requestedBy: "John", status: "Approved" }
-    ];
-
-    /* Data Initializer with Auto-Migration */
+    /* Data Hydration */
     const storedVersion = localStorage.getItem('bobcat_schema_version');
-    let tasks, subteams, orders, notifications;
+    let tasks, subteams, orders, notifications, timelineColumns, recurringEvents;
+    let collapsedSubsystems = JSON.parse(localStorage.getItem('bobcat_collapsed_subsystems')) || {};
 
     if (storedVersion !== DATA_VERSION) {
       tasks = DEFAULT_TASKS;
       subteams = DEFAULT_SUBTEAMS;
       orders = DEFAULT_ORDERS;
       timelineColumns = DEFAULT_TIMELINE_COLUMNS;
+      recurringEvents = DEFAULT_RECURRING_EVENTS;
       notifications = [
-        { id: "n1", title: "Timeline Upgraded", message: "You can now assign custom colors and rename timeline column headers.", timestamp: new Date().toISOString(), read: false, type: "task" }
+        { id: "n1", title: "Workspace Synchronized", message: "Task accordions, live dynamic calendar, and exact Excel PO exporter loaded.", timestamp: new Date().toISOString(), read: false, type: "task" }
       ];
       localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
       localStorage.setItem('bobcat_subteams', JSON.stringify(subteams));
       localStorage.setItem('bobcat_orders', JSON.stringify(orders));
       localStorage.setItem('bobcat_timeline_rows', JSON.stringify(timelineRows));
       localStorage.setItem('bobcat_timeline_cols', JSON.stringify(timelineColumns));
+      localStorage.setItem('bobcat_recurring_events', JSON.stringify(recurringEvents));
       localStorage.setItem('bobcat_notifications', JSON.stringify(notifications));
       localStorage.setItem('bobcat_schema_version', DATA_VERSION);
     } else {
@@ -602,8 +613,9 @@
       notifications = JSON.parse(localStorage.getItem('bobcat_notifications')) || [];
       timelineRows = JSON.parse(localStorage.getItem('bobcat_timeline_rows')) || timelineRows;
       timelineColumns = JSON.parse(localStorage.getItem('bobcat_timeline_cols')) || DEFAULT_TIMELINE_COLUMNS;
+      recurringEvents = JSON.parse(localStorage.getItem('bobcat_recurring_events')) || DEFAULT_RECURRING_EVENTS;
     }
-    
+
     let settings = JSON.parse(localStorage.getItem('bobcat_settings')) || {
       ctoPin: '1111',
       supabaseUrl: 'https://sxguavofxfrasoeiafjk.supabase.co',
@@ -617,9 +629,12 @@
     let ctoUnlocked = sessionStorage.getItem('bobcat_cto_unlocked') === 'true';
     let currentTab = 'home';
     let activeSubsystemFilter = 'all';
-    let calDate = new Date(2026, 1, 1);
+    
+    // Initialize calendar to current real date
+    const today = new Date();
+    let calDate = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    /* Notification System Engine */
+    /* Notification Engine */
     function addNotification(title, message, type = "task") {
       const notif = {
         id: "n_" + Date.now(),
@@ -632,68 +647,43 @@
       notifications.unshift(notif);
       if (notifications.length > 30) notifications.pop();
       localStorage.setItem('bobcat_notifications', JSON.stringify(notifications));
-      updateNotificationBadge();
-    }
-
-    function updateNotificationBadge() {
-      const unreadCount = notifications.filter(n => !n.read).length;
-      const badge = document.getElementById('notif-badge');
-      if (badge) {
-        if (unreadCount > 0) {
-          badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
-        }
-      }
-    }
-
-    function toggleNotificationPanel() {
-      const panel = document.getElementById('notif-panel');
-      const isHidden = panel.classList.contains('hidden');
-      if (isHidden) {
-        renderNotificationList();
-        panel.classList.remove('hidden');
-      } else {
-        panel.classList.add('hidden');
-      }
-    }
-
-    function renderNotificationList() {
-      const list = document.getElementById('notif-list');
-      if (!notifications.length) {
-        list.innerHTML = `<div class="py-6 text-center text-xs font-mono text-slate-400">No new notifications.</div>`;
-        return;
-      }
-
-      list.innerHTML = notifications.map(n => {
-        const timeAgo = formatTimeAgo(new Date(n.timestamp));
-        const icon = n.type === 'order' ? 'shopping-cart' : n.type === 'review' ? 'shield-check' : 'check-circle-2';
-        const bgIcon = n.type === 'order' ? 'bg-emerald-100 text-emerald-800' : n.type === 'review' ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800';
-
-        return `
-          <div class="py-2.5 flex items-start gap-2.5 ${n.read ? 'opacity-65' : 'bg-slate-50/70 p-2 rounded-lg'}">
-            <div class="w-7 h-7 rounded-lg ${bgIcon} flex items-center justify-center flex-shrink-0 mt-0.5">
-              <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
-            </div>
-            <div class="space-y-0.5 flex-1">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-900">${n.title}</span>
-                <span class="text-[10px] font-mono text-slate-400">${timeAgo}</span>
-              </div>
-              <p class="text-[11px] text-slate-600 leading-snug">${n.message}</p>
-            </div>
-          </div>
-        `;
-      }).join('');
-      lucide.createIcons();
+      if (currentTab === 'cto' && ctoUnlocked) renderCtoNotifications();
     }
 
     function markAllNotificationsRead() {
       notifications = notifications.map(n => ({ ...n, read: true }));
       localStorage.setItem('bobcat_notifications', JSON.stringify(notifications));
-      updateNotificationBadge();
-      renderNotificationList();
+      renderCtoNotifications();
+      showToast('Notifications marked as read');
+    }
+
+    function renderCtoNotifications() {
+      const container = document.getElementById('cto-notifications-container');
+      if (!container) return;
+      if (!notifications.length) {
+        container.innerHTML = `<div class="py-6 text-center text-xs font-mono text-slate-400">No activity alerts logged.</div>`;
+        return;
+      }
+      container.innerHTML = notifications.map(n => {
+        const timeAgo = formatTimeAgo(new Date(n.timestamp));
+        const icon = n.type === 'order' ? 'shopping-cart' : n.type === 'review' ? 'shield-check' : 'check-circle-2';
+        const bgIcon = n.type === 'order' ? 'bg-emerald-100 text-emerald-800' : n.type === 'review' ? 'bg-amber-100 text-amber-800' : 'bg-[#0c2340]/10 text-[#0c2340]';
+        return `
+          <div class="p-2.5 rounded-lg border border-slate-100 flex items-start gap-3 ${n.read ? 'bg-white opacity-70' : 'bg-slate-50'}">
+            <div class="w-7 h-7 rounded-lg ${bgIcon} flex items-center justify-center flex-shrink-0 mt-0.5">
+              <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="space-y-0.5 flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-bold text-slate-900 truncate">${n.title}</span>
+                <span class="text-[10px] font-mono text-slate-400 flex-shrink-0">${timeAgo}</span>
+              </div>
+              <p class="text-[11.5px] text-slate-600 leading-snug">${n.message}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
     }
 
     function formatTimeAgo(date) {
@@ -710,7 +700,6 @@
         const clientFactory = window.supabase?.createClient;
         if (settings.supabaseUrl && settings.supabaseKey && clientFactory) {
           dbClient = clientFactory(settings.supabaseUrl, settings.supabaseKey);
-          
           const { data, error } = await dbClient.from('tasks').select('id').limit(1);
           if (error) throw error;
 
@@ -727,7 +716,7 @@
           updateSyncBadge(false);
         }
       } catch (err) {
-        console.warn('Local storage fallback:', err);
+        console.warn('Local storage fallback mode:', err);
         updateSyncBadge(false);
       }
     }
@@ -749,7 +738,7 @@
             category: r.category,
             priority: r.priority,
             status: r.status,
-            assignee: r.assignee,
+            assignee: r.assignee || "",
             deadline: r.deadline,
             notes: r.notes
           }));
@@ -762,7 +751,7 @@
               category: t.category,
               priority: t.priority,
               status: t.status,
-              assignee: t.assignee,
+              assignee: t.assignee || "",
               deadline: t.deadline,
               notes: t.notes
             });
@@ -781,6 +770,7 @@
             qty: r.qty,
             unitPrice: Number(r.unit_price),
             urgency: r.urgency,
+            notes: r.notes || "N/A",
             requestedBy: r.requested_by,
             status: r.status
           }));
@@ -798,7 +788,7 @@
 
         render();
       } catch (e) {
-        console.error('Data sync pull error:', e);
+        console.error('Data pull error:', e);
       }
     }
 
@@ -817,6 +807,8 @@
       localStorage.setItem('bobcat_orders', JSON.stringify(orders));
       localStorage.setItem('bobcat_timeline_rows', JSON.stringify(timelineRows));
       localStorage.setItem('bobcat_timeline_cols', JSON.stringify(timelineColumns));
+      localStorage.setItem('bobcat_recurring_events', JSON.stringify(recurringEvents));
+      localStorage.setItem('bobcat_collapsed_subsystems', JSON.stringify(collapsedSubsystems));
 
       if (isCloudConnected && dbClient && syncType && syncData) {
         (async () => {
@@ -829,7 +821,7 @@
                 category: syncData.category,
                 priority: syncData.priority,
                 status: syncData.status,
-                assignee: syncData.assignee,
+                assignee: syncData.assignee || "",
                 deadline: syncData.deadline,
                 notes: syncData.notes
               });
@@ -863,41 +855,12 @@
               await dbClient.from('subteams').delete().eq('id', syncData);
             }
           } catch (err) {
-            console.error('Async DB write error:', err);
+            console.error('Database write error:', err);
           }
         })();
       }
 
       render();
-    }
-
-    function reseedDefaultTasks() {
-      if (confirm('Reset and load all 28 default engineering tasks and column layouts?')) {
-        tasks = DEFAULT_TASKS;
-        timelineColumns = DEFAULT_TIMELINE_COLUMNS;
-        localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
-        localStorage.setItem('bobcat_timeline_cols', JSON.stringify(timelineColumns));
-        localStorage.setItem('bobcat_schema_version', DATA_VERSION);
-        if (isCloudConnected && dbClient) {
-          (async () => {
-            for (let t of DEFAULT_TASKS) {
-              await dbClient.from('tasks').upsert({
-                id: t.id,
-                title: t.title,
-                subsystem_id: t.subsystemId,
-                category: t.category,
-                priority: t.priority,
-                status: t.status,
-                assignee: t.assignee,
-                deadline: t.deadline,
-                notes: t.notes
-              });
-            }
-          })();
-        }
-        showToast('All tasks and columns reseeded');
-        render();
-      }
     }
 
     function showToast(msg) {
@@ -944,8 +907,6 @@
         mobileSecretTab.classList.toggle('hidden', !ctoUnlocked);
       }
 
-      updateNotificationBadge();
-
       if (currentTab === 'home') renderHome();
       if (currentTab === 'cto' && ctoUnlocked) renderCto();
       if (currentTab === 'tasks') renderStreamlinedTasks();
@@ -957,61 +918,106 @@
       lucide.createIcons();
     }
 
-    /* 1. Overview View */
+    /* 1. Overview Dashboard */
     function renderHome() {
-      const totalTasks = tasks.length;
       const completedTasks = tasks.filter(t => t.status === 'Complete').length;
-      const pct = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
-      const blockers = tasks.filter(t => t.status === 'Blocked').length;
-      const openTasks = tasks.filter(t => t.status !== 'Complete').length;
+      const inProgressTasks = tasks.filter(t => t.status === 'In Progress' || t.status === 'Ready for CTO Review').length;
+      const totalTasks = tasks.length;
+      
+      const calculatedPct = Math.min(100, Math.round(35 + ((completedTasks * 1.0 + inProgressTasks * 0.4) / (totalTasks || 1)) * 65));
+      const unassignedCount = tasks.filter(t => !t.assignee || t.assignee.trim() === '').length;
+      const arrivedParts = orders.filter(o => o.status === 'Arrived in Shop').length;
+      const totalParts = orders.length;
 
-      document.getElementById('stat-progress-pct').innerText = `${pct}%`;
-      document.getElementById('stat-completed-count').innerText = `${completedTasks}/${totalTasks} done`;
-      document.getElementById('stat-progress-bar').style.width = `${pct}%`;
-      document.getElementById('stat-blockers-count').innerText = blockers;
-      document.getElementById('stat-teams-count').innerText = TAXONOMY.length;
-      document.getElementById('stat-open-count').innerText = openTasks;
+      document.getElementById('stat-progress-pct').innerText = `${calculatedPct}%`;
+      document.getElementById('stat-progress-bar').style.width = `${calculatedPct}%`;
+      document.getElementById('stat-unassigned-count').innerText = unassignedCount;
+      document.getElementById('stat-parts-ready').innerText = `${arrivedParts} / ${totalParts}`;
 
       const subList = document.getElementById('subsystem-progress-list');
       subList.innerHTML = TAXONOMY.map(sub => {
         const subTasks = tasks.filter(t => t.subsystemId === sub.id);
         const subDone = subTasks.filter(t => t.status === 'Complete').length;
-        const subPct = subTasks.length ? Math.round((subDone / subTasks.length) * 100) : 0;
+        const subInProg = subTasks.filter(t => t.status === 'In Progress').length;
+        
+        let subPct = 0;
+        let statusBadge = "Design Phase";
+        let badgeClass = "bg-slate-100 text-slate-700";
+
+        if (sub.id === 'chassis') {
+          subPct = Math.min(100, Math.round(65 + (subDone / (subTasks.length || 1)) * 35));
+          statusBadge = "Frame Assembled";
+          badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-200";
+        } else if (sub.id === 'drivetrain-fitment') {
+          subPct = Math.min(100, Math.round(55 + (subDone / (subTasks.length || 1)) * 45));
+          statusBadge = "Powertrain Mockup";
+          badgeClass = "bg-sky-100 text-sky-800 border border-sky-200";
+        } else {
+          subPct = subTasks.length ? Math.round(((subDone + subInProg * 0.4) / subTasks.length) * 100) : 0;
+          if (subPct > 50) {
+            statusBadge = "Fabrication";
+            badgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
+          }
+        }
+
         return `
-          <div class="space-y-1.5 cursor-pointer hover:opacity-85 transition-opacity" onclick="filterBySubsystem('${sub.id}')">
-            <div class="flex justify-between text-xs">
-              <span class="text-slate-800 font-semibold">${sub.name}</span>
-              <span class="text-slate-500 font-mono text-[11px]">${subDone}/${subTasks.length} (${subPct}%)</span>
+          <div class="space-y-1.5 cursor-pointer hover:opacity-90 transition-opacity p-2.5 rounded-lg border border-slate-100 hover:border-slate-300 bg-slate-50/50" onclick="filterBySubsystem('${sub.id}')">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="text-slate-900 font-semibold">${sub.name}</span>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded-md font-bold ${badgeClass}">${statusBadge}</span>
+              </div>
+              <span class="text-slate-500 font-mono text-[11px] font-medium">${subDone}/${subTasks.length} done (${subPct}%)</span>
             </div>
-            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-              <div class="bg-[#0c2340] h-full rounded-full transition-all" style="width: ${subPct}%"></div>
+            <div class="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden">
+              <div class="bg-[#0c2340] h-full rounded-full transition-all duration-500" style="width: ${subPct}%"></div>
             </div>
           </div>
         `;
       }).join('');
 
-      const urgentList = document.getElementById('urgent-tasks-list');
-      const urgent = tasks.filter(t => t.priority === 'Critical' || t.status === 'Blocked' || t.priority === 'High').slice(0, 4);
-      if (!urgent.length) {
-        urgentList.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center font-mono">No critical blockers active.</div>`;
+      const upcomingList = document.getElementById('upcoming-deadlines-list');
+      const sortedByDate = [...tasks].filter(t => t.status !== 'Complete').sort((a,b) => new Date(a.deadline) - new Date(b.deadline)).slice(0, 4);
+
+      if (!sortedByDate.length) {
+        upcomingList.innerHTML = `<div class="text-xs text-slate-400 py-6 text-center font-mono">No active deadlines pending.</div>`;
       } else {
-        urgentList.innerHTML = urgent.map(t => `
-          <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-start justify-between gap-2 shadow-xs">
-            <div class="space-y-1">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full ${t.status === 'Blocked' ? 'bg-rose-500' : 'bg-amber-500'}"></span>
-                <span class="text-xs font-semibold text-slate-900">${t.title}</span>
+        const nextMilestone = sortedByDate[0];
+        if (nextMilestone) {
+          const d = new Date(nextMilestone.deadline);
+          document.getElementById('stat-target-date').innerText = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          document.getElementById('stat-target-name').innerText = nextMilestone.title;
+        }
+
+        upcomingList.innerHTML = sortedByDate.map(t => {
+          const deadlineDate = new Date(t.deadline);
+          const formattedDate = deadlineDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const isUrgent = t.priority === 'Critical';
+
+          return `
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-start justify-between gap-2.5 shadow-xs">
+              <div class="space-y-1 min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full flex-shrink-0 ${isUrgent ? 'bg-rose-500' : 'bg-[#b59a57]'}"></span>
+                  <h4 class="text-xs font-bold text-slate-900 truncate">${t.title}</h4>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 block truncate">${getSubsystem(t.subsystemId).name}</span>
               </div>
-              <span class="text-[10px] font-mono text-slate-500 block">${getSubsystem(t.subsystemId).name} &bull; ${t.assignee || 'Unassigned'}</span>
+              <div class="text-right flex-shrink-0">
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isUrgent ? 'bg-rose-100 text-rose-800' : 'bg-slate-200 text-slate-800'}">${formattedDate}</span>
+                <span class="block text-[9.5px] font-mono text-slate-400 mt-1">${t.assignee || 'Unassigned'}</span>
+              </div>
             </div>
-            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded ${t.status === 'Blocked' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}">${t.status}</span>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 
     function filterBySubsystem(subId) {
       activeSubsystemFilter = subId;
+      // Auto expand the chosen subsystem
+      collapsedSubsystems[subId] = false;
+      saveState();
       switchTab('tasks');
     }
 
@@ -1074,6 +1080,8 @@
       document.getElementById('cto-stat-pending-spend').innerText = `$${pendingSpend.toFixed(2)}`;
       document.getElementById('cto-stat-total-spend').innerText = `$${totalSpend.toFixed(2)}`;
 
+      renderCtoNotifications();
+
       const reviewTasks = tasks.filter(t => t.status === 'Ready for CTO Review');
       document.getElementById('cto-review-count').innerText = `${reviewTasks.length} items pending`;
       const reviewQueue = document.getElementById('cto-review-queue');
@@ -1086,7 +1094,7 @@
             <div>
               <div class="flex items-center justify-between">
                 <span class="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-amber-200 text-amber-900">${getSubsystem(t.subsystemId).name}</span>
-                <span class="text-[10px] font-mono text-slate-500">${t.assignee}</span>
+                <span class="text-[10px] font-mono text-slate-500">${t.assignee || 'Unassigned'}</span>
               </div>
               <h4 class="text-xs font-bold text-slate-900 mt-1">${t.title}</h4>
               ${t.notes ? `<p class="text-[11px] text-slate-600 mt-1 leading-snug">${t.notes}</p>` : ''}
@@ -1177,7 +1185,24 @@
       }
     }
 
-    /* 3. Streamlined Task Board */
+    /* 3. Accordion Collapsible Task Board */
+    function toggleSubsystemAccordion(subId) {
+      collapsedSubsystems[subId] = !collapsedSubsystems[subId];
+      saveState();
+      renderStreamlinedTasks();
+      lucide.createIcons();
+    }
+
+    function toggleAllTaskAccordions() {
+      const anyOpen = TAXONOMY.some(s => !collapsedSubsystems[s.id]);
+      TAXONOMY.forEach(s => {
+        collapsedSubsystems[s.id] = anyOpen;
+      });
+      saveState();
+      renderStreamlinedTasks();
+      lucide.createIcons();
+    }
+
     function renderStreamlinedTasks() {
       const pillBar = document.getElementById('subsystem-pill-bar');
       const allCount = tasks.length;
@@ -1196,6 +1221,10 @@
           `;
         }).join('')}
       `;
+
+      const anyOpen = TAXONOMY.some(s => !collapsedSubsystems[s.id]);
+      const toggleAllBtnText = document.getElementById('btn-toggle-all-text');
+      if (toggleAllBtnText) toggleAllBtnText.innerText = anyOpen ? "Collapse All" : "Expand All";
 
       const query = (document.getElementById('task-search-input')?.value || '').toLowerCase().trim();
       const statusFilter = document.getElementById('task-status-filter')?.value || 'All';
@@ -1219,72 +1248,91 @@
         matchedTotal += subTasks.length;
         if (!subTasks.length && query) return '';
 
+        const isCollapsed = !query && collapsedSubsystems[sub.id];
+        const subDone = subTasks.filter(t => t.status === 'Complete').length;
+        const subUnassigned = subTasks.filter(t => !t.assignee || t.assignee === '').length;
+
         return `
-          <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">${sub.code}</span>
-                  <h3 class="text-sm font-bold text-slate-900">${sub.name}</h3>
+          <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs transition-all">
+            <!-- Clickable Accordion Header -->
+            <div onclick="toggleSubsystemAccordion('${sub.id}')" class="p-4 bg-slate-50/80 hover:bg-slate-100/90 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${isCollapsed ? 'border-transparent' : 'border-slate-200'} transition-colors">
+              <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-600 transition-transform ${isCollapsed ? '-rotate-90' : 'rotate-0'}">
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-1 leading-snug">${sub.categories[0]?.rule || 'SAE Technical Specifications'}</p>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded bg-[#0c2340] text-[#b59a57] font-mono text-[10px] font-bold uppercase">${sub.code}</span>
+                    <h3 class="text-sm font-bold text-slate-900">${sub.name}</h3>
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-0.5">${sub.categories[0]?.rule || 'SAE Technical Specifications'}</p>
+                </div>
               </div>
-              <button onclick="openTaskModal(null, '${sub.id}')" class="text-xs text-[#0c2340] hover:text-[#b59a57] font-semibold flex items-center gap-1 self-start sm:self-auto font-mono">
-                + Add to ${sub.name.split(' ')[0]}
-              </button>
+
+              <!-- Accordion Header Stats & Quick Add -->
+              <div class="flex items-center gap-2 self-end sm:self-auto" onclick="event.stopPropagation()">
+                ${subUnassigned > 0 ? `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-mono text-[10px] font-bold">${subUnassigned} unclaimed</span>` : ''}
+                <span class="text-xs font-mono font-semibold text-slate-600 px-2 py-0.5 rounded bg-white border border-slate-200">${subDone}/${subTasks.length} done</span>
+                <button onclick="openTaskModal(null, '${sub.id}')" class="px-2.5 py-1 rounded bg-[#0c2340] hover:bg-slate-800 text-white font-semibold text-xs shadow-xs flex items-center gap-1 font-mono">
+                  + Add
+                </button>
+              </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              ${subTasks.length ? subTasks.map(t => {
-                const priorityColor = {
-                  Critical: 'text-rose-700 border-rose-300 bg-rose-50',
-                  High: 'text-amber-800 border-amber-300 bg-amber-50',
-                  Medium: 'text-blue-800 border-blue-300 bg-blue-50',
-                  Low: 'text-slate-600 border-slate-300 bg-slate-100'
-                }[t.priority] || 'text-slate-600 border-slate-300 bg-slate-100';
+            <!-- Expandable Cards Grid Container -->
+            <div class="${isCollapsed ? 'hidden' : 'p-5'} bg-white">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                ${subTasks.length ? subTasks.map(t => {
+                  const priorityColor = {
+                    Critical: 'text-rose-700 border-rose-300 bg-rose-50',
+                    High: 'text-amber-800 border-amber-300 bg-amber-50',
+                    Medium: 'text-blue-800 border-blue-300 bg-blue-50',
+                    Low: 'text-slate-600 border-slate-300 bg-slate-100'
+                  }[t.priority] || 'text-slate-600 border-slate-300 bg-slate-100';
 
-                const statusColor = {
-                  'To Do': 'bg-slate-100 text-slate-600 border-slate-300',
-                  'In Progress': 'bg-sky-50 text-sky-700 border-sky-300',
-                  'Blocked': 'bg-rose-50 text-rose-700 border-rose-300',
-                  'Ready for CTO Review': 'bg-amber-50 text-amber-800 border-amber-300 font-bold',
-                  'Complete': 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                }[t.status] || 'bg-slate-100 text-slate-700';
+                  const statusColor = {
+                    'To Do': 'bg-slate-100 text-slate-600 border-slate-300',
+                    'In Progress': 'bg-sky-50 text-sky-700 border-sky-300',
+                    'Blocked': 'bg-rose-50 text-rose-700 border-rose-300',
+                    'Ready for CTO Review': 'bg-amber-50 text-amber-800 border-amber-300 font-bold',
+                    'Complete': 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                  }[t.status] || 'bg-slate-100 text-slate-700';
 
-                return `
-                  <div class="bg-slate-50/50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between hover:border-slate-400 shadow-xs transition-colors space-y-3">
-                    <div class="space-y-1.5">
-                      <div class="flex items-start justify-between gap-1.5">
-                        <span class="text-[9.5px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${priorityColor}">${t.priority}</span>
-                        <div class="flex items-center gap-1">
-                          <button onclick="openTaskModal('${t.id}')" class="p-1 hover:text-[#0c2340] text-slate-400" title="Edit"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                          <button onclick="deleteTask('${t.id}')" class="p-1 hover:text-rose-600 text-slate-400" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  return `
+                    <div class="bg-slate-50/50 border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between hover:border-slate-400 shadow-xs transition-colors space-y-3">
+                      <div class="space-y-1.5">
+                        <div class="flex items-start justify-between gap-1.5">
+                          <span class="text-[9.5px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${priorityColor}">${t.priority}</span>
+                          <div class="flex items-center gap-1">
+                            <button onclick="openTaskModal('${t.id}')" class="p-1 hover:text-[#0c2340] text-slate-400" title="Edit"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deleteTask('${t.id}')" class="p-1 hover:text-rose-600 text-slate-400" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                          </div>
                         </div>
+                        <h4 class="text-xs font-bold text-slate-900 leading-snug">${t.title}</h4>
+                        <span class="text-[10px] font-mono text-slate-500 block">${t.category}</span>
+                        ${t.notes ? `<p class="text-[11px] text-slate-600 leading-relaxed">${t.notes}</p>` : ''}
                       </div>
-                      <h4 class="text-xs font-bold text-slate-900 leading-snug">${t.title}</h4>
-                      <span class="text-[10px] font-mono text-slate-500 block">${t.category}</span>
-                      ${t.notes ? `<p class="text-[11px] text-slate-600 leading-relaxed">${t.notes}</p>` : ''}
-                    </div>
 
-                    <div class="pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                      <div class="flex items-center gap-1">
-                        ${t.assignee ? `
-                          <span class="text-slate-700 font-mono text-[10.5px] font-medium flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 text-slate-400"></i> ${t.assignee}</span>
-                        ` : `
-                          <button onclick="claimTaskPrompt('${t.id}')" class="text-[#0c2340] hover:text-[#b59a57] font-mono font-semibold text-[10.5px]">+ Claim</button>
-                        `}
+                      <div class="pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-1">
+                          ${t.assignee ? `
+                            <span class="text-slate-700 font-mono text-[10.5px] font-medium flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 text-slate-400"></i> ${t.assignee}</span>
+                          ` : `
+                            <button onclick="claimTaskPrompt('${t.id}')" class="px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-mono font-bold text-[10.5px]">+ Claim</button>
+                          `}
+                        </div>
+                        <select onchange="updateTaskStatus('${t.id}', this.value)" class="bg-white border border-slate-200 text-[10.5px] font-mono font-semibold rounded px-2 py-0.5 outline-none ${statusColor}">
+                          <option value="To Do" ${t.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                          <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                          <option value="Blocked" ${t.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
+                          <option value="Ready for CTO Review" ${t.status === 'Ready for CTO Review' ? 'selected' : ''}>Review</option>
+                          <option value="Complete" ${t.status === 'Complete' ? 'selected' : ''}>Complete</option>
+                        </select>
                       </div>
-                      <select onchange="updateTaskStatus('${t.id}', this.value)" class="bg-white border border-slate-200 text-[10.5px] font-mono font-semibold rounded px-2 py-0.5 outline-none ${statusColor}">
-                        <option value="To Do" ${t.status === 'To Do' ? 'selected' : ''}>To Do</option>
-                        <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                        <option value="Blocked" ${t.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
-                        <option value="Ready for CTO Review" ${t.status === 'Ready for CTO Review' ? 'selected' : ''}>Review</option>
-                        <option value="Complete" ${t.status === 'Complete' ? 'selected' : ''}>Complete</option>
-                      </select>
                     </div>
-                  </div>
-                `;
-              }).join('') : `<p class="col-span-full py-4 text-center text-xs font-mono text-slate-400">No active tasks in this section.</p>`}
+                  `;
+                }).join('') : `<p class="col-span-full py-4 text-center text-xs font-mono text-slate-400">No active tasks in this section.</p>`}
+              </div>
             </div>
           </div>
         `;
@@ -1301,11 +1349,19 @@
 
     function setSubsystemFilter(subId) {
       activeSubsystemFilter = subId;
+      if (subId !== 'all') collapsedSubsystems[subId] = false;
       renderStreamlinedTasks();
       lucide.createIcons();
     }
 
-    /* 4. Calendar & Customizable Timeline Matrix */
+    /* 4. Live Calendar & Recurring Events Engine */
+    function jumpToCurrentMonth() {
+      const now = new Date();
+      calDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      renderCalendar();
+      lucide.createIcons();
+    }
+
     function changeMonth(delta) {
       calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
       renderCalendar();
@@ -1322,19 +1378,39 @@
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const grid = document.getElementById('calendar-grid');
 
+      const todayDate = new Date();
+      const isCurrentViewingMonth = todayDate.getFullYear() === year && todayDate.getMonth() === month;
+      const todayDayNumber = todayDate.getDate();
+
       let html = '';
       for (let i = 0; i < firstDay; i++) {
-        html += `<div class="h-20 bg-slate-50/50 rounded-lg border border-slate-100 opacity-40"></div>`;
+        html += `<div class="h-24 bg-slate-50/50 rounded-lg border border-slate-100 opacity-40"></div>`;
       }
 
       for (let d = 1; d <= daysInMonth; d++) {
+        const cellDate = new Date(year, month, d);
+        const dayOfWeek = cellDate.getDay();
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        
         const dayTasks = tasks.filter(t => t.deadline === dateStr);
+        const recurringForDay = recurringEvents.filter(r => r.dayOfWeek === dayOfWeek);
+        const isToday = isCurrentViewingMonth && d === todayDayNumber;
 
         html += `
-          <div class="h-20 p-1.5 bg-white border border-slate-200 rounded-lg flex flex-col justify-between hover:border-slate-400 transition-colors">
-            <span class="font-mono text-[10px] font-bold text-slate-700 text-right">${d}</span>
-            <div class="space-y-1 overflow-y-auto max-h-12">
+          <div class="h-24 p-1.5 bg-white border ${isToday ? 'border-2 border-[#b59a57] ring-2 ring-[#b59a57]/20 shadow-xs' : 'border-slate-200'} rounded-lg flex flex-col justify-between hover:border-slate-400 transition-colors">
+            <div class="flex items-center justify-between">
+              ${isToday ? `<span class="px-1.5 py-0.2 rounded bg-[#b59a57] text-white font-mono text-[9px] font-bold uppercase tracking-wider">Today</span>` : `<span></span>`}
+              <span class="font-mono text-[10.5px] font-bold ${isToday ? 'text-[#b59a57]' : 'text-slate-700'}">${d}</span>
+            </div>
+            
+            <div class="space-y-1 overflow-y-auto max-h-16 pr-0.5">
+              ${recurringForDay.map(r => `
+                <div class="px-1 py-0.5 rounded text-[8.5px] font-semibold truncate bg-[#0c2340]/10 text-[#0c2340] border border-[#0c2340]/20 flex items-center gap-1" title="${r.title} at ${r.time}">
+                  <i data-lucide="repeat" class="w-2.5 h-2.5 flex-shrink-0 text-[#b59a57]"></i>
+                  <span class="truncate">${r.title}</span>
+                </div>
+              `).join('')}
+
               ${dayTasks.map(t => `
                 <div class="px-1 py-0.5 rounded text-[9px] font-semibold truncate ${t.status==='Complete'?'bg-emerald-100 text-emerald-800':t.priority==='Critical'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}" title="${t.title} (${t.assignee || 'Unassigned'})">
                   ${t.title}
@@ -1347,8 +1423,79 @@
       grid.innerHTML = html;
     }
 
+    function openRecurringEventModal() {
+      const modalCard = document.getElementById('modal-card');
+      modalCard.innerHTML = `
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+          <h3 class="text-sm font-bold text-slate-900">Manage Weekly Recurring Events</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="space-y-4 mt-4 text-xs">
+          <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+            ${recurringEvents.map(r => {
+              const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+              return `
+                <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between gap-2">
+                  <div>
+                    <h4 class="font-bold text-slate-900">${r.title}</h4>
+                    <span class="text-[10px] font-mono text-slate-500">Every ${dayNames[r.dayOfWeek]} &bull; ${r.time}</span>
+                  </div>
+                  <button onclick="deleteRecurringEvent('${r.id}')" class="text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <form id="form-recurring-add" class="pt-3 border-t border-slate-200 space-y-3">
+            <span class="font-bold font-mono text-slate-700 uppercase text-[10px]">Add New Recurring Session</span>
+            <div>
+              <input required id="f-rec-title" class="w-full bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none" placeholder="e.g. Subsystem Work Session">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <select id="f-rec-day" class="bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-700 outline-none font-mono">
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+              </select>
+              <input id="f-rec-time" class="bg-slate-50 border border-slate-300 rounded p-1.5 text-xs text-slate-900 outline-none font-mono" value="6:00 PM">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded font-semibold text-xs shadow-xs">+ Add Recurring Event</button>
+            </div>
+          </form>
+        </div>
+      `;
+
+      document.getElementById('form-recurring-add').onsubmit = (e) => {
+        e.preventDefault();
+        recurringEvents.push({
+          id: "rec_" + Date.now(),
+          title: document.getElementById('f-rec-title').value.trim(),
+          dayOfWeek: parseInt(document.getElementById('f-rec-day').value),
+          time: document.getElementById('f-rec-time').value.trim(),
+          color: "navy"
+        });
+        saveState();
+        closeModal();
+        showToast('Recurring event saved');
+      };
+
+      document.getElementById('modal-container').classList.remove('hidden');
+      document.getElementById('modal-container').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function deleteRecurringEvent(id) {
+      recurringEvents = recurringEvents.filter(r => r.id !== id);
+      saveState();
+      openRecurringEventModal();
+    }
+
     function renderTimelineMatrix() {
-      // 1. Render Editable Headers
       const thead = document.getElementById('timeline-matrix-head');
       thead.innerHTML = `
         <tr class="bg-[#0c2340] text-white font-mono text-[11px]">
@@ -1365,7 +1512,6 @@
         </tr>
       `;
 
-      // 2. Render Rows & Cells
       const tbody = document.getElementById('timeline-matrix-body');
       tbody.innerHTML = timelineRows.map(row => {
         return `
@@ -1397,7 +1543,6 @@
       }).join('');
     }
 
-    /* Column & Week Editing Functions */
     function editColumnHeader(colKey) {
       const col = timelineColumns.find(c => c.key === colKey);
       if (!col) return;
@@ -1417,7 +1562,7 @@
           <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
         <div class="space-y-4 mt-4 text-xs">
-          <p class="text-slate-500">Edit any column title or change its color highlighting.</p>
+          <p class="text-slate-500">Edit any column title or adjust color highlighting.</p>
           <div class="max-h-72 overflow-y-auto space-y-2 pr-1 divide-y divide-slate-100">
             ${timelineColumns.map((col, index) => `
               <div class="flex items-center justify-between gap-2 pt-2 pb-1">
@@ -1435,7 +1580,7 @@
             `).join('')}
           </div>
           <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
-            <button onclick="addNewTimelineColumn()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-semibold text-xs">+ Add New Column</button>
+            <button onclick="addNewTimelineColumn()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-semibold text-xs">+ Add Column</button>
             <button onclick="saveAllColumnsFromModal()" class="px-4 py-1.5 bg-[#0c2340] hover:bg-slate-800 text-white rounded font-semibold text-xs shadow-xs">Save Changes</button>
           </div>
         </div>
@@ -1454,7 +1599,7 @@
       });
       saveState();
       closeModal();
-      showToast('Columns & colors saved');
+      showToast('Columns saved');
     }
 
     function addNewTimelineColumn() {
@@ -1468,14 +1613,13 @@
     }
 
     function deleteTimelineColumn(colKey) {
-      if (confirm('Delete this column and its associated milestone entries?')) {
+      if (confirm('Delete this column and its entries?')) {
         timelineColumns = timelineColumns.filter(c => c.key !== colKey);
         saveState();
         openColumnConfigModal();
       }
     }
 
-    /* Editable Cells & Row Modals */
     function editTimelineCell(rowId, weekKey) {
       const row = timelineRows.find(r => r.id === rowId);
       if (!row) return;
@@ -1523,7 +1667,7 @@
       }
     }
 
-    /* 5. Purchase Orders View */
+    /* 5. Purchase Orders & EXACT Excel Export Generator */
     function renderOrders() {
       const reqCount = orders.filter(o => o.status === 'Requested').length;
       const appCount = orders.filter(o => o.status === 'Approved' || o.status === 'Ordered').length;
@@ -1538,18 +1682,16 @@
         const urgColor = o.urgency === 'Immediate Need' ? 'text-rose-700 bg-rose-50 border-rose-200 font-bold' : 'text-slate-600 bg-slate-100 border-slate-200';
         return `
           <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-3 px-4 font-semibold text-slate-900">${o.vendor || 'Vendor'}</td>
             <td class="py-3 px-4 font-semibold text-slate-900">
               ${o.item}
-              ${o.description ? `<span class="block text-[11px] text-slate-500 font-normal">${o.description}</span>` : ''}
+              ${o.notes && o.notes !== 'N/A' ? `<span class="block text-[11px] text-slate-500 font-normal font-mono">Notes: ${o.notes}</span>` : ''}
             </td>
-            <td class="py-3 px-4 text-slate-600 text-[11px] font-mono">${getSubsystem(o.subsystemId).name}</td>
-            <td class="py-3 px-4">
-              <a href="${o.vendorUrl || '#'}" target="_blank" class="text-[#0c2340] font-semibold hover:underline inline-flex items-center gap-1">${o.vendor || 'Vendor'} <i data-lucide="external-link" class="w-3 h-3"></i></a>
-              <span class="block text-[10px] font-mono text-slate-500">${o.partNumber || 'N/A'}</span>
-            </td>
+            <td class="py-3 px-4 font-mono text-slate-600 text-[11px]">${o.partNumber || 'N/A'}</td>
+            <td class="py-3 px-4 text-slate-600 text-[11px] font-mono">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
             <td class="py-3 px-4 text-right font-mono text-slate-800 font-bold">${o.qty}</td>
             <td class="py-3 px-4"><span class="text-[10px] font-mono px-2 py-0.5 rounded border ${urgColor}">${o.urgency}</span></td>
-            <td class="py-3 px-4 text-slate-700 font-mono text-[11px]">${o.requestedBy || 'Team Member'}</td>
+            <td class="py-3 px-4 text-slate-700 font-mono text-[11px] font-bold">${o.requestedBy || 'Team'}</td>
             <td class="py-3 px-4">
               <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-white border border-slate-300 rounded px-2 py-1 text-[11px] font-mono font-medium text-slate-700 outline-none shadow-xs">
                 <option value="Requested" ${o.status === 'Requested' ? 'selected' : ''}>Requested</option>
@@ -1566,21 +1708,74 @@
       }).join('');
     }
 
-    function exportOrdersToCSV() {
-      let csv = "ID,Item,Description,Subsystem,Vendor,Part Number,Qty,Unit Price,Total Price,Urgency,Requester,Status\n";
-      orders.forEach(o => {
-        const total = (o.qty * o.unitPrice).toFixed(2);
-        csv += `"${o.id}","${o.item}","${o.description || ''}","${getSubsystem(o.subsystemId).name}","${o.vendor || ''}","${o.partNumber || ''}",${o.qty},${o.unitPrice},${total},"${o.urgency}","${o.requestedBy || ''}","${o.status}"\n`;
+    /* Exact Excel (.xlsx) Formatter matching Baja_Purchase_2-20-2026.xlsx */
+    function exportOrdersToExactExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert("Excel export library is loading, please try again in a second.");
+        return;
+      }
+
+      const headers = [
+        "Vendor",
+        "Item(s)",
+        "Part #",
+        "Unit Cost ($)",
+        "Quantity",
+        "Total Cost ($)",
+        "Web Link",
+        "Subassembly",
+        "Notes",
+        "Member Responsible"
+      ];
+
+      const rows = [];
+      orders.forEach((o, idx) => {
+        const rowNumber = idx + 2;
+        rows.push([
+          o.vendor || "N/A",
+          o.item || "",
+          o.partNumber || "N/A",
+          Number(o.unitPrice) || 0.0,
+          Number(o.qty) || 1,
+          { f: `D${rowNumber}*E${rowNumber}` }, // Exact Excel multiplication formula
+          o.vendorUrl || "",
+          getSubsystem(o.subsystemId).name.split('&')[0].trim(),
+          o.notes || "N/A",
+          o.requestedBy || ""
+        ]);
       });
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `bobcat_racing_purchase_orders_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('Exported purchase orders CSV');
+      // Total Summary row
+      const totalRowIndex = rows.length + 2;
+      rows.push([
+        "", "", "", "", "Total",
+        { f: `SUM(F2:F${totalRowIndex - 1})` }, // Exact Excel summation formula
+        "", "", "", ""
+      ]);
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+      // Exact Column Widths from template
+      ws['!cols'] = [
+        { wch: 22 },  // Vendor
+        { wch: 118 }, // Item(s)
+        { wch: 15 },  // Part #
+        { wch: 13 },  // Unit Cost ($)
+        { wch: 9 },   // Quantity
+        { wch: 15 },  // Total Cost ($)
+        { wch: 128 }, // Web Link
+        { wch: 15 },  // Subassembly
+        { wch: 10 },  // Notes
+        { wch: 20 }   // Member Responsible
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+      const now = new Date();
+      const dateStr = `${now.getMonth() + 1}-${now.getDate()}-${now.getFullYear()}`;
+      XLSX.writeFile(wb, `Baja_Purchase_${dateStr}.xlsx`);
+      showToast(`Exported Baja_Purchase_${dateStr}.xlsx`);
     }
 
     /* Modal Handlers */
@@ -1649,7 +1844,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Assignee (Member)</label>
-              <input id="f-task-assignee" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${t.assignee}" placeholder="John, Matt, Andy...">
+              <input id="f-task-assignee" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${t.assignee || ''}" placeholder="Leave blank to keep unassigned">
             </div>
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Target Date</label>
@@ -1796,14 +1991,15 @@
     }
 
     function claimTaskPrompt(id) {
-      const name = prompt('Enter your name:');
-      if (name) {
+      const name = prompt('Enter your initials or name to claim this work package:');
+      if (name && name.trim()) {
         const target = tasks.find(t => t.id === id);
         if (target) {
           target.assignee = name.trim();
+          target.status = target.status === 'To Do' ? 'In Progress' : target.status;
           saveState('task_upsert', target);
-          addNotification("Task Claimed", `${name} took ownership of '${target.title}'`, "task");
-          showToast(`Task assigned to ${name}`);
+          addNotification("Task Claimed", `${name} claimed '${target.title}'`, "task");
+          showToast(`Task claimed by ${name}`);
         }
       }
     }
@@ -1817,22 +2013,22 @@
         </div>
         <form id="form-order" class="space-y-4 mt-4 text-xs">
           <div>
-            <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Item Description</label>
+            <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Item(s) &amp; Description</label>
             <input required id="f-po-item" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none focus:border-[#0c2340]" placeholder="e.g. 1.0in OD x .120in Wall Steel Tubing">
           </div>
           <div>
-            <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Subsystem</label>
+            <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Subassembly</label>
             <select id="f-po-subsystem" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none">
               ${TAXONOMY.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
             </select>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Vendor Name</label>
-              <input id="f-po-vendor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="McMaster / Summit / Wilwood">
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Vendor</label>
+              <input id="f-po-vendor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="McMaster / Summit / Amazon">
             </div>
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Direct Web Link</label>
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Web Link</label>
               <input type="url" id="f-po-url" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="https://...">
             </div>
           </div>
@@ -1842,25 +2038,22 @@
               <input id="f-po-partnum" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono">
             </div>
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Qty</label>
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Quantity</label>
               <input type="number" min="1" id="f-po-qty" value="1" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono">
             </div>
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Unit Price ($)</label>
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Unit Cost ($)</label>
               <input type="number" step="0.01" id="f-po-price" value="0.00" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none font-mono">
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Urgency</label>
-              <select id="f-po-urgency" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none">
-                <option>Next Batch Order</option>
-                <option>Immediate Need</option>
-              </select>
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Notes (Length/Size)</label>
+              <input id="f-po-notes" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="e.g. 3 ft, front A-Arm">
             </div>
             <div>
-              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Requester Name</label>
-              <input required id="f-po-requester" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="Your Name">
+              <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Member Responsible</label>
+              <input required id="f-po-requester" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" placeholder="Initials / Name">
             </div>
           </div>
           <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
@@ -1881,7 +2074,8 @@
           partNumber: document.getElementById('f-po-partnum').value.trim(),
           qty: parseInt(document.getElementById('f-po-qty').value) || 1,
           unitPrice: parseFloat(document.getElementById('f-po-price').value) || 0.0,
-          urgency: document.getElementById('f-po-urgency').value,
+          notes: document.getElementById('f-po-notes').value.trim() || 'N/A',
+          urgency: "Immediate Need",
           requestedBy: document.getElementById('f-po-requester').value.trim(),
           status: 'Requested',
           submittedAt: new Date().toISOString()
@@ -1897,11 +2091,8 @@
           fetch(settings.webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...orderData,
-              notificationEmails: settings.emailList.split(',').map(e => e.trim())
-            })
-          }).catch(err => console.error('Webhook error:', err));
+            body: JSON.stringify(orderData)
+          }).catch(err => console.error('Webhook dispatch error:', err));
         }
       };
 
@@ -1959,7 +2150,7 @@
             <input id="f-set-emails" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-900 outline-none" value="${settings.emailList || ''}" placeholder="captain@bobcatracing.edu, lead@bobcatracing.edu">
           </div>
           <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Default Data Reset</button>
+            <button type="button" onclick="reseedDefaultTasks()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold">Force Baseline Data Reset</button>
             <button type="submit" class="px-4 py-2 bg-[#0c2340] hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs">Save Settings</button>
           </div>
         </form>
@@ -1981,7 +2172,7 @@
       lucide.createIcons();
     }
 
-    /* Secret Ghost Hotkey Trigger */
+    /* Secret Ghost Hotkey Trigger (Ctrl+Shift+X or Cmd+Shift+X) */
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
@@ -1994,7 +2185,7 @@
     document.addEventListener('click', (e) => {
       const panel = document.getElementById('notif-panel');
       const btn = document.getElementById('btn-notifications');
-      if (panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+      if (panel && !panel.contains(e.target) && !btn?.contains(e.target)) {
         panel.classList.add('hidden');
       }
     });

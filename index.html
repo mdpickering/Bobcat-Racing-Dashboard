@@ -60,7 +60,7 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs (Auto-condenses smoothly) -->
+      <!-- Navigation Tabs -->
       <nav id="main-nav-bar" class="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-hidden">
         <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap" data-tab="home">Overview</button>
         <button class="nav-tab px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap" data-tab="tasks">Tasks &amp; Teams</button>
@@ -80,16 +80,16 @@
         </button>
       </nav>
 
-      <!-- Right Controls: Compact Lead Login + Sync Status -->
+      <!-- Right Controls: Lead Login + Cloud Sync Badge -->
       <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
         <button id="btn-lead-auth-trigger" onclick="openLeadAuthModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-xs flex items-center gap-1 transition-colors whitespace-nowrap">
           <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
           <span id="btn-lead-auth-label" class="hidden sm:inline">Lead Login</span>
         </button>
 
-        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-mono text-slate-600 select-none shadow-xs whitespace-nowrap">
+        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-mono text-slate-600 select-none shadow-xs whitespace-nowrap" title="Live Multi-Device Supabase Sync">
           <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-          <span id="sync-status-text" class="hidden sm:inline">Checking...</span>
+          <span id="sync-status-text" class="hidden sm:inline">Connecting...</span>
         </div>
       </div>
     </div>
@@ -296,7 +296,7 @@
         </div>
       </div>
 
-      <!-- Active PO Live Staging Card (Arrived items auto-hide here) -->
+      <!-- Active PO Live Staging Card -->
       <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
           <div class="flex items-center gap-2">
@@ -596,8 +596,6 @@
   </div>
 
   <script>
-    const DATA_VERSION = "v15_clean_headers_and_optional_dates";
-
     const DEFAULT_SUBSYSTEMS = [
       {
         id: "fabrication",
@@ -750,13 +748,14 @@
       { id: "rec_thu", title: "Shop & Fab Session", dayOfWeek: 4, time: "6:00 PM", color: "gold" }
     ];
 
-    let taxonomy = DEFAULT_SUBSYSTEMS;
-    let tasks = DEFAULT_TASKS;
-    let orders = [];
-    let timelineColumns = DEFAULT_TIMELINE_COLUMNS;
-    let recurringEvents = DEFAULT_RECURRING_EVENTS;
-    let timelineMilestones = {};
-    let collapsedSubsystems = {};
+    /* Non-Destructive Data Hydration */
+    let taxonomy = JSON.parse(localStorage.getItem('bobcat_taxonomy')) || DEFAULT_SUBSYSTEMS;
+    let tasks = JSON.parse(localStorage.getItem('bobcat_tasks')) || DEFAULT_TASKS;
+    let orders = JSON.parse(localStorage.getItem('bobcat_orders')) || [];
+    let timelineColumns = JSON.parse(localStorage.getItem('bobcat_timeline_cols')) || DEFAULT_TIMELINE_COLUMNS;
+    let recurringEvents = JSON.parse(localStorage.getItem('bobcat_recurring_events')) || DEFAULT_RECURRING_EVENTS;
+    let timelineMilestones = JSON.parse(localStorage.getItem('bobcat_timeline_milestones')) || {};
+    let collapsedSubsystems = JSON.parse(localStorage.getItem('bobcat_collapsed_subsystems')) || {};
     let selectedOrderIds = new Set();
     let currentTaskViewMode = 'subsystems';
     let showCompletedArchive = false;
@@ -764,24 +763,6 @@
 
     let ctoUnlocked = sessionStorage.getItem('bobcat_cto_unlocked') === 'true';
     let authenticatedLeadSubId = sessionStorage.getItem('bobcat_lead_authenticated_sub') || null;
-
-    try {
-      const storedVersion = localStorage.getItem('bobcat_schema_version');
-      if (storedVersion === DATA_VERSION) {
-        taxonomy = JSON.parse(localStorage.getItem('bobcat_taxonomy')) || DEFAULT_SUBSYSTEMS;
-        tasks = JSON.parse(localStorage.getItem('bobcat_tasks')) || DEFAULT_TASKS;
-        orders = JSON.parse(localStorage.getItem('bobcat_orders')) || [];
-        timelineColumns = JSON.parse(localStorage.getItem('bobcat_timeline_cols')) || DEFAULT_TIMELINE_COLUMNS;
-        recurringEvents = JSON.parse(localStorage.getItem('bobcat_recurring_events')) || DEFAULT_RECURRING_EVENTS;
-        timelineMilestones = JSON.parse(localStorage.getItem('bobcat_timeline_milestones')) || {};
-        collapsedSubsystems = JSON.parse(localStorage.getItem('bobcat_collapsed_subsystems')) || {};
-      } else {
-        localStorage.setItem('bobcat_schema_version', DATA_VERSION);
-        saveState();
-      }
-    } catch (e) {
-      console.warn("Storage reset:", e);
-    }
 
     orders.forEach(o => { if (o && o.id) selectedOrderIds.add(o.id); });
 
@@ -806,7 +787,15 @@
       return taxonomy.find(s => s.id === id) || { id: 'other', name: 'Uncategorized Work', categories: [{ name: 'General', rule: 'General Specifications' }], lead: 'Unassigned', members: [] };
     }
 
-    function saveState() {
+    /* Subsystem Filter Handler */
+    function setSubsystemFilter(subId) {
+      activeSubsystemFilter = subId;
+      renderStreamlinedTasks();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* Bi-Directional Cloud Save & State Sync */
+    function saveState(broadcastCloud = true) {
       try {
         localStorage.setItem('bobcat_taxonomy', JSON.stringify(taxonomy));
         localStorage.setItem('bobcat_tasks', JSON.stringify(tasks));
@@ -815,8 +804,30 @@
         localStorage.setItem('bobcat_recurring_events', JSON.stringify(recurringEvents));
         localStorage.setItem('bobcat_timeline_milestones', JSON.stringify(timelineMilestones));
         localStorage.setItem('bobcat_collapsed_subsystems', JSON.stringify(collapsedSubsystems));
+
+        if (broadcastCloud && dbClient && isCloudConnected) {
+          pushStateToCloud();
+        }
       } catch (err) {
         console.error("Local save error:", err);
+      }
+    }
+
+    async function pushStateToCloud() {
+      try {
+        const payload = {
+          id: 'bobcat_master_workspace_state',
+          taxonomy,
+          tasks,
+          orders,
+          timelineColumns,
+          recurringEvents,
+          timelineMilestones,
+          updated_at: new Date().toISOString()
+        };
+        await dbClient.from('workspace_state').upsert(payload, { onConflict: 'id' });
+      } catch (err) {
+        console.warn("Cloud sync push error:", err);
       }
     }
 
@@ -1077,7 +1088,6 @@
       liveToday.setHours(0,0,0,0);
       const day14 = new Date(liveToday.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-      // Safe date calculation handling tasks without deadlines
       const dueIn14Days = tasks.filter(t => {
         if (t.status === 'Complete' || !t.deadline) return false;
         const taskDate = new Date(t.deadline + 'T00:00:00');
@@ -1514,7 +1524,7 @@
                               <div class="flex items-center justify-between text-[11px] bg-white p-1.5 rounded border border-slate-200 gap-1.5">
                                 <span class="truncate text-slate-800">${t.title}</span>
                                 <div class="flex items-center gap-1">
-                                  <button onclick="unassignSingleTask('${t.id}')" class="text-slate-400 hover:text-rose-600 p-0.5" title="Unassign"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                  <button onclick="unassignSingleTask('${t.id}')" class="text-slate-400 hover:text-rose-600 p-0.5" title="Unassign single task"><i data-lucide="x" class="w-3 h-3"></i></button>
                                   <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${t.status==='Complete'?'bg-emerald-100 text-emerald-800':t.status==='In Progress'?'bg-sky-100 text-sky-800':'bg-slate-100 text-slate-700'}">${t.status}</span>
                                 </div>
                               </div>
@@ -1924,8 +1934,6 @@
       const approvedSpend = activeOrders.filter(o => o.status === 'Approved' || o.status === 'Ordered').reduce((sum, o) => sum + ((Number(o.qty) || 0) * (Number(o.unitPrice) || 0)), 0);
       const pendingSpend = activeOrders.filter(o => o.status === 'Requested').reduce((sum, o) => sum + ((Number(o.qty) || 0) * (Number(o.unitPrice) || 0)), 0);
       const arrivedSpend = completedOrders.reduce((sum, o) => sum + ((Number(o.qty) || 0) * (Number(o.unitPrice) || 0)), 0);
-      const totalSpend = orders.reduce((sum, o) => sum + ((Number(o.qty) || 0) * (Number(o.unitPrice) || 0)), 0);
-
       document.getElementById('cto-stat-approved-spend').innerText = `$${approvedSpend.toFixed(2)}`;
       document.getElementById('cto-stat-pending-spend').innerText = `$${pendingSpend.toFixed(2)}`;
       document.getElementById('cto-stat-arrived-spend').innerText = `$${arrivedSpend.toFixed(2)}`;
@@ -2421,7 +2429,6 @@
         </div>
         
         <form id="form-bulk-order" class="space-y-4 mt-3 text-xs">
-          <!-- Common Order Metadata -->
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-slate-600 mb-1 font-mono uppercase font-bold text-[10px]">Vendor Name</label>
@@ -2437,7 +2444,6 @@
             </div>
           </div>
 
-          <!-- Multi-Item Line Items -->
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <span class="font-mono font-bold text-slate-700 uppercase text-[10px] tracking-wider">Line Items In This Order</span>
@@ -2449,7 +2455,6 @@
             <div id="bulk-po-rows-container" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
           </div>
 
-          <!-- Order Summary Footer -->
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between font-mono text-xs">
             <span class="text-slate-600">Total Order Requisition Estimate:</span>
             <span id="bulk-order-total-est" class="text-base font-bold text-slate-900">$0.00</span>
@@ -2831,7 +2836,7 @@
 
     document.getElementById('task-search-input')?.addEventListener('input', () => renderStreamlinedTasks());
 
-    /* Cloud Multi-User Sync */
+    /* Cloud Multi-User Realtime Sync Engine */
     async function initCloudSync() {
       const dot = document.getElementById('sync-status-dot');
       const text = document.getElementById('sync-status-text');
@@ -2839,13 +2844,45 @@
         const clientFactory = window.supabase?.createClient;
         if (settings.supabaseUrl && settings.supabaseKey && clientFactory) {
           dbClient = clientFactory(settings.supabaseUrl, settings.supabaseKey);
-          const { error } = await dbClient.from('tasks').select('id').limit(1);
-          if (error) throw error;
+
+          // 1. Initial Pull of Master State from Cloud
+          const { data, error } = await dbClient.from('workspace_state').select('*').eq('id', 'bobcat_master_workspace_state').single();
+          
+          if (!error && data) {
+            if (data.taxonomy && Array.isArray(data.taxonomy)) taxonomy = data.taxonomy;
+            if (data.tasks && Array.isArray(data.tasks)) tasks = data.tasks;
+            if (data.orders && Array.isArray(data.orders)) orders = data.orders;
+            if (data.timelineColumns && Array.isArray(data.timelineColumns)) timelineColumns = data.timelineColumns;
+            if (data.recurringEvents && Array.isArray(data.recurringEvents)) recurringEvents = data.recurringEvents;
+            if (data.timelineMilestones) timelineMilestones = data.timelineMilestones;
+            saveState(false);
+            render();
+          } else {
+            // First-time seed to cloud
+            await pushStateToCloud();
+          }
+
+          // 2. Realtime Subscription across devices
+          dbClient.channel('workspace_realtime_sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'workspace_state' }, payload => {
+              if (payload.new && payload.new.id === 'bobcat_master_workspace_state') {
+                const cloudData = payload.new;
+                if (cloudData.taxonomy) taxonomy = cloudData.taxonomy;
+                if (cloudData.tasks) tasks = cloudData.tasks;
+                if (cloudData.orders) orders = cloudData.orders;
+                if (cloudData.timelineColumns) timelineColumns = cloudData.timelineColumns;
+                if (cloudData.recurringEvents) recurringEvents = cloudData.recurringEvents;
+                if (cloudData.timelineMilestones) timelineMilestones = cloudData.timelineMilestones;
+                saveState(false);
+                render();
+                showToast("Workspace synced with team");
+              }
+            }).subscribe();
 
           isCloudConnected = true;
           if (dot && text) {
             dot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-400";
-            text.innerText = "Cloud Sync";
+            text.innerText = "Live Cloud Sync";
           }
         } else {
           throw new Error("Local fallback");

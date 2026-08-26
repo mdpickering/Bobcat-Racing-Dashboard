@@ -45,7 +45,7 @@
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-[#0c2340] selection:text-white">
 
-  <!-- Compact Responsive Top Navigation -->
+  <!-- Header Navigation -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
       
@@ -80,7 +80,7 @@
         </button>
       </nav>
 
-      <!-- Right Controls: Lead Login + Cloud Sync Badge -->
+      <!-- Right Controls: Lead Login + Sync Status -->
       <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
         <button id="btn-lead-auth-trigger" onclick="openLeadAuthModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-xs flex items-center gap-1 transition-colors whitespace-nowrap">
           <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
@@ -596,6 +596,14 @@
   </div>
 
   <script>
+    /* Subsystem Filter Handler (Global Scope) */
+    function setSubsystemFilter(subId) {
+      activeSubsystemFilter = subId;
+      renderStreamlinedTasks();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* Subsystem / Team Data Definitions */
     const DEFAULT_SUBSYSTEMS = [
       {
         id: "fabrication",
@@ -787,13 +795,6 @@
       return taxonomy.find(s => s.id === id) || { id: 'other', name: 'Uncategorized Work', categories: [{ name: 'General', rule: 'General Specifications' }], lead: 'Unassigned', members: [] };
     }
 
-    /* Subsystem Filter Handler */
-    function setSubsystemFilter(subId) {
-      activeSubsystemFilter = subId;
-      renderStreamlinedTasks();
-      if (window.lucide) lucide.createIcons();
-    }
-
     /* Bi-Directional Cloud Save & State Sync */
     function saveState(broadcastCloud = true) {
       try {
@@ -820,9 +821,9 @@
           taxonomy,
           tasks,
           orders,
-          timelineColumns,
-          recurringEvents,
-          timelineMilestones,
+          timeline_columns: timelineColumns,
+          recurring_events: recurringEvents,
+          timeline_milestones: timelineMilestones,
           updated_at: new Date().toISOString()
         };
         await dbClient.from('workspace_state').upsert(payload, { onConflict: 'id' });
@@ -841,7 +842,7 @@
       }
     }
 
-    /* Executive CTO Authentication */
+    /* Executive CTO Authentication (Ctrl+Shift+X) */
     function promptCtoPin() {
       const modalCard = document.getElementById('modal-card');
       modalCard.innerHTML = `
@@ -1524,7 +1525,7 @@
                               <div class="flex items-center justify-between text-[11px] bg-white p-1.5 rounded border border-slate-200 gap-1.5">
                                 <span class="truncate text-slate-800">${t.title}</span>
                                 <div class="flex items-center gap-1">
-                                  <button onclick="unassignSingleTask('${t.id}')" class="text-slate-400 hover:text-rose-600 p-0.5" title="Unassign single task"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                  <button onclick="unassignSingleTask('${t.id}')" class="text-slate-400 hover:text-rose-600 p-0.5" title="Unassign"><i data-lucide="x" class="w-3 h-3"></i></button>
                                   <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${t.status==='Complete'?'bg-emerald-100 text-emerald-800':t.status==='In Progress'?'bg-sky-100 text-sky-800':'bg-slate-100 text-slate-700'}">${t.status}</span>
                                 </div>
                               </div>
@@ -2817,7 +2818,7 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    /* Exclusive Secret Hotkey for CTO Access (Ctrl+Shift+X or Cmd+Shift+X) */
+    /* Secret Hotkey for CTO Access (Ctrl+Shift+X or Cmd+Shift+X) */
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
@@ -2836,7 +2837,7 @@
 
     document.getElementById('task-search-input')?.addEventListener('input', () => renderStreamlinedTasks());
 
-    /* Cloud Multi-User Realtime Sync Engine */
+    /* Multi-Device Cloud Realtime Sync Engine */
     async function initCloudSync() {
       const dot = document.getElementById('sync-status-dot');
       const text = document.getElementById('sync-status-text');
@@ -2845,37 +2846,45 @@
         if (settings.supabaseUrl && settings.supabaseKey && clientFactory) {
           dbClient = clientFactory(settings.supabaseUrl, settings.supabaseKey);
 
-          // 1. Initial Pull of Master State from Cloud
+          // Initial Pull from Cloud
           const { data, error } = await dbClient.from('workspace_state').select('*').eq('id', 'bobcat_master_workspace_state').single();
           
           if (!error && data) {
             if (data.taxonomy && Array.isArray(data.taxonomy)) taxonomy = data.taxonomy;
             if (data.tasks && Array.isArray(data.tasks)) tasks = data.tasks;
             if (data.orders && Array.isArray(data.orders)) orders = data.orders;
-            if (data.timelineColumns && Array.isArray(data.timelineColumns)) timelineColumns = data.timelineColumns;
-            if (data.recurringEvents && Array.isArray(data.recurringEvents)) recurringEvents = data.recurringEvents;
-            if (data.timelineMilestones) timelineMilestones = data.timelineMilestones;
+            const cols = data.timeline_columns || data.timelineColumns;
+            if (cols && Array.isArray(cols)) timelineColumns = cols;
+            const rec = data.recurring_events || data.recurringEvents;
+            if (rec && Array.isArray(rec)) recurringEvents = rec;
+            const miles = data.timeline_milestones || data.timelineMilestones;
+            if (miles) timelineMilestones = miles;
+            
             saveState(false);
             render();
           } else {
-            // First-time seed to cloud
+            // First time seed
             await pushStateToCloud();
           }
 
-          // 2. Realtime Subscription across devices
+          // Realtime Multi-Computer Subscription
           dbClient.channel('workspace_realtime_sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'workspace_state' }, payload => {
               if (payload.new && payload.new.id === 'bobcat_master_workspace_state') {
                 const cloudData = payload.new;
-                if (cloudData.taxonomy) taxonomy = cloudData.taxonomy;
-                if (cloudData.tasks) tasks = cloudData.tasks;
-                if (cloudData.orders) orders = cloudData.orders;
-                if (cloudData.timelineColumns) timelineColumns = cloudData.timelineColumns;
-                if (cloudData.recurringEvents) recurringEvents = cloudData.recurringEvents;
-                if (cloudData.timelineMilestones) timelineMilestones = cloudData.timelineMilestones;
+                if (cloudData.taxonomy && Array.isArray(cloudData.taxonomy)) taxonomy = cloudData.taxonomy;
+                if (cloudData.tasks && Array.isArray(cloudData.tasks)) tasks = cloudData.tasks;
+                if (cloudData.orders && Array.isArray(cloudData.orders)) orders = cloudData.orders;
+                const cols = cloudData.timeline_columns || cloudData.timelineColumns;
+                if (cols && Array.isArray(cols)) timelineColumns = cols;
+                const rec = cloudData.recurring_events || cloudData.recurringEvents;
+                if (rec && Array.isArray(rec)) recurringEvents = rec;
+                const miles = cloudData.timeline_milestones || cloudData.timelineMilestones;
+                if (miles) timelineMilestones = miles;
+
                 saveState(false);
                 render();
-                showToast("Workspace synced with team");
+                showToast("Workspace updated via cloud");
               }
             }).subscribe();
 

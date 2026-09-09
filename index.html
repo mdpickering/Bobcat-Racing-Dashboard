@@ -53,13 +53,13 @@
       --bg-main: #040811;
       --bg-panel: rgba(10, 21, 38, 0.7);
       --text-main: #f8fafc;
-      --border-color: rgba(255,255,255,0.06);
+      --border-color: rgba(255,255,255,0.08);
     }
     html.light {
-      --bg-main: #f1f5f9;
-      --bg-panel: rgba(255, 255, 255, 0.9);
+      --bg-main: #f8fafc;
+      --bg-panel: #ffffff;
       --text-main: #0f172a;
-      --border-color: rgba(15, 23, 42, 0.1);
+      --border-color: #cbd5e1;
     }
     html.light body {
       background-color: var(--bg-main);
@@ -69,20 +69,40 @@
     html.light .panel {
       background: var(--bg-panel);
       border-color: var(--border-color);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
-    html.light .telemetry-input {
-      background-color: #ffffff;
-      border-color: #cbd5e1;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
       color: #0f172a;
+    }
+    html.light .telemetry-input, html.light select, html.light input, html.light textarea {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
     }
     html.light aside {
       background-color: #ffffff !important;
       border-right-color: #cbd5e1 !important;
     }
     html.light header {
-      background-color: rgba(255, 255, 255, 0.8) !important;
+      background-color: rgba(255, 255, 255, 0.9) !important;
       border-bottom-color: #cbd5e1 !important;
+    }
+    html.light table thead {
+      background-color: #e2e8f0 !important;
+      color: #334155 !important;
+    }
+    html.light table tbody tr {
+      border-bottom-color: #e2e8f0 !important;
+      color: #1e293b !important;
+    }
+    html.light table tbody tr:hover {
+      background-color: rgba(0,0,0,0.03) !important;
+    }
+    html.light .badge-slate {
+      background: rgba(15, 23, 42, 0.08);
+      color: #334155;
+      border-color: rgba(15, 23, 42, 0.15);
+    }
+    html.light h1, html.light h2, html.light h3, html.light h4, html.light strong {
+      color: #0f172a !important;
     }
 
     body {
@@ -163,7 +183,7 @@
           </div>
         </div>
         <div class="ml-3">
-          <span class="block text-sm font-bold text-white tracking-wider leading-tight">BOBCAT RACING</span>
+          <span class="block text-sm font-bold tracking-wider leading-tight">BOBCAT RACING</span>
           <span class="block text-[9px] font-mono text-[#FFC72C] tracking-widest uppercase mt-0.5 flex items-center gap-1">
             <span class="w-1 h-1 rounded-full bg-[#FFC72C] animate-pulse"></span> COMMAND
           </span>
@@ -181,7 +201,7 @@
         <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-500"></i> Dashboard
       </button>
       <button onclick="switchTab('tasks')" class="nav-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" data-tab="tasks">
-        <i data-lucide="kanban" class="w-4 h-4 text-slate-500"></i> Kanban Board (Active Work)
+        <i data-lucide="kanban" class="w-4 h-4 text-slate-500"></i> Tasks
       </button>
       <button onclick="switchTab('schedule')" class="nav-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" data-tab="schedule">
         <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i> Master Timeline
@@ -288,7 +308,7 @@
               <span id="stat-target-name" class="block text-sm font-bold mt-1 truncate">Loading...</span>
               <span id="stat-target-date" class="block text-xs font-mono text-[#FFC72C] mt-1">--</span>
             </div>
-            <button onclick="switchTab('tasks')" class="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-mono font-bold transition-all shadow-sm">View Kanban Board</button>
+            <button onclick="switchTab('tasks')" class="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-mono font-bold transition-all shadow-sm">View Tasks</button>
           </div>
         </div>
 
@@ -364,7 +384,7 @@
 
             <div class="data-card-table p-4 space-y-3">
               <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 class="text-xs font-mono font-bold uppercase text-slate-300 tracking-wider">Sub-Team Roster</h3>
+                <h3 class="text-xs font-mono font-bold uppercase tracking-wider">Sub-Team Roster</h3>
                 <button onclick="editCurrentLeadRoster()" class="text-xs text-[#FFC72C] hover:underline font-semibold flex items-center gap-1 font-mono">
                   <i data-lucide="pencil" class="w-3 h-3"></i> Edit
                 </button>
@@ -477,7 +497,7 @@
           
           <div class="overflow-x-auto max-h-72 border border-white/10 rounded-xl mt-3">
             <table class="w-full text-left text-xs border-collapse min-w-[950px]">
-              <thead class="bg-qu-elevated text-slate-300 text-[10px] font-mono uppercase font-bold sticky top-0 z-10 border-b border-white/10">
+              <thead class="bg-qu-elevated text-[10px] font-mono uppercase font-bold sticky top-0 z-10 border-b border-white/10">
                 <tr>
                   <th class="py-3 px-4 w-8 text-center"><input type="checkbox" id="chk-master-orders" onchange="toggleSelectAllActiveOrders(this.checked)" class="rounded bg-black/40 border-white/20 text-[#FFC72C] focus:ring-0"></th>
                   <th class="py-3 px-4">Vendor</th>
@@ -513,7 +533,7 @@
           <div id="cto-completed-po-container" class="hidden p-4 bg-[#040811]/80">
             <div class="overflow-x-auto max-h-64 border border-white/10 rounded-xl">
               <table class="w-full text-left text-xs border-collapse min-w-[950px]">
-                <thead class="bg-qu-elevated text-slate-300 text-[10px] font-mono uppercase font-bold sticky top-0 z-10 border-b border-white/10">
+                <thead class="bg-qu-elevated text-[10px] font-mono uppercase font-bold sticky top-0 z-10 border-b border-white/10">
                   <tr>
                     <th class="py-3 px-4">Vendor</th>
                     <th class="py-3 px-4">Item(s)</th>
@@ -552,7 +572,7 @@
         </div>
       </div>
 
-      <!-- ==================== VIEW 4: TASKS & TEAMS (KANBAN BOARD) ==================== -->
+      <!-- ==================== VIEW 4: TASKS ==================== -->
       <div id="view-tasks" class="hidden space-y-6">
         <div class="panel p-4 space-y-3">
           <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
@@ -584,13 +604,6 @@
                 <i data-lucide="plus" class="w-3.5 h-3.5 stroke-[2.5]"></i>
                 <span id="btn-tasks-add-label">Pitch Task</span>
               </button>
-            </div>
-          </div>
-
-          <div class="p-3 bg-black/30 border border-white/5 rounded-xl text-xs text-slate-300 font-mono flex items-center gap-2">
-            <i data-lucide="info" class="w-4 h-4 text-[#FFC72C] shrink-0"></i>
-            <div>
-              <strong>What is a Kanban Board?</strong> A visual workflow management method designed to help visualize work, limit work-in-progress, and maximize efficiency across your vehicle subsystems.
             </div>
           </div>
 
@@ -672,7 +685,7 @@
           <div class="flex items-center gap-2">
             <button id="btn-orders-submit-action" onclick="handleOrdersSubmitButtonClick()" class="bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl px-4 py-2.5 text-xs font-mono font-bold shadow-glow flex items-center justify-center gap-2 transition-all">
               <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
-              <span id="btn-orders-submit-label">Lead PO Entry</span>
+              <span id="btn-orders-submit-label">Request Purchase Order</span>
             </button>
           </div>
         </div>
@@ -1276,7 +1289,7 @@
       const breadcrumb = document.getElementById('breadcrumb-active-title');
       const titleMap = {
         home: 'Overview & Telemetry',
-        tasks: 'Active Work (Kanban)',
+        tasks: 'Tasks (Kanban)',
         schedule: 'Master Timeline',
         orders: 'Purchasing Pipeline',
         lead: 'Subsystem Command',
@@ -1342,7 +1355,7 @@
       if (taskAddLabel) taskAddLabel.innerText = isLeadActive ? "Add Task" : "Pitch Task";
 
       const ordersSubmitLabel = document.getElementById('btn-orders-submit-label');
-      if (ordersSubmitLabel) ordersSubmitLabel.innerText = isLeadActive ? "+ Submit Requisition" : "Lead Requisition Access";
+      if (ordersSubmitLabel) ordersSubmitLabel.innerText = isLeadActive ? "+ Submit Requisition" : "Request Purchase Order";
 
       const scheduleActions = document.getElementById('schedule-lead-actions');
       if (scheduleActions) {
@@ -1498,7 +1511,7 @@
               ${r.notes ? `<p class="text-[11px] text-slate-300 font-sans leading-relaxed">${r.notes}</p>` : ''}
               <div class="flex items-center gap-1.5 pt-2 border-t border-white/10">
                 <button onclick="approveTaskRequest('${r.id}')" class="flex-1 py-1 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-lg font-mono font-bold text-[10px] shadow-glow">Approve &amp; Assign</button>
-                <button onclick="declineTaskRequest('${r.id}')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 rounded-lg font-mono text-[10px]">Decline</button>
+                <button onclick="declineTaskRequest('${r.id}')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 rounded-lg font-mono text-[10px]">Decline</button>
               </div>
             </div>
           `).join('');
@@ -2047,10 +2060,10 @@
         const isToday = isCurrentViewingMonth && d === todayDayNumber;
 
         html += `
-          <div class="h-24 p-1.5 bg-[#040811]/70 border ${isToday ? 'border-2 border-[#FFC72C] ring-2 ring-[#FFC72C]/20 shadow-glow' : 'border-white/10'} rounded-xl flex flex-col justify-between hover:border-white/30 transition-colors">
+          <div class="h-24 p-1.5 panel border ${isToday ? 'border-2 border-[#FFC72C] ring-2 ring-[#FFC72C]/20 shadow-glow' : ''} rounded-xl flex flex-col justify-between transition-colors">
             <div class="flex items-center justify-between">
               ${isToday ? `<span class="px-1.5 py-0.5 rounded bg-[#FFC72C] text-[#0C2340] font-mono text-[9px] font-bold uppercase tracking-wider">Today</span>` : `<span></span>`}
-              <span class="font-mono text-[10.5px] font-bold ${isToday ? 'text-[#FFC72C]' : 'text-slate-300'}">${d}</span>
+              <span class="font-mono text-[10.5px] font-bold ${isToday ? 'text-[#FFC72C]' : ''}">${d}</span>
             </div>
             
             <div class="space-y-1 overflow-y-auto max-h-16 pr-0.5">
@@ -2078,7 +2091,7 @@
       const thead = document.getElementById('timeline-matrix-head');
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-qu-elevated text-slate-200 font-mono text-[11px] border-b border-white/10">
+          <tr class="bg-qu-elevated font-mono text-[11px] border-b border-white/10">
             <th class="py-3 px-3 w-52 sticky left-0 bg-qu-elevated z-10 border-r border-white/10">Subsystem</th>
              ${(timelineColumns || []).map(col => {
               const style = HIGHLIGHT_STYLES[col.highlight] || HIGHLIGHT_STYLES.none;

@@ -1532,6 +1532,25 @@
       if (window.lucide) lucide.createIcons();
     }
 
+    function handleOrdersSubmitButtonClick() {
+      openBulkOrderModal();
+    }
+
+    function delegateTaskPrompt(taskId) {
+      const target = tasks.find(x => x.id === taskId);
+      if (!target) return;
+      const sub = getSubsystem(target.subsystemId);
+      const team = [sub.lead, ...(sub.members || [])];
+      const name = prompt(`Assign "${target.title}" to which team member?\nTeam: ${team.join(', ')}`);
+      if (name && name.trim()) {
+        target.assignee = name.trim();
+        target.status = target.status === 'To Do' ? 'In Progress' : target.status;
+        saveState();
+        showToast(`Task assigned to ${name.trim()}`);
+        render();
+      }
+    }
+
     /* Core Tab Switcher - Updated for new Sidebar styling */
     function switchTab(tabId) {
       if (tabId === 'cto' && !ctoUnlocked) {

@@ -709,7 +709,7 @@
             <p class="text-xs text-slate-400 font-mono">BOM inventory logistics (Option A: PO creation authorized for Leads &amp; CTO)</p>
           </div>
           <div class="flex items-center gap-2">
-            <button id="btn-orders-submit-action" onclick="handleOrdersSubmitButtonClick()" class="bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl px-4 py-2.5 text-xs font-mono font-bold shadow-glow flex items-center justify-center gap-2 transition-all">
+            <button id="btn-orders-submit-action" onclick="window.handleOrdersSubmitButtonClick()" class="bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl px-4 py-2.5 text-xs font-mono font-bold shadow-glow flex items-center justify-center gap-2 transition-all">
               <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
               <span id="btn-orders-submit-label">Request Purchase Order</span>
             </button>
@@ -1532,7 +1532,7 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    function handleOrdersSubmitButtonClick() {
+    window.handleOrdersSubmitButtonClick = function() {
       openBulkOrderModal();
     }
 
@@ -1819,7 +1819,7 @@
                 <i data-lucide="${isLead ? 'crown' : 'user'}" class="w-3.5 h-3.5 ${isLead ? 'text-[#FFC72C]' : 'text-slate-500'}"></i>
                 <span class="font-bold">${member} ${isLead ? '<span class="text-[9px] text-[#FFC72C] font-bold">(Lead)</span>' : ''}</span>
               </div>
-              <span class="text-[10px] text-slate-400 font-semibold">${assignedCount} tasks</span>
+              <span class="text-[10px] font-mono text-slate-400 font-semibold">${assignedCount} tasks</span>
             </div>
           `;
         }).join('');

@@ -49,18 +49,30 @@
   </script>
 
   <style>
+    /* --- DARK MODE (Default Technical Command Center) --- */
     :root {
       --bg-main: #040811;
       --bg-panel: rgba(10, 21, 38, 0.7);
+      --bg-elevated: #0F1E33;
       --text-main: #f8fafc;
+      --text-muted: #94a3b8;
       --border-color: rgba(255,255,255,0.08);
+      --accent-gold: #FFC72C;
+      --accent-navy: #0C2340;
     }
+
+    /* --- LIGHT MODE (Clean Crisp Engineering Workspace) --- */
     html.light {
-      --bg-main: #f1f5f9;
+      --bg-main: #f8fafc;
       --bg-panel: #ffffff;
+      --bg-elevated: #e2e8f0;
       --text-main: #0f172a;
+      --text-muted: #475569;
       --border-color: #cbd5e1;
+      --accent-gold: #d97706;
+      --accent-navy: #0f172a;
     }
+
     html.light body {
       background-color: var(--bg-main);
       color: var(--text-main);
@@ -70,10 +82,10 @@
       background: var(--bg-panel);
       border-color: var(--border-color);
       box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-      color: #0f172a;
+      color: var(--text-main);
     }
     html.light .telemetry-input, html.light select, html.light input, html.light textarea {
-      background-color: #f8fafc !important;
+      background-color: #f1f5f9 !important;
       border-color: #cbd5e1 !important;
       color: #0f172a !important;
     }
@@ -82,7 +94,7 @@
       border-right-color: #cbd5e1 !important;
     }
     html.light header {
-      background-color: rgba(255, 255, 255, 0.9) !important;
+      background-color: rgba(255, 255, 255, 0.95) !important;
       border-bottom-color: #cbd5e1 !important;
     }
     html.light table thead {
@@ -99,16 +111,11 @@
     html.light td, html.light th {
       color: #0f172a !important;
     }
-    html.light .badge-slate {
-      background: rgba(15, 23, 42, 0.1);
-      color: #1e293b;
-      border-color: rgba(15, 23, 42, 0.2);
-    }
     html.light h1, html.light h2, html.light h3, html.light h4, html.light strong, html.light span {
-      color: #0f172a;
+      color: var(--text-main);
     }
     html.light .text-slate-400, html.light .text-slate-500 {
-      color: #475569 !important;
+      color: var(--text-muted) !important;
     }
 
     body {

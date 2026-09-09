@@ -56,7 +56,7 @@
       --border-color: rgba(255,255,255,0.08);
     }
     html.light {
-      --bg-main: #f8fafc;
+      --bg-main: #f1f5f9;
       --bg-panel: #ffffff;
       --text-main: #0f172a;
       --border-color: #cbd5e1;
@@ -73,7 +73,7 @@
       color: #0f172a;
     }
     html.light .telemetry-input, html.light select, html.light input, html.light textarea {
-      background-color: #f1f5f9 !important;
+      background-color: #f8fafc !important;
       border-color: #cbd5e1 !important;
       color: #0f172a !important;
     }
@@ -87,22 +87,28 @@
     }
     html.light table thead {
       background-color: #e2e8f0 !important;
-      color: #334155 !important;
+      color: #0f172a !important;
     }
     html.light table tbody tr {
       border-bottom-color: #e2e8f0 !important;
-      color: #1e293b !important;
+      color: #0f172a !important;
     }
     html.light table tbody tr:hover {
-      background-color: rgba(0,0,0,0.03) !important;
+      background-color: rgba(0,0,0,0.04) !important;
+    }
+    html.light td, html.light th {
+      color: #0f172a !important;
     }
     html.light .badge-slate {
-      background: rgba(15, 23, 42, 0.08);
-      color: #334155;
-      border-color: rgba(15, 23, 42, 0.15);
+      background: rgba(15, 23, 42, 0.1);
+      color: #1e293b;
+      border-color: rgba(15, 23, 42, 0.2);
     }
-    html.light h1, html.light h2, html.light h3, html.light h4, html.light strong {
-      color: #0f172a !important;
+    html.light h1, html.light h2, html.light h3, html.light h4, html.light strong, html.light span {
+      color: #0f172a;
+    }
+    html.light .text-slate-400, html.light .text-slate-500 {
+      color: #475569 !important;
     }
 
     body {
@@ -201,7 +207,7 @@
         <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-500"></i> Dashboard
       </button>
       <button onclick="switchTab('tasks')" class="nav-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" data-tab="tasks">
-        <i data-lucide="kanban" class="w-4 h-4 text-slate-500"></i> Tasks
+        <i data-lucide="check-square" class="w-4 h-4 text-slate-500"></i> Tasks
       </button>
       <button onclick="switchTab('schedule')" class="nav-tab w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all border-l-4 border-transparent" data-tab="schedule">
         <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i> Master Timeline
@@ -1289,7 +1295,7 @@
       const breadcrumb = document.getElementById('breadcrumb-active-title');
       const titleMap = {
         home: 'Overview & Telemetry',
-        tasks: 'Tasks (Kanban)',
+        tasks: 'Tasks',
         schedule: 'Master Timeline',
         orders: 'Purchasing Pipeline',
         lead: 'Subsystem Command',
@@ -1836,7 +1842,7 @@
                       </button>
                     ` : `
                       <button onclick="openViewerTaskPitchModal('${sub.id}')" class="px-3 py-1 rounded-lg bg-[#41748D]/20 hover:bg-[#41748D]/30 text-[#6ba4b8] border border-[#41748D]/30 font-semibold text-xs flex items-center gap-1 font-mono">
-                        + Pitch
+                        + Request Work
                       </button>
                     `}
                   </div>
@@ -1916,7 +1922,7 @@
                           ${userIsLead ? `
                             <button onclick="claimTaskPrompt('${t.id}')" class="px-2.5 py-1 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-lg text-[10px] font-mono font-bold flex-shrink-0 shadow-glow">+ Claim</button>
                           ` : `
-                            <button onclick="openViewerTaskPitchModal('${sub.id}')" class="px-2.5 py-1 bg-[#41748D]/20 text-[#6ba4b8] border border-[#41748D]/30 rounded-lg text-[10px] font-mono font-bold flex-shrink-0">Request</button>
+                            <button onclick="openViewerTaskPitchModal('${sub.id}')" class="px-2.5 py-1 bg-[#41748D]/20 text-[#6ba4b8] border border-[#41748D]/30 rounded-lg text-[10px] font-mono font-bold flex-shrink-0">Request Work</button>
                           `}
                         </div>
                       `).join('') : `<span class="text-[10px] font-mono text-slate-500 block py-1 italic">All subsystem work claimed.</span>`}
@@ -1926,7 +1932,7 @@
 
                 <div class="pt-2 border-t border-white/10 flex gap-2">
                   <button onclick="openViewerTaskPitchModal('${sub.id}')" class="flex-1 py-2 bg-[#41748D]/20 hover:bg-[#41748D]/30 text-[#6ba4b8] border border-[#41748D]/30 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1 font-mono">
-                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-[#FFC72C]"></i> Pitch Work
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-[#FFC72C]"></i> Request Work
                   </button>
                   ${userIsLead ? `
                     <button onclick="openTaskModal(null, '${sub.id}')" class="flex-1 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] text-xs font-mono font-bold rounded-xl transition-colors flex items-center justify-center gap-1 shadow-glow">
@@ -2091,12 +2097,11 @@
       const thead = document.getElementById('timeline-matrix-head');
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-qu-elevated font-mono text-[11px] border-b border-white/10">
-            <th class="py-3 px-3 w-52 sticky left-0 bg-qu-elevated z-10 border-r border-white/10">Subsystem</th>
+          <tr class="font-mono text-[11px] border-b border-white/10" style="background-color: rgba(15,30,51,0.5);">
+            <th class="py-3 px-3 w-52 sticky left-0 z-10 border-r border-white/10" style="background: inherit;">Subsystem</th>
              ${(timelineColumns || []).map(col => {
-              const style = HIGHLIGHT_STYLES[col.highlight] || HIGHLIGHT_STYLES.none;
               return `
-                <th onclick="editColumnHeader('${col.key}')" class="py-3 px-2 text-center w-24 ${hasAnyLeadAccess() ? 'cursor-pointer hover:opacity-80' : ''} transition-opacity ${style.header}">
+                <th onclick="editColumnHeader('${col.key}')" class="py-3 px-2 text-center w-24 ${hasAnyLeadAccess() ? 'cursor-pointer hover:opacity-80' : ''} transition-opacity border-r border-white/10">
                   <span class="block truncate">${col.label}</span>
                 </th>
               `;
@@ -2114,17 +2119,15 @@
 
           return `
             <tr class="hover:bg-white/5 transition-colors group">
-              <td class="py-3 px-3 font-bold border-r border-white/10 sticky left-0 bg-[#0A1526] z-10 flex items-center justify-between">
+              <td class="py-3 px-3 font-bold border-r border-white/10 sticky left-0 z-10 flex items-center justify-between" style="background: var(--bg-panel);">
                 <span class="truncate pr-1">${sub.name}</span>
               </td>
               ${(timelineColumns || []).map(col => {
                 const taskText = rowMilestones[col.key] || '';
-                const style = HIGHLIGHT_STYLES[col.highlight] || HIGHLIGHT_STYLES.none;
-
                 return `
-                  <td onclick="${canEditSubTimeline ? `editTimelineMilestone('${sub.id}', '${col.key}')` : ''}" class="py-2 px-1.5 align-top ${canEditSubTimeline ? 'cursor-pointer hover:brightness-125' : ''} transition-all ${style.cell}">
+                  <td onclick="${canEditSubTimeline ? `editTimelineMilestone('${sub.id}', '${col.key}')` : ''}" class="py-2 px-1.5 align-top ${canEditSubTimeline ? 'cursor-pointer hover:brightness-125' : ''} transition-all border-r border-white/5">
                     ${taskText ? `
-                      <div class="p-1.5 rounded-lg ${isSae ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300 font-bold' : 'bg-[#FFC72C]/10 border-[#FFC72C]/30 text-[#FFC72C] font-semibold'} border text-[10px] leading-tight text-center shadow-xs">
+                      <div class="p-1.5 rounded-lg ${isSae ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300 font-bold' : 'bg-[#FFC72C]/15 border-[#FFC72C]/40 text-[#FFC72C] font-semibold'} border text-[10px] leading-tight text-center shadow-xs">
                         ${taskText}
                       </div>
                     ` : canEditSubTimeline ? `<div class="h-6 flex items-center justify-center opacity-0 group-hover:opacity-40 text-slate-500 font-mono text-[9px]">+</div>` : ''}
@@ -2245,12 +2248,12 @@
             return `
               <tr class="hover:bg-white/5 transition-colors group">
                 <td class="py-3 px-4 font-semibold border-r border-white/5">${o.vendor || 'Vendor'}</td>
-                <td class="py-3 px-4 text-slate-200 border-r border-white/5">
+                <td class="py-3 px-4 border-r border-white/5">
                   <span class="block truncate max-w-[200px]" title="${o.item}">${o.item}</span>
                   ${o.notes && o.notes !== 'N/A' ? `<span class="block text-[10px] text-slate-500 font-normal font-mono mt-0.5 truncate max-w-[200px]">Notes: ${o.notes}</span>` : ''}
                 </td>
-                <td class="py-3 px-4 font-mono text-slate-400 text-[11px] border-r border-white/5">${o.partNumber || 'N/A'}</td>
-                <td class="py-3 px-4 text-slate-400 text-[11px] font-mono border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
+                <td class="py-3 px-4 font-mono text-[11px] border-r border-white/5">${o.partNumber || 'N/A'}</td>
+                <td class="py-3 px-4 font-mono text-[11px] border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
                 <td class="py-3 px-4 text-right font-mono font-bold border-r border-white/5">${o.qty}</td>
                 <td class="py-3 px-4 border-r border-white/5"><span class="badge-pill ${urgColor}">${o.urgency}</span></td>
                 <td class="py-3 px-4 font-mono text-[11px] font-bold border-r border-white/5">${o.requestedBy || 'Team'}</td>
@@ -2271,11 +2274,11 @@
           completedTbody.innerHTML = completedOrders.map(o => `
             <tr class="hover:bg-white/5 transition-colors bg-emerald-500/5 opacity-80 hover:opacity-100">
               <td class="py-3 px-4 font-semibold border-r border-white/5">${o.vendor || 'Vendor'}</td>
-              <td class="py-3 px-4 text-slate-200 border-r border-white/5">
+              <td class="py-3 px-4 border-r border-white/5">
                 <span class="block truncate max-w-[200px]" title="${o.item}">${o.item}</span>
               </td>
-              <td class="py-3 px-4 font-mono text-slate-400 text-[11px] border-r border-white/5">${o.partNumber || 'N/A'}</td>
-              <td class="py-3 px-4 text-slate-400 text-[11px] font-mono border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
+              <td class="py-3 px-4 font-mono text-[11px] border-r border-white/5">${o.partNumber || 'N/A'}</td>
+              <td class="py-3 px-4 font-mono text-[11px] border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
               <td class="py-3 px-4 text-right font-mono font-bold border-r border-white/5">${o.qty}</td>
               <td class="py-3 px-4 font-mono text-[11px] font-bold border-r border-white/5">${o.requestedBy || 'Team'}</td>
               <td class="py-3 px-4 text-center">
@@ -2332,12 +2335,12 @@
               <input type="checkbox" onchange="toggleOrderSelection('${o.id}', this.checked)" ${isChecked ? 'checked' : ''} class="rounded bg-black/40 border-white/20 text-[#FFC72C] focus:ring-0">
             </td>
             <td class="py-2.5 px-3 font-semibold border-r border-white/5">${o.vendor}</td>
-            <td class="py-2.5 px-3 truncate max-w-xs font-sans text-xs text-slate-200 border-r border-white/5" title="${o.item}">${o.item}</td>
-            <td class="py-2.5 px-3 text-slate-400 text-[11px] border-r border-white/5">${o.partNumber}</td>
+            <td class="py-2.5 px-3 truncate max-w-xs font-sans text-xs border-r border-white/5" title="${o.item}">${o.item}</td>
+            <td class="py-2.5 px-3 text-[11px] border-r border-white/5">${o.partNumber}</td>
             <td class="py-2.5 px-3 text-right border-r border-white/5">$${Number(o.unitPrice).toFixed(2)}</td>
             <td class="py-2.5 px-3 text-right font-bold border-r border-white/5">${o.qty}</td>
             <td class="py-2.5 px-3 text-right font-bold border-r border-white/5">$${lineTotal}</td>
-            <td class="py-2.5 px-3 text-slate-400 border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
+            <td class="py-2.5 px-3 border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
             <td class="py-2.5 px-3 font-bold border-r border-white/5">${o.requestedBy}</td>
             <td class="py-2.5 px-3 border-r border-white/5">
               <select onchange="updateOrderStatus('${o.id}', this.value)" class="telemetry-input rounded-xl px-2.5 py-1 text-[10.5px] font-mono font-medium outline-none">
@@ -2370,12 +2373,12 @@
         return `
           <tr class="hover:bg-white/5 bg-emerald-500/5">
             <td class="py-2.5 px-3 font-semibold border-r border-white/5">${o.vendor}</td>
-            <td class="py-2.5 px-3 truncate max-w-xs font-sans text-xs text-slate-200 border-r border-white/5" title="${o.item}">${o.item}</td>
-            <td class="py-2.5 px-3 text-slate-400 text-[11px] border-r border-white/5">${o.partNumber}</td>
+            <td class="py-2.5 px-3 truncate max-w-xs font-sans text-xs border-r border-white/5" title="${o.item}">${o.item}</td>
+            <td class="py-2.5 px-3 text-[11px] border-r border-white/5">${o.partNumber}</td>
             <td class="py-2.5 px-3 text-right border-r border-white/5">$${Number(o.unitPrice).toFixed(2)}</td>
             <td class="py-2.5 px-3 text-right font-bold border-r border-white/5">${o.qty}</td>
             <td class="py-2.5 px-3 text-right font-bold border-r border-white/5">$${lineTotal}</td>
-            <td class="py-2.5 px-3 text-slate-400 border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
+            <td class="py-2.5 px-3 border-r border-white/5">${getSubsystem(o.subsystemId).name.split('&')[0]}</td>
             <td class="py-2.5 px-3 font-bold border-r border-white/5">${o.requestedBy}</td>
             <td class="py-2.5 px-3 border-r border-white/5">
               <select onchange="updateOrderStatus('${o.id}', this.value)" class="telemetry-input rounded-xl px-2.5 py-1 text-[10.5px] font-mono text-emerald-400 outline-none">
@@ -2697,7 +2700,7 @@
 
     function openBulkOrderModal() {
       if (!hasAnyLeadAccess()) {
-        alert("Purchase Order submission is restricted to Subsystem Leads and the CTO. Please log in.");
+        openLeadAuthModal();
         return;
       }
 
@@ -2710,7 +2713,7 @@
         <div class="flex items-center justify-between pb-3 border-b border-white/10">
           <div class="flex items-center gap-2">
             <i data-lucide="shopping-bag" class="w-4 h-4 text-[#FFC72C]"></i>
-            <h3 class="text-sm font-bold">Multi-Part Purchase Order Requisition</h3>
+            <h3 class="text-sm font-bold">Request Purchase Order</h3>
           </div>
           <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
@@ -2749,7 +2752,7 @@
 
           <div class="flex justify-end gap-2 pt-2 border-t border-white/10">
             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-xs font-semibold border border-white/10">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl font-mono font-bold text-xs shadow-glow">Submit Requisition Batch</button>
+            <button type="submit" class="px-4 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl font-mono font-bold text-xs shadow-glow">Submit Purchase Order</button>
           </div>
         </form>
       `;
@@ -2802,7 +2805,7 @@
 
         saveState();
         closeModal();
-        showToast(`Submitted ${newOrders.length} parts from ${vendor}`);
+        showToast(`Requested ${newOrders.length} parts from ${vendor}`);
         render();
       };
 

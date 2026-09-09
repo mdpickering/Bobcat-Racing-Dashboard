@@ -467,7 +467,7 @@
             <button onclick="openSubsystemManagerModal()" class="bg-qu-elevated border border-white/15 hover:bg-qu-card rounded-xl px-3 py-1.5 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all">
               <i data-lucide="layers" class="w-3.5 h-3.5 text-[#FFC72C]"></i> Teams &amp; PINs
             </button>
-            <button onclick="openSettingsModal()" class="bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono font-semibold flex items-center gap-1 transition-all">
+            <button onclick="openSettingsModal()" class="bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all">
               <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Settings
             </button>
             <button onclick="lockCtoPortal()" class="bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-400 rounded-xl px-3 py-1.5 text-xs font-mono font-semibold flex items-center gap-1 transition-all">
@@ -709,7 +709,7 @@
             <p class="text-xs text-slate-400 font-mono">BOM inventory logistics (Option A: PO creation authorized for Leads &amp; CTO)</p>
           </div>
           <div class="flex items-center gap-2">
-            <button id="btn-orders-submit-action" onclick="openBulkOrderModal()" class="bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl px-4 py-2.5 text-xs font-mono font-bold shadow-glow flex items-center justify-center gap-2 transition-all">
+            <button id="btn-orders-submit-action" onclick="handleOrdersSubmitButtonClick()" class="bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl px-4 py-2.5 text-xs font-mono font-bold shadow-glow flex items-center justify-center gap-2 transition-all">
               <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
               <span id="btn-orders-submit-label">Request Purchase Order</span>
             </button>

@@ -709,7 +709,7 @@
             <p class="text-xs text-slate-400 font-mono">BOM inventory logistics (Option A: PO creation authorized for Leads &amp; CTO)</p>
           </div>
           <div class="flex items-center gap-2">
-            <button id="btn-orders-submit-action" onclick="window.handleOrdersSubmitButtonClick()" class="bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl px-4 py-2.5 text-xs font-mono font-bold shadow-glow flex items-center justify-center gap-2 transition-all">
+            <button id="btn-orders-submit-action" onclick="openBulkOrderModal()" class="bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl px-4 py-2.5 text-xs font-mono font-bold shadow-glow flex items-center justify-center gap-2 transition-all">
               <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
               <span id="btn-orders-submit-label">Request Purchase Order</span>
             </button>
@@ -1046,6 +1046,34 @@
       const defFallback = DEFAULT_SUBSYSTEMS.find(d => d.id === id);
       if (defFallback) return defFallback;
       return { id: id || 'other', name: 'Uncategorized Work', categories: [{ name: 'General Engineering', rule: 'General SAE Specifications' }], lead: 'Unassigned', members: [] };
+    }
+
+    async function syncBeforePush() {
+      if (dbClient && isCloudConnected) {
+        try {
+          const { data, error } = await dbClient.from('workspace_state').select('*').eq('id', 'bobcat_master_workspace_state').single();
+          if (!error && data) {
+            if (data.taxonomy && Array.isArray(data.taxonomy)) {
+              taxonomy = data.taxonomy.map(sub => {
+                const defSub = DEFAULT_SUBSYSTEMS.find(d => d.id === sub.id);
+                return {
+                  ...sub,
+                  categories: (sub.categories && Array.isArray(sub.categories) && sub.categories.length > 0)
+                    ? sub.categories
+                    : (defSub ? defSub.categories : [{ name: "General Engineering", rule: "Follow standard SAE technical rules and inspection specifications." }])
+                };
+              });
+            }
+            if (data.tasks) tasks = data.tasks;
+            if (data.orders) orders = data.orders;
+            if (data.timeline_columns) timelineColumns = data.timeline_columns;
+            if (data.recurring_events) recurringEvents = data.recurring_events;
+            if (data.timeline_milestones) timelineMilestones = data.timeline_milestones;
+            if (data.pending_requests) pendingRequests = data.pending_requests;
+            if (data.member_intakes) memberIntakes = data.member_intakes;
+          }
+        } catch (err) { console.warn('Pre-save sync failed', err); }
+      }
     }
 
     function saveState(broadcastCloud = true) {
@@ -1394,7 +1422,7 @@
         </form>
       `;
 
-      document.getElementById('form-member-intake').onsubmit = (e) => {
+      document.getElementById('form-member-intake').onsubmit = async (e) => {
         e.preventDefault();
         const candidate = {
           id: 'cand_' + Date.now(),
@@ -1407,6 +1435,8 @@
           goals: document.getElementById('f-intake-goals').value.trim(),
           submittedAt: new Date().toISOString()
         };
+
+        await syncBeforePush(); // <--- Downloads latest database to prevent overwriting
 
         memberIntakes.push(candidate);
         saveState();
@@ -1509,7 +1539,7 @@
         </form>
       `;
 
-      document.getElementById('form-viewer-pitch').onsubmit = (e) => {
+      document.getElementById('form-viewer-pitch').onsubmit = async (e) => {
         e.preventDefault();
         const request = {
           id: 'req_' + Date.now(),
@@ -1519,6 +1549,8 @@
           notes: document.getElementById('f-pitch-notes').value.trim(),
           submittedAt: new Date().toISOString()
         };
+
+        await syncBeforePush(); // <--- Prevents overwriting
 
         pendingRequests.push(request);
         saveState();
@@ -1530,10 +1562,6 @@
       document.getElementById('modal-container').classList.remove('hidden');
       document.getElementById('modal-container').classList.add('flex');
       if (window.lucide) lucide.createIcons();
-    }
-
-    window.handleOrdersSubmitButtonClick = function() {
-      openBulkOrderModal();
     }
 
     function delegateTaskPrompt(taskId) {
@@ -3009,302 +3037,121 @@
     });
 
     /* =========================================================
-       MISSING EXECUTIVE & PURCHASING FUNCTIONS
+       UPDATED MULTI-PART PURCHASE ORDER ENGINE
        ========================================================= */
+
+    let bulkPOItemRows = [];
 
     function openBulkOrderModal() {
-      const modalCard = document.getElementById('modal-card');
-      modalCard.innerHTML = `
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
-          <h3 class="text-sm font-bold flex items-center gap-2"><i data-lucide="shopping-bag" class="w-4 h-4 text-[#FFC72C]"></i> Request Purchase Order</h3>
-          <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-        </div>
-        <form id="form-po-request" class="space-y-4 mt-4 text-xs">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Vendor</label>
-              <input required id="f-po-vendor" class="w-full telemetry-input rounded-xl p-2.5 outline-none" placeholder="e.g. McMaster-Carr">
-            </div>
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Part Number (Optional)</label>
-              <input id="f-po-part" class="w-full telemetry-input rounded-xl p-2.5 outline-none font-mono" placeholder="e.g. 91251A542">
-            </div>
-          </div>
-          <div>
-            <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Item Description</label>
-            <input required id="f-po-item" class="w-full telemetry-input rounded-xl p-2.5 outline-none" placeholder="e.g. 3/8-24 Grade 8 Hex Bolts">
-          </div>
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Qty</label>
-              <input required type="number" min="1" id="f-po-qty" class="w-full telemetry-input rounded-xl p-2.5 outline-none" value="1">
-            </div>
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Unit Price ($)</label>
-              <input required type="number" step="0.01" min="0" id="f-po-price" class="w-full telemetry-input rounded-xl p-2.5 outline-none" placeholder="0.00">
-            </div>
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Urgency</label>
-              <select id="f-po-urgency" class="w-full telemetry-input rounded-xl p-2.5 outline-none">
-                <option>Standard</option>
-                <option>Immediate Need</option>
-              </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Target Subsystem</label>
-              <select id="f-po-subsystem" class="w-full telemetry-input rounded-xl p-2.5 outline-none">
-                ${taxonomy.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Requested By</label>
-              <input required id="f-po-requester" class="w-full telemetry-input rounded-xl p-2.5 outline-none" placeholder="Your Name">
-            </div>
-          </div>
-          <div class="flex justify-end gap-2 pt-3 border-t border-white/15">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl font-semibold border border-white/15">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl font-mono font-bold shadow-glow">Submit PO</button>
-          </div>
-        </form>
-      `;
-
-      document.getElementById('form-po-request').onsubmit = (e) => {
-        e.preventDefault();
-        orders.push({
-          id: 'po_' + Date.now(),
-          vendor: document.getElementById('f-po-vendor').value.trim(),
-          item: document.getElementById('f-po-item').value.trim(),
-          partNumber: document.getElementById('f-po-part').value.trim(),
-          qty: parseInt(document.getElementById('f-po-qty').value),
-          unitPrice: parseFloat(document.getElementById('f-po-price').value),
-          urgency: document.getElementById('f-po-urgency').value,
-          subsystemId: document.getElementById('f-po-subsystem').value,
-          requestedBy: document.getElementById('f-po-requester').value.trim(),
-          status: 'Requested',
-          notes: ''
-        });
-        saveState();
-        closeModal();
-        showToast("Purchase Order Requested");
-        render();
-      };
-
-      document.getElementById('modal-container').classList.remove('hidden');
-      document.getElementById('modal-container').classList.add('flex');
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function exportSelectedOrdersToExactExcel() {
-      const itemsToExport = orders.filter(o => selectedOrderIds.has(o.id));
-      if (itemsToExport.length === 0) {
-        alert("Select at least one active order to export.");
+      if (!hasAnyLeadAccess()) {
+        alert("Purchase Order submission is restricted to Subsystem Leads and the CTO. Please log in.");
         return;
       }
-      
-      const exportData = itemsToExport.map(o => ({
-        "Vendor": o.vendor,
-        "Item Description": o.item,
-        "Part Number": o.partNumber,
-        "Quantity": o.qty,
-        "Unit Price": o.unitPrice,
-        "Total Line Cost": (o.qty * o.unitPrice).toFixed(2),
-        "Subsystem": getSubsystem(o.subsystemId).name,
-        "Requested By": o.requestedBy,
-        "Status": o.status
-      }));
 
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Baja Purchase Orders");
-      XLSX.writeFile(wb, `Bobcat_Racing_POs_${new Date().toISOString().slice(0,10)}.xlsx`);
-      showToast("Excel Export Complete");
-    }
+      bulkPOItemRows = [
+        { id: 1, item: '', partNumber: '', qty: 1, unitPrice: 0.0, notes: '', subassembly: taxonomy[0].id }
+      ];
 
-    function deleteOrder(id) {
-      if (confirm("Permanently delete this purchase order?")) {
-        orders = orders.filter(o => o.id !== id);
-        selectedOrderIds.delete(id);
-        saveState();
-        showToast("Purchase Order Deleted");
-        render();
-      }
-    }
+      const modalCard = document.getElementById('modal-card');
+      modalCard.innerHTML = `
+        <div class="flex items-center justify-between pb-3 border-b border-white/15">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shopping-bag" class="w-4 h-4 text-[#FFC72C]"></i>
+            <h3 class="text-sm font-bold">Request Purchase Order</h3>
+          </div>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        
+        <form id="form-bulk-order" class="space-y-4 mt-3 text-xs">
+          <div class="p-3 bg-black/40 border border-white/15 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Vendor Name</label>
+              <input required id="f-bulk-vendor" class="w-full telemetry-input rounded-xl p-2 outline-none" placeholder="McMaster / Summit">
+            </div>
+            <div>
+              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Vendor Web Link</label>
+              <input type="url" id="f-bulk-url" class="w-full telemetry-input rounded-xl p-2 outline-none" placeholder="https://...">
+            </div>
+            <div>
+              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Member Responsible</label>
+              <input required id="f-bulk-requester" class="w-full telemetry-input rounded-xl p-2 outline-none" placeholder="Initials / Name">
+            </div>
+          </div>
 
-    function updateOrderStatus(id, newStatus) {
-      const target = orders.find(o => o.id === id);
-      if (target) {
-        target.status = newStatus;
-        saveState();
-        showToast(`Order marked as ${newStatus}`);
-        render();
-      }
-    }
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold uppercase text-[10px] tracking-wider text-slate-400">Line Items In This Order</span>
+              <button type="button" onclick="addBulkItemRow()" class="px-2.5 py-1 bg-[#FFC72C]/15 hover:bg-[#FFC72C]/25 text-[#FFC72C] border border-[#FFC72C]/30 rounded-lg font-mono font-bold text-[10.5px] flex items-center gap-1">
+                <i data-lucide="plus" class="w-3 h-3"></i> Add Another Item
+              </button>
+            </div>
 
-    /* =========================================================
-       MISSING RECRUITING & TASK PITCH FUNCTIONS
-       ========================================================= */
+            <div id="bulk-po-rows-container" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+          </div>
 
-    function recruitCandidate(candId, subId) {
-      const candIndex = memberIntakes.findIndex(c => c.id === candId);
-      if (candIndex > -1) {
-        const cand = memberIntakes[candIndex];
-        const targetSub = taxonomy.find(s => s.id === subId);
-        if (targetSub) {
-          if (!targetSub.members) targetSub.members = [];
-          targetSub.members.push(cand.name.split(' ')[0]);
-          memberIntakes.splice(candIndex, 1);
-          saveState();
-          showToast(`${cand.name} recruited to ${targetSub.name.split('&')[0]}`);
-          render();
-        }
-      }
-    }
+          <div class="p-3 bg-black/40 border border-white/15 rounded-xl flex items-center justify-between font-mono text-xs">
+            <span>Total Order Requisition Estimate:</span>
+            <span id="bulk-order-total-est" class="text-base font-bold">$0.00</span>
+          </div>
 
-    function handleTasksAddButtonClick() {
-      const targetSub = activeSubsystemFilter === 'all' ? taxonomy[0].id : activeSubsystemFilter;
-      if (hasAnyLeadAccess()) {
-        openTaskModal(null, targetSub);
-      } else {
-        openViewerTaskPitchModal(targetSub);
-      }
-    }
+          <div class="flex justify-end gap-2 pt-2 border-t border-white/15">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl font-semibold border border-white/15">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl font-mono font-bold text-xs shadow-glow">Submit Purchase Order</button>
+          </div>
+        </form>
+      `;
 
-    function approveTaskRequest(id) {
-      const reqIndex = pendingRequests.findIndex(r => r.id === id);
-      if (reqIndex > -1) {
-        const req = pendingRequests[reqIndex];
-        const targetSub = getSubsystem(req.subsystemId);
-        tasks.push({
-          id: 't' + Date.now(),
-          title: req.title,
-          subsystemId: req.subsystemId,
-          category: targetSub.categories[0]?.name || "General Engineering",
-          priority: "Medium",
-          status: "To Do",
-          assignee: "",
-          deadline: "",
-          notes: `${req.notes}\n(Requested by: ${req.requester})`
+      renderBulkItemRows();
+
+      document.getElementById('form-bulk-order').onsubmit = async (e) => {
+        e.preventDefault();
+        const vendor = document.getElementById('f-bulk-vendor').value.trim();
+        const vendorUrl = document.getElementById('f-bulk-url').value.trim();
+        const requestedBy = document.getElementById('f-bulk-requester').value.trim();
+
+        const newOrders = [];
+        bulkPOItemRows.forEach((row, idx) => {
+          const itemEl = document.getElementById(`bulk-item-desc-${row.id}`);
+          const partEl = document.getElementById(`bulk-item-part-${row.id}`);
+          const qtyEl = document.getElementById(`bulk-item-qty-${row.id}`);
+          const priceEl = document.getElementById(`bulk-item-price-${row.id}`);
+          const subEl = document.getElementById(`bulk-item-sub-${row.id}`);
+          const notesEl = document.getElementById(`bulk-item-notes-${row.id}`);
+
+          if (itemEl && itemEl.value.trim()) {
+            newOrders.push({
+              id: 'o' + (Date.now() + idx),
+              item: itemEl.value.trim(),
+              subsystemId: subEl ? subEl.value : taxonomy[0].id,
+              vendor: vendor || 'Vendor',
+              vendorUrl: vendorUrl || '',
+              partNumber: partEl ? partEl.value.trim() || 'N/A' : 'N/A',
+              qty: parseInt(qtyEl?.value) || 1,
+              unitPrice: parseFloat(priceEl?.value) || 0.0,
+              notes: notesEl ? notesEl.value.trim() || 'N/A' : 'N/A',
+              urgency: "Immediate Need",
+              requestedBy: requestedBy,
+              status: 'Requested',
+              submittedAt: new Date().toISOString()
+            });
+          }
         });
-        pendingRequests.splice(reqIndex, 1);
-        saveState();
-        showToast("Pitch approved and converted to Task");
-        render();
-      }
-    }
 
-    function declineTaskRequest(id) {
-      pendingRequests = pendingRequests.filter(r => r.id !== id);
-      saveState();
-      showToast("Task pitch removed");
-      render();
-    }
+        if (!newOrders.length) {
+          alert("Please enter at least one item description.");
+          return;
+        }
 
-    /* =========================================================
-       MISSING EXECUTIVE SETTINGS & TEAM MANAGEMENT
-       ========================================================= */
+        await syncBeforePush(); // <--- Sync safety before saving orders
 
-    function openSettingsModal() {
-      const modalCard = document.getElementById('modal-card');
-      modalCard.innerHTML = `
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
-          <h3 class="text-sm font-bold flex items-center gap-2"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-[#FFC72C]"></i> Executive Settings</h3>
-          <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-        </div>
-        <form id="form-settings" class="space-y-4 mt-4 text-xs">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Master CTO PIN</label>
-              <input required id="f-set-cto" type="password" class="w-full telemetry-input rounded-xl p-2.5 font-mono" value="${settings.ctoPin || ''}">
-            </div>
-            <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Global Lead PIN (Override)</label>
-              <input required id="f-set-lead" type="password" class="w-full telemetry-input rounded-xl p-2.5 font-mono" value="${settings.globalLeadPin || ''}">
-            </div>
-          </div>
-          <div>
-            <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Supabase Project URL</label>
-            <input id="f-set-sb-url" class="w-full telemetry-input rounded-xl p-2.5 font-mono" value="${settings.supabaseUrl || ''}">
-          </div>
-          <div class="flex justify-end gap-2 pt-3 border-t border-white/15">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white/5 rounded-xl font-semibold border border-white/15">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl font-mono font-bold shadow-glow">Save Core Settings</button>
-          </div>
-        </form>
-      `;
-      document.getElementById('form-settings').onsubmit = (e) => {
-        e.preventDefault();
-        settings.ctoPin = document.getElementById('f-set-cto').value.trim();
-        settings.globalLeadPin = document.getElementById('f-set-lead').value.trim();
-        settings.supabaseUrl = document.getElementById('f-set-sb-url').value.trim();
-        localStorage.setItem('bobcat_settings', JSON.stringify(settings));
-        closeModal();
-        showToast("Settings Updated Successfully");
-      };
-      document.getElementById('modal-container').classList.remove('hidden');
-      document.getElementById('modal-container').classList.add('flex');
-      if (window.lucide) lucide.createIcons();
-    }
+        newOrders.forEach(o => {
+          orders.push(o);
+          selectedOrderIds.add(o.id);
+        });
 
-    function openSubsystemManagerModal() {
-      const modalCard = document.getElementById('modal-card');
-      modalCard.innerHTML = `
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
-          <h3 class="text-sm font-bold flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4 text-[#FFC72C]"></i> Teams & PIN Manager</h3>
-          <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-        </div>
-        <div class="space-y-3 mt-4 text-xs max-h-[60vh] overflow-y-auto pr-2">
-          ${taxonomy.map(sub => `
-            <div class="panel p-3 border border-white/15 rounded-xl">
-              <div class="flex items-center justify-between mb-2">
-                <span class="font-bold">${sub.name}</span>
-                <button onclick="openRosterEditModal('${sub.id}')" class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/15 rounded-lg text-[10px] font-mono">Edit Members</button>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <input class="telemetry-input rounded-lg p-2 font-mono text-[11px]" value="${sub.lead}" disabled title="Lead Name">
-                <input class="telemetry-input rounded-lg p-2 font-mono text-[11px]" value="PIN: ${sub.leadPin || 'Not Set'}" disabled title="Current Subsystem PIN">
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-      document.getElementById('modal-container').classList.remove('hidden');
-      document.getElementById('modal-container').classList.add('flex');
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function openRosterEditModal(subId) {
-      const sub = getSubsystem(subId);
-      const modalCard = document.getElementById('modal-card');
-      modalCard.innerHTML = `
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
-          <h3 class="text-sm font-bold">Edit Roster: ${sub.name.split('&')[0]}</h3>
-          <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-        </div>
-        <form id="form-roster-edit" class="space-y-4 mt-4 text-xs">
-          <div>
-            <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Subsystem Lead</label>
-            <input required id="f-roster-lead" class="w-full telemetry-input rounded-xl p-2.5 outline-none font-mono" value="${sub.lead}">
-          </div>
-          <div>
-            <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Team Members (Comma Separated)</label>
-            <input required id="f-roster-members" class="w-full telemetry-input rounded-xl p-2.5 outline-none font-mono" value="${(sub.members || []).join(', ')}">
-          </div>
-          <div class="flex justify-end gap-2 pt-3 border-t border-white/15">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white/5 rounded-xl font-semibold border border-white/15">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl font-mono font-bold shadow-glow">Update Roster</button>
-          </div>
-        </form>
-      `;
-
-      document.getElementById('form-roster-edit').onsubmit = (e) => {
-        e.preventDefault();
-        sub.lead = document.getElementById('f-roster-lead').value.trim();
-        sub.members = document.getElementById('f-roster-members').value.split(',').map(m => m.trim()).filter(m => m.length > 0);
         saveState();
         closeModal();
-        showToast("Roster Updated");
+        showToast(`Requested ${newOrders.length} parts from ${vendor}`);
         render();
       };
 
@@ -3313,62 +3160,85 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    function editCurrentLeadRoster() {
-      if (authenticatedLeadSubId) {
-        openRosterEditModal(authenticatedLeadSubId);
-      }
-    }
+    function renderBulkItemRows() {
+      const container = document.getElementById('bulk-po-rows-container');
+      if (!container) return;
 
-    function openRecurringEventModal() {
-      const modalCard = document.getElementById('modal-card');
-      modalCard.innerHTML = `
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
-          <h3 class="text-sm font-bold flex items-center gap-2"><i data-lucide="repeat" class="w-4 h-4 text-[#FFC72C]"></i> Add Recurring Event</h3>
-          <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-        </div>
-        <form id="form-recurring" class="space-y-4 mt-4 text-xs">
-          <div>
-            <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Event Title</label>
-            <input required id="f-rec-title" class="w-full telemetry-input rounded-xl p-2.5 outline-none" placeholder="e.g. Shop Fabrication Session">
+      container.innerHTML = bulkPOItemRows.map((row, index) => `
+        <div class="po-item-row p-3 bg-black/40 border border-white/15 rounded-xl space-y-2 relative group hover:border-white/30 transition-colors">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/5 border border-white/15 text-slate-300">Item #${index + 1}</span>
+            ${bulkPOItemRows.length > 1 ? `
+              <button type="button" onclick="removeBulkItemRow(${row.id})" class="text-slate-400 hover:text-rose-400 p-0.5" title="Remove line item">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
           </div>
-          <div class="grid grid-cols-2 gap-3">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Day of Week</label>
-              <select id="f-rec-day" class="w-full telemetry-input rounded-xl p-2.5 outline-none font-semibold">
-                <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
-                <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Item Description</label>
+              <input required id="bulk-item-desc-${row.id}" class="f-po-item w-full telemetry-input rounded-xl p-1.5 text-xs outline-none" value="${row.item}" placeholder="e.g. Hex Bolt 1/2-20">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Subassembly</label>
+              <select id="bulk-item-sub-${row.id}" class="f-po-subsystem w-full telemetry-input rounded-xl p-1.5 text-xs outline-none">
+                ${taxonomy.map(s => `<option value="${s.id}" ${s.id === row.subassembly ? 'selected' : ''}>${s.name}</option>`).join('')}
               </select>
             </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
             <div>
-              <label class="block mb-1 font-mono uppercase font-bold text-[10px]">Timeframe</label>
-              <input required id="f-rec-time" class="w-full telemetry-input rounded-xl p-2.5 outline-none font-mono" placeholder="e.g. 6:00 PM - 9:00 PM">
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Part #</label>
+              <input id="bulk-item-part-${row.id}" class="f-po-part w-full telemetry-input rounded-xl p-1.5 text-xs font-mono outline-none" value="${row.partNumber}" placeholder="e.g. 91286A211">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Qty</label>
+              <input type="number" min="1" oninput="calculateBulkTotalEst()" id="bulk-item-qty-${row.id}" class="f-po-qty w-full telemetry-input rounded-xl p-1.5 text-xs font-mono outline-none font-bold" value="${row.qty}">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Unit ($)</label>
+              <input type="number" step="0.01" min="0" oninput="calculateBulkTotalEst()" id="bulk-item-price-${row.id}" class="f-po-price w-full telemetry-input rounded-xl p-1.5 text-xs font-mono outline-none" value="${row.unitPrice}">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Notes</label>
+              <input id="bulk-item-notes-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs outline-none" value="${row.notes}" placeholder="Optional notes">
             </div>
           </div>
-          <div class="flex justify-end gap-2 pt-3 border-t border-white/15">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white/5 rounded-xl font-semibold border border-white/15">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-[#FFC72C] hover:bg-[#e5a800] text-[#0C2340] rounded-xl font-mono font-bold shadow-glow">Save Event</button>
-          </div>
-        </form>
-      `;
+        </div>
+      `).join('');
 
-      document.getElementById('form-recurring').onsubmit = (e) => {
-        e.preventDefault();
-        recurringEvents.push({
-          id: 'rec_' + Date.now(),
-          title: document.getElementById('f-rec-title').value.trim(),
-          dayOfWeek: parseInt(document.getElementById('f-rec-day').value),
-          time: document.getElementById('f-rec-time').value.trim(),
-          color: "navy"
-        });
-        saveState();
-        closeModal();
-        showToast("Recurring Calendar Event Added");
-        render();
-      };
-
-      document.getElementById('modal-container').classList.remove('hidden');
-      document.getElementById('modal-container').classList.add('flex');
+      calculateBulkTotalEst();
       if (window.lucide) lucide.createIcons();
+    }
+
+    // Attach globally so the inline 'onclick' inside the modal can hit it
+    window.addBulkItemRow = function() {
+      bulkPOItemRows.push({
+        id: Date.now(),
+        item: '', partNumber: '', qty: 1, unitPrice: 0.0, notes: '', subassembly: taxonomy[0].id
+      });
+      renderBulkItemRows();
+    };
+
+    function removeBulkItemRow(id) {
+      if (bulkPOItemRows.length <= 1) return;
+      bulkPOItemRows = bulkPOItemRows.filter(r => r.id !== id);
+      renderBulkItemRows();
+    }
+
+    function calculateBulkTotalEst() {
+      let total = 0;
+      bulkPOItemRows.forEach(row => {
+        const qtyEl = document.getElementById(`bulk-item-qty-${row.id}`);
+        const priceEl = document.getElementById(`bulk-item-price-${row.id}`);
+        const q = parseInt(qtyEl?.value) || 0;
+        const p = parseFloat(priceEl?.value) || 0;
+        total += (q * p);
+      });
+      const label = document.getElementById('bulk-order-total-est');
+      if (label) label.innerText = `$${total.toFixed(2)}`;
     }
 
 

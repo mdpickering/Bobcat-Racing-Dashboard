@@ -3403,7 +3403,7 @@
       }
     }
 
-    function exportSelectedOrdersToExactExcel() {
+function exportSelectedOrdersToExactExcel() {
       const itemsToExport = orders.filter(o => selectedOrderIds.has(o.id));
       if (itemsToExport.length === 0) {
         alert("Select at least one active order to export.");
@@ -3442,7 +3442,7 @@
       if (target) {
         target.status = newStatus;
         saveState();
-        showToast(\`Order marked as \${newStatus}\`);
+        showToast(`Order marked as ${newStatus}`);
         render();
       }
     }
@@ -3457,7 +3457,7 @@
           targetSub.members.push(cand.name.split(' ')[0]);
           memberIntakes.splice(candIndex, 1);
           saveState();
-          showToast(\`\${cand.name} recruited to \${targetSub.name.split('&')[0]}\`);
+          showToast(`${cand.name} recruited to ${targetSub.name.split('&')[0]}`);
           render();
         }
       }
@@ -3477,7 +3477,7 @@
           status: "To Do",
           assignee: "",
           deadline: "",
-          notes: \`\${req.notes}\\n(Requested by: \${req.requester})\`
+          notes: `${req.notes}\n(Requested by: ${req.requester})`
         });
         pendingRequests.splice(reqIndex, 1);
         saveState();

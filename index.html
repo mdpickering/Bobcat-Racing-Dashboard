@@ -3042,6 +3042,12 @@
 
 let bulkPOItemRows = [];
 
+    // Safety function to prevent quotes (") from breaking the HTML rendering
+    function safeStr(val) {
+      if (val === undefined || val === null) return '';
+      return String(val).replace(/"/g, '&quot;');
+    }
+
     function openBulkOrderModal() {
       if (!hasAnyLeadAccess()) {
         alert("Purchase Order submission is restricted to Subsystem Leads and the CTO. Please log in.");
@@ -3050,7 +3056,7 @@ let bulkPOItemRows = [];
 
       // Initialize with vendor fields on the row itself
       bulkPOItemRows = [
-        { id: 1, vendor: '', vendorUrl: '', item: '', partNumber: '', qty: 1, unitPrice: 0.0, notes: '', subassembly: taxonomy[0].id }
+        { id: Date.now(), vendor: '', vendorUrl: '', item: '', partNumber: '', qty: 1, unitPrice: 0.0, notes: '', subassembly: taxonomy[0].id }
       ];
 
       const modalCard = document.getElementById('modal-card');
@@ -3072,7 +3078,7 @@ let bulkPOItemRows = [];
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <span class="font-mono font-bold uppercase text-[10px] tracking-wider text-slate-400">Line Items In This Order</span>
-              <button type="button" onclick="window.addBulkItemRow()" class="px-2.5 py-1 bg-[#FFC72C]/15 hover:bg-[#FFC72C]/25 text-[#FFC72C] border border-[#FFC72C]/30 rounded-lg font-mono font-bold text-[10.5px] flex items-center gap-1 transition-colors">
+              <button type="button" onclick="event.preventDefault(); window.addBulkItemRow();" class="px-2.5 py-1 bg-[#FFC72C]/15 hover:bg-[#FFC72C]/25 text-[#FFC72C] border border-[#FFC72C]/30 rounded-lg font-mono font-bold text-[10.5px] flex items-center gap-1 transition-colors">
                 <i data-lucide="plus" class="w-3 h-3"></i> Add Another Item
               </button>
             </div>
@@ -3093,6 +3099,181 @@ let bulkPOItemRows = [];
       `;
 
       renderBulkItemRows();
+
+      document.getElementById('form-bulk-order').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        window.captureBulkRows(); // Ensure absolute latest DOM values are captured before saving
+
+        const requestedBy = document.getElementById('f-bulk-requester').value.trim();
+        const newOrders = [];
+
+        bulkPOItemRows.forEach((row, idx) => {
+          if (row.item && row.item.trim() !== '') {
+            newOrders.push({
+              id: 'o' + (Date.now() + idx),
+              item: row.item.trim(),
+              subsystemId: row.subassembly || taxonomy[0].id,
+              vendor: row.vendor && row.vendor.trim() !== '' ? row.vendor.trim() : 'Vendor',
+              vendorUrl: row.vendorUrl ? row.vendorUrl.trim() : '',
+              partNumber: row.partNumber ? row.partNumber.trim() : 'N/A',
+              qty: parseInt(row.qty) || 1,
+              unitPrice: parseFloat(row.unitPrice) || 0.0,
+              notes: row.notes ? row.notes.trim() : 'N/A',
+              urgency: "Immediate Need",
+              requestedBy: requestedBy,
+              status: 'Requested',
+              submittedAt: new Date().toISOString()
+            });
+          }
+        });
+
+        if (!newOrders.length) {
+          alert("Please enter at least one item description.");
+          return;
+        }
+
+        if (typeof syncBeforePush === 'function') await syncBeforePush();
+
+        newOrders.forEach(o => {
+          orders.push(o);
+          selectedOrderIds.add(o.id);
+        });
+
+        saveState();
+        closeModal();
+        showToast(`Requested ${newOrders.length} parts`);
+        render();
+      };
+
+      document.getElementById('modal-container').classList.remove('hidden');
+      document.getElementById('modal-container').classList.add('flex');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Captures all current typing so adding a new row doesn't erase what's already there
+    window.captureBulkRows = function() {
+      bulkPOItemRows.forEach(row => {
+        const vendorEl = document.getElementById(`bulk-item-vendor-${row.id}`);
+        const urlEl = document.getElementById(`bulk-item-url-${row.id}`);
+        const desc = document.getElementById(`bulk-item-desc-${row.id}`);
+        const part = document.getElementById(`bulk-item-part-${row.id}`);
+        const qty = document.getElementById(`bulk-item-qty-${row.id}`);
+        const price = document.getElementById(`bulk-item-price-${row.id}`);
+        const sub = document.getElementById(`bulk-item-sub-${row.id}`);
+        const notes = document.getElementById(`bulk-item-notes-${row.id}`);
+
+        if (vendorEl) row.vendor = vendorEl.value;
+        if (urlEl) row.vendorUrl = urlEl.value;
+        if (desc) row.item = desc.value;
+        if (part) row.partNumber = part.value;
+        if (qty) row.qty = parseInt(qty.value) || 1;
+        if (price) row.unitPrice = parseFloat(price.value) || 0.0;
+        if (sub) row.subassembly = sub.value;
+        if (notes) row.notes = notes.value;
+      });
+    };
+
+    window.addBulkItemRow = function() {
+      window.captureBulkRows();
+
+      const lastRow = bulkPOItemRows[bulkPOItemRows.length - 1];
+      bulkPOItemRows.push({
+        id: Date.now(),
+        vendor: lastRow ? lastRow.vendor : '', 
+        vendorUrl: lastRow ? lastRow.vendorUrl : '', 
+        item: '', partNumber: '', qty: 1, unitPrice: 0.0, notes: '', 
+        subassembly: lastRow ? lastRow.subassembly : taxonomy[0].id
+      });
+      
+      renderBulkItemRows();
+    };
+
+    window.removeBulkItemRow = function(id) {
+      if (bulkPOItemRows.length <= 1) return;
+      window.captureBulkRows();
+      bulkPOItemRows = bulkPOItemRows.filter(r => r.id !== id);
+      renderBulkItemRows();
+    };
+
+    window.calculateBulkTotalEst = function() {
+      let total = 0;
+      bulkPOItemRows.forEach(row => {
+        const qtyEl = document.getElementById(`bulk-item-qty-${row.id}`);
+        const priceEl = document.getElementById(`bulk-item-price-${row.id}`);
+        
+        const q = qtyEl ? parseInt(qtyEl.value) : (parseInt(row.qty) || 0);
+        const p = priceEl ? parseFloat(priceEl.value) : (parseFloat(row.unitPrice) || 0);
+        
+        if (!isNaN(q) && !isNaN(p)) total += (q * p);
+      });
+      const label = document.getElementById('bulk-order-total-est');
+      if (label) label.innerText = `$${total.toFixed(2)}`;
+    };
+
+    function renderBulkItemRows() {
+      const container = document.getElementById('bulk-po-rows-container');
+      if (!container) return;
+
+      container.innerHTML = bulkPOItemRows.map((row, index) => `
+        <div class="p-3 bg-black/40 border border-white/15 rounded-xl space-y-3 relative group hover:border-white/30 transition-colors">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/5 border border-white/15 text-slate-300">Item #${index + 1}</span>
+            ${bulkPOItemRows.length > 1 ? `
+              <button type="button" onclick="event.preventDefault(); window.removeBulkItemRow(${row.id})" class="text-slate-400 hover:text-rose-400 p-0.5" title="Remove line item">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Vendor Name</label>
+              <input required id="bulk-item-vendor-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs outline-none" value="${safeStr(row.vendor)}" placeholder="e.g. McMaster / Summit">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Vendor Link (Optional)</label>
+              <input type="url" id="bulk-item-url-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs outline-none" value="${safeStr(row.vendorUrl)}" placeholder="https://...">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Item Description</label>
+              <input required id="bulk-item-desc-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs outline-none" value="${safeStr(row.item)}" placeholder="e.g. Hex Bolt 1/2-20">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Subassembly</label>
+              <select id="bulk-item-sub-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs outline-none">
+                ${taxonomy.map(s => `<option value="${s.id}" ${s.id === row.subassembly ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Part #</label>
+              <input id="bulk-item-part-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs font-mono outline-none" value="${safeStr(row.partNumber)}" placeholder="e.g. 91286A211">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Qty</label>
+              <input type="number" min="1" oninput="window.calculateBulkTotalEst()" id="bulk-item-qty-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs font-mono outline-none font-bold" value="${row.qty}">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Unit ($)</label>
+              <input type="number" step="0.01" min="0" oninput="window.calculateBulkTotalEst()" id="bulk-item-price-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs font-mono outline-none" value="${row.unitPrice}">
+            </div>
+            <div>
+              <label class="block text-[9.5px] font-mono text-slate-400 uppercase">Notes</label>
+              <input id="bulk-item-notes-${row.id}" class="w-full telemetry-input rounded-xl p-1.5 text-xs outline-none" value="${safeStr(row.notes)}" placeholder="Optional notes">
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      window.calculateBulkTotalEst();
+      if (window.lucide) lucide.createIcons();
+    }
 
       document.getElementById('form-bulk-order').onsubmit = async (e) => {
         e.preventDefault();

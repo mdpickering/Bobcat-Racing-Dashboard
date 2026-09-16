@@ -1,0 +1,41 @@
+-- =========================================================
+-- 0005_harden_task_requests_grant_and_sync_function.sql
+-- Phase 6.2B patch — two fixes found on review of 0004:
+--   1) task_requests.legacy_requester_raw was reachable through
+--      the authenticated INSERT grant, inconsistent with
+--      tasks.legacy_id / tasks.legacy_assignee_raw, which are
+--      import-only and not client-writable.
+--   2) sync_task_primary_owner() (SECURITY DEFINER) had no
+--      explicit EXECUTE lockdown, unlike the 0002/0003 helper
+--      functions.
+-- Does NOT modify 0001-0004, does not touch workspace_state or
+-- any legacy table, and does not migrate any production data.
+-- Run against bobcat-dev only.
+-- =========================================================
+
+-- ---------------------------------------------------------
+-- FIX 1 — task_requests.legacy_requester_raw is migration/import
+-- only, exactly like tasks.legacy_id and tasks.legacy_assignee_raw.
+-- Remove it from the authenticated INSERT grant. The column
+-- itself is untouched (still exists, still populatable via
+-- privileged/direct access for the future production import);
+-- only the client-facing insert path for this one column is
+-- removed. subsystem_id, title, description remain insertable.
+-- ---------------------------------------------------------
+revoke insert (legacy_requester_raw) on public.task_requests from authenticated;
+
+-- ---------------------------------------------------------
+-- FIX 2 — sync_task_primary_owner() is a trigger-only function:
+-- it exists solely to be fired by task_assignees_sync_primary_owner
+-- and should never be directly callable via RPC by anyone.
+-- Revoking EXECUTE from anon and authenticated by name (not
+-- PUBLIC — see the 0003 postmortem) closes that off. Trigger
+-- firing does not consult the invoking role's EXECUTE privilege
+-- on the trigger function, so task_assignees_sync_primary_owner
+-- keeps working exactly as before; this only removes the
+-- possibility of calling the function directly. Unlike
+-- can_access_task/is_* (which ARE re-granted to authenticated
+-- for use inside RLS policies), this function gets no re-grant
+-- to anyone — nothing should ever call it directly.
+-- ---------------------------------------------------------
+revoke execute on function public.sync_task_primary_owner() from anon, authenticated;

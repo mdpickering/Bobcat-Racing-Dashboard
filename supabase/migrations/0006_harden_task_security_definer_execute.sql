@@ -1,0 +1,35 @@
+-- =========================================================
+-- 0006_harden_task_security_definer_execute.sql
+-- Phase 6.2B patch — closes a privilege gap found during
+-- verification: can_access_task(uuid) and
+-- sync_task_primary_owner() each had EXECUTE revoked from the
+-- named anon/authenticated roles (0004/0005) but never from
+-- PUBLIC, so anon could still call can_access_task() directly.
+--
+-- Lesson: a function that should not be publicly callable needs
+-- BOTH of these revoked, not just one:
+--   - PUBLIC       — plain Postgres grants EXECUTE to PUBLIC on
+--                    every new function by default; PUBLIC is a
+--                    pseudo-role meaning "every role," so any
+--                    role (including anon) inherits it unless
+--                    explicitly revoked.
+--   - anon,
+--     authenticated — Supabase additionally configures
+--                    ALTER DEFAULT PRIVILEGES to grant EXECUTE to
+--                    these two roles BY NAME at function-creation
+--                    time, on top of the PUBLIC default. This is
+--                    a separate grant and revoking PUBLIC does
+--                    not touch it (this was the original 0003
+--                    finding).
+-- 0002 revoked PUBLIC but not anon/authenticated (fixed by 0003).
+-- 0004/0005 revoked anon/authenticated but not PUBLIC (fixed
+-- here). Both layers must be revoked together.
+--
+-- Does NOT modify 0001-0005. Does not change any table, column,
+-- RLS policy, or trigger logic — privilege grants only. Does not
+-- touch workspace_state or any legacy table, and does not
+-- migrate any production data. Run against bobcat-dev only.
+-- =========================================================
+
+revoke execute on function public.can_access_task(uuid) from public;
+revoke execute on function public.sync_task_primary_owner() from public;

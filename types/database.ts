@@ -165,6 +165,138 @@ export interface PurchaseRequest {
   legacy_status_raw: string | null
   subsystem?: Pick<Subsystem, 'id' | 'name'>
   requester?: Pick<Profile, 'id' | 'display_name' | 'email'>
+  reviewer?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+  items?: PurchaseRequestItem[]
+}
+
+export interface PurchaseRequestItem {
+  id: string
+  purchase_request_id: string
+  description: string
+  quantity: number
+  unit_cost: number | null
+  link: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+  legacy_id: string | null
+}
+
+export interface PurchaseStatusHistory {
+  id: string
+  purchase_request_id: string
+  from_status: PurchaseStatus | null
+  to_status: PurchaseStatus
+  changed_by: string
+  changed_at: string
+  note: string | null
+  changed_by_profile?: Pick<Profile, 'id' | 'display_name' | 'email'>
+}
+
+export type CadReviewStatus = 'Draft' | 'Submitted for Review' | 'Changes Requested' | 'Approved' | 'Approved for Manufacturing'
+
+export interface CadReview {
+  id: string
+  subsystem_id: string
+  task_id: string | null
+  title: string
+  description: string | null
+  submitted_by: string
+  reviewer_id: string | null
+  status: CadReviewStatus
+  current_revision: number
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+  legacy_id: string | null
+  legacy_status_raw: string | null
+  subsystem?: Pick<Subsystem, 'id' | 'name'>
+  task?: Pick<Task, 'id' | 'title'> | null
+  submitter?: Pick<Profile, 'id' | 'display_name' | 'email' | 'avatar_url'>
+  reviewer?: Pick<Profile, 'id' | 'display_name' | 'email' | 'avatar_url'> | null
+  versions?: CadReviewVersion[]
+}
+
+export interface CadReviewVersion {
+  id: string
+  cad_review_id: string
+  revision_number: number
+  submitted_by: string
+  external_cad_link: string | null
+  drawing_link: string | null
+  notes: string | null
+  created_at: string
+  legacy_id: string | null
+  submitter?: Pick<Profile, 'id' | 'display_name' | 'email'>
+}
+
+export interface CadReviewComment {
+  id: string
+  cad_review_id: string
+  user_id: string
+  comment: string
+  created_at: string
+  updated_at: string
+  user?: Pick<Profile, 'id' | 'display_name' | 'email' | 'avatar_url'>
+}
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  description: string | null
+  start_time: string
+  end_time: string
+  subsystem_id: string | null
+  created_by: string
+  active: boolean
+  created_at: string
+  updated_at: string
+  subsystem?: Pick<Subsystem, 'id' | 'name'> | null
+  creator?: Pick<Profile, 'id' | 'display_name' | 'email'>
+}
+
+export interface RecurringEvent {
+  id: string
+  title: string
+  day_of_week: number
+  time_label: string | null
+  color: string | null
+  subsystem_id: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+  subsystem?: Pick<Subsystem, 'id' | 'name'> | null
+}
+
+export interface Milestone {
+  id: string
+  name: string
+  date: string
+  subsystem_id: string | null
+  description: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+  subsystem?: Pick<Subsystem, 'id' | 'name'> | null
+}
+
+export interface TimelineColumn {
+  key: string
+  label: string
+  highlight: boolean
+  sort_order: number
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TimelineMilestone {
+  subsystem_id: string
+  timeline_column_key: string
+  milestone_text: string | null
+  updated_by: string
+  created_at: string
+  updated_at: string
 }
 
 export interface CompetitionSettings {

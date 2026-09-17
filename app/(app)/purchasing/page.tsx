@@ -1,12 +1,53 @@
-import ComingSoon from '@/components/layout/ComingSoon'
-import { ShoppingCart } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { listPurchaseRequests } from '@/lib/supabase/queries/purchasing'
+import { listSubsystems } from '@/lib/supabase/queries/subsystems'
+import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import type { Profile } from '@/types/user'
+import PurchaseFilters from '@/components/purchasing/PurchaseFilters'
+import PurchaseRequestList from '@/components/purchasing/PurchaseRequestList'
+import PurchasingToolbar from '@/components/purchasing/PurchasingToolbar'
+import ErrorState from '@/components/ui/ErrorState'
 
-export default function PurchasingPage() {
+export default async function PurchasingPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined }
+}) {
+  const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data: profileRow } = await supabase.from('profiles').select('*').eq('id', user!.id).single()
+  const profile = profileRow as Profile
+
+  const [subsystems, { data: leadRows }] = await Promise.all([
+    listSubsystems(supabase),
+    supabase.from('subsystem_members').select('subsystem_id').eq('user_id', profile.id).eq('is_lead', true),
+  ])
+  const isAnySubsystemLead = (leadRows ?? []).length > 0
+  const canCreate = isCtoOrAdmin(profile) || isAnySubsystemLead
+
+  let requests
+  try {
+    requests = await listPurchaseRequests(supabase, {
+      subsystemId: searchParams.subsystem,
+      status: searchParams.status,
+    })
+  } catch {
+    return <ErrorState message="Could not load purchase requests." />
+  }
+
   return (
-    <ComingSoon
-      icon={ShoppingCart}
-      title="Purchasing"
-      description="Multi-line purchase requests, vendor details, and approval workflow are built in the next application chunk."
-    />
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-lg font-bold text-text-primary">Purchasing</h1>
+        <p className="mt-0.5 text-xs font-mono text-text-muted">
+          {requests.length} request{requests.length === 1 ? '' : 's'} matching your filters
+        </p>
+      </div>
+      <PurchasingToolbar canCreate={canCreate} subsystems={subsystems} />
+      <PurchaseFilters subsystems={subsystems} />
+      <PurchaseRequestList requests={requests} />
+    </div>
   )
 }

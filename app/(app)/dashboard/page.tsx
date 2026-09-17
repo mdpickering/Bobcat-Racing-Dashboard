@@ -9,8 +9,9 @@ import SubsystemInfoWidget from '@/components/dashboard/SubsystemInfoWidget'
 import NotificationsWidget from '@/components/dashboard/NotificationsWidget'
 import PendingRequestsWidget from '@/components/dashboard/PendingRequestsWidget'
 import OrgPendingWidget from '@/components/dashboard/OrgPendingWidget'
+import PurchasingWidget from '@/components/dashboard/PurchasingWidget'
 import ErrorState from '@/components/ui/ErrorState'
-import { AlertTriangle, Clock, ShieldAlert, Eye, ShoppingCart, ListChecks } from 'lucide-react'
+import { AlertTriangle, Clock, ShieldAlert, Eye, ListChecks } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -77,19 +78,7 @@ export default async function DashboardPage() {
 
         <div className="space-y-4">
           <CompetitionCountdown competition={data.competition} />
-          {data.pendingPurchaseCount > 0 && (
-            <a
-              href="/purchasing"
-              className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 text-xs transition-colors hover:border-accent-blue/40"
-            >
-              <ShoppingCart size={16} className="text-accent-blue" />
-              <span className="text-text-secondary">
-                <strong className="text-text-primary">{data.pendingPurchaseCount}</strong> purchase request
-                {data.pendingPurchaseCount === 1 ? '' : 's'} awaiting review in your subsystem
-                {data.mySubsystems.length === 1 ? '' : 's'}
-              </span>
-            </a>
-          )}
+          <PurchasingWidget pendingCount={data.pendingPurchaseCount} subsystemCount={data.mySubsystems.length} />
           <SubsystemInfoWidget memberships={data.mySubsystems} />
           <NotificationsWidget notifications={data.notifications} />
         </div>

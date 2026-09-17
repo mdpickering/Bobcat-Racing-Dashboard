@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu, Search, LogOut, ChevronDown } from 'lucide-react'
+import Link from 'next/link'
+import { Menu, Search, LogOut, ChevronDown, UserCog } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types/user'
 import Avatar from '@/components/ui/Avatar'
@@ -28,7 +29,7 @@ export default function Header({ profile, onOpenMobileNav }: HeaderProps) {
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (search.trim()) router.push(`/tasks?search=${encodeURIComponent(search.trim())}`)
+    if (search.trim()) router.push(`/search?q=${encodeURIComponent(search.trim())}`)
   }
 
   return (
@@ -47,12 +48,21 @@ export default function Header({ profile, onOpenMobileNav }: HeaderProps) {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tasks…"
+          placeholder="Search tasks, people, subsystems…"
           className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted"
         />
       </form>
 
       <div className="flex-1 sm:hidden" />
+
+      <button
+        type="button"
+        onClick={() => router.push('/search')}
+        aria-label="Search"
+        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised sm:hidden"
+      >
+        <Search size={16} />
+      </button>
 
       <div className="flex items-center gap-2">
         <ThemeToggle />
@@ -79,6 +89,13 @@ export default function Header({ profile, onOpenMobileNav }: HeaderProps) {
                   <div className="truncate text-text-muted">{profile.email}</div>
                 </div>
                 <div className="my-1 border-t border-border" />
+                <Link
+                  href="/account"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-text-secondary hover:bg-surface hover:text-text-primary"
+                >
+                  <UserCog size={14} /> Account
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}

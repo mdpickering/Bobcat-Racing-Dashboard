@@ -129,6 +129,12 @@ export async function addTaskAttachmentMetadata(
   return data as unknown as TaskAttachment
 }
 
+export async function getTaskAttachmentUrl(supabase: SupabaseClient, storagePath: string): Promise<string> {
+  const { data, error } = await supabase.storage.from('task-attachments').createSignedUrl(storagePath, 60)
+  if (error) throw error
+  return data.signedUrl
+}
+
 export async function listTaskRequests(supabase: SupabaseClient, subsystemId?: string): Promise<TaskRequest[]> {
   // task_requests has two FK paths to profiles (requester_id, reviewed_by),
   // so the embed needs the FK hint to disambiguate — same PGRST201 class

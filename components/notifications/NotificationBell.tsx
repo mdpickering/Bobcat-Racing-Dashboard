@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Bell, CheckCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { listNotifications, countUnreadNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/supabase/queries/notifications'
@@ -8,8 +10,10 @@ import type { AppNotification } from '@/types/database'
 import EmptyState from '@/components/ui/EmptyState'
 import { SkeletonList } from '@/components/ui/Skeleton'
 import { timeAgo } from '@/lib/format'
+import { notificationHref } from '@/lib/notificationLinks'
 
 export default function NotificationBell() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [notifications, setNotifications] = useState<AppNotification[]>([])
@@ -67,6 +71,15 @@ export default function NotificationBell() {
     setUnreadCount(0)
   }
 
+  async function handleNotificationClick(n: AppNotification) {
+    setOpen(false)
+    if (!n.read_at) {
+      const supabase = createClient()
+      markNotificationRead(supabase, n.id, true).then(refresh)
+    }
+    router.push(notificationHref(n))
+  }
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -103,16 +116,13 @@ export default function NotificationBell() {
             ) : (
               <ul className="space-y-1">
                 {notifications.map((n) => (
-                  <li
-                    key={n.id}
-                    className={`rounded-lg px-3 py-2 text-xs ${n.read_at ? 'opacity-60' : 'bg-accent-blue/5'}`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+                  <li key={n.id} className={`rounded-lg text-xs ${n.read_at ? 'opacity-60' : 'bg-accent-blue/5'}`}>
+                    <div className="flex items-start justify-between gap-2 px-3 py-2">
+                      <button type="button" onClick={() => handleNotificationClick(n)} className="min-w-0 flex-1 text-left">
                         <div className="truncate font-semibold text-text-primary">{n.title}</div>
                         {n.message && <div className="mt-0.5 line-clamp-2 text-[11px] text-text-secondary">{n.message}</div>}
                         <div className="mt-1 text-[10px] text-text-muted">{timeAgo(n.created_at)}</div>
-                      </div>
+                      </button>
                       {!n.read_at && (
                         <button
                           type="button"
@@ -127,6 +137,15 @@ export default function NotificationBell() {
                 ))}
               </ul>
             )}
+          </div>
+          <div className="border-t border-border p-2">
+            <Link
+              href="/notifications"
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-1.5 text-center text-[10px] font-mono uppercase tracking-wide text-accent-blue hover:bg-surface"
+            >
+              View all
+            </Link>
           </div>
         </div>
       )}

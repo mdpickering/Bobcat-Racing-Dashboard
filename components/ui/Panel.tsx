@@ -6,7 +6,7 @@ export default function Panel({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`bg-qu-surface/70 backdrop-blur-md border border-white/10 rounded-xl shadow-panel ${className}`}
+      className={`bg-surface border border-border rounded-xl shadow-panel ${className}`}
       {...props}
     />
   )

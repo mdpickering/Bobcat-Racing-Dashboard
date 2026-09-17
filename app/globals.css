@@ -2,7 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg: 4 8 17;
+  --surface: 10 21 38;
+  --surface-raised: 14 28 48;
+  --border: 30 48 71;
+  --text-primary: 241 245 249;
+  --text-secondary: 148 163 184;
+  --text-muted: 100 116 139;
+  --accent: 255 199 44;
+  --accent-blue: 62 124 177;
+}
+
+:root[data-theme='light'] {
+  --bg: 246 247 249;
+  --surface: 255 255 255;
+  --surface-raised: 255 255 255;
+  --border: 222 227 233;
+  --text-primary: 15 23 42;
+  --text-secondary: 71 85 105;
+  --text-muted: 100 116 139;
+  --accent: 191 138 5;
+  --accent-blue: 40 96 145;
+}
+
 body {
-  background-color: #040811;
-  color: #f8fafc;
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text-primary));
+}
+
+::selection {
+  background-color: rgb(var(--accent) / 0.25);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--border));
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background-color: transparent;
 }

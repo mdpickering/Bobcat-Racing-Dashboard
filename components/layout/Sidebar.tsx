@@ -1,32 +1,59 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { NAV_ITEMS } from '@/lib/navigation'
 import type { Profile } from '@/types/user'
 
 interface SidebarProps {
   profile: Profile
+  onNavigate?: () => void
 }
 
-export default function Sidebar({ profile }: SidebarProps) {
+export default function Sidebar({ profile, onNavigate }: SidebarProps) {
+  const pathname = usePathname()
+
   return (
-    <aside className="w-64 flex-shrink-0 bg-qu-surface/90 border-r border-white/10 flex flex-col justify-between h-screen">
-      <div>
-        <div className="h-16 flex items-center px-5 border-b border-white/10">
-          <span className="text-sm font-bold tracking-wide">BOBCAT RACING</span>
+    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-border bg-surface">
+      <div className="flex h-16 items-center gap-2 border-b border-border px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-qu-gold font-mono text-sm font-black text-qu-navy">
+          B
         </div>
-        <nav className="p-4 space-y-1 text-xs font-mono text-slate-400">
-          <div className="px-2 py-2 rounded-lg bg-white/5 text-slate-200">
-            Dashboard
-          </div>
-          <div className="px-2 py-2 text-slate-500">
-            More sections arrive in later phases
-          </div>
-        </nav>
+        <div className="leading-tight">
+          <div className="text-sm font-bold tracking-wide text-text-primary">BOBCAT RACING</div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Engineering Ops</div>
+        </div>
       </div>
-      <div className="p-4 border-t border-white/10 text-[11px] font-mono text-slate-400">
-        Signed in as
-        <div className="text-slate-200 font-semibold truncate">
+
+      <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-thin p-3">
+        {NAV_ITEMS.map((item) => {
+          const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                active
+                  ? 'bg-accent-blue/15 text-text-primary'
+                  : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
+              }`}
+            >
+              <Icon size={16} className={active ? 'text-accent-blue' : 'text-text-muted'} />
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div className="border-t border-border p-4">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Signed in as</div>
+        <div className="mt-1 truncate text-xs font-semibold text-text-primary">
           {profile.display_name || profile.email}
         </div>
-        <div className="text-qu-gold uppercase text-[10px] mt-1">
-          {profile.role}
+        <div className="mt-0.5 text-[10px] font-mono uppercase tracking-wide text-qu-gold">
+          {profile.role.replace('_', ' ')}
         </div>
       </div>
     </aside>

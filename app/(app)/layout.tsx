@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import Sidebar from '@/components/layout/Sidebar'
-import Header from '@/components/layout/Header'
+import AppShell from '@/components/layout/AppShell'
+import type { Profile } from '@/types/user'
 
 export default async function AppLayout({
   children,
@@ -23,13 +23,5 @@ export default async function AppLayout({
 
   if (!profile?.approved) redirect('/pending-approval')
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-qu-obsidian text-slate-50">
-      <Sidebar profile={profile} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header profile={profile} />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
-      </div>
-    </div>
-  )
+  return <AppShell profile={profile as Profile}>{children}</AppShell>
 }

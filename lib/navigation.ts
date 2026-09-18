@@ -7,6 +7,7 @@ import {
   GanttChartSquare,
   ShoppingCart,
   Ruler,
+  ShieldCheck,
 } from 'lucide-react'
 
 export interface NavItem {
@@ -24,3 +25,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/purchasing', label: 'Purchasing', icon: ShoppingCart },
   { href: '/cad', label: 'CAD Review', icon: Ruler },
 ]
+
+// Rendered only for cto/admin — see Sidebar.tsx. The route handlers
+// themselves also gate on isCtoOrAdmin() independently of nav visibility,
+// and RLS is the real boundary underneath both.
+export const ADMIN_NAV_ITEMS: NavItem[] = [{ href: '/admin', label: 'Administration', icon: ShieldCheck }]

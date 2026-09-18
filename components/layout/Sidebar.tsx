@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { NAV_ITEMS } from '@/lib/navigation'
+import { NAV_ITEMS, ADMIN_NAV_ITEMS } from '@/lib/navigation'
+import { isCtoOrAdmin } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 
 interface SidebarProps {
@@ -45,6 +46,31 @@ export default function Sidebar({ profile, onNavigate }: SidebarProps) {
             </Link>
           )
         })}
+
+        {isCtoOrAdmin(profile) && (
+          <>
+            <div className="my-2 border-t border-border" />
+            {ADMIN_NAV_ITEMS.map((item) => {
+              const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                    active
+                      ? 'bg-qu-gold/15 text-qu-gold'
+                      : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
+                  }`}
+                >
+                  <Icon size={16} className={active ? 'text-qu-gold' : 'text-text-muted'} />
+                  {item.label}
+                </Link>
+              )
+            })}
+          </>
+        )}
       </nav>
 
       <div className="border-t border-border p-4">

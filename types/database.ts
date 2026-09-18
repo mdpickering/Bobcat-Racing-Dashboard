@@ -4,6 +4,27 @@ export type TaskStatus = 'To Do' | 'In Progress' | 'Blocked' | 'Review' | 'Compl
 export type TaskPriority = 'Critical' | 'High' | 'Medium' | 'Low'
 export type TaskAssigneeRole = 'primary' | 'co_owner'
 export type TaskRequestStatus = 'pending' | 'approved' | 'declined'
+export type ApplicationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface MemberApplication {
+  id: string
+  legacy_id: string | null
+  name: string
+  email: string
+  year: string | null
+  experience_level: string | null
+  weekly_hours: number | null
+  skills: string[] | null
+  goals: string | null
+  status: ApplicationStatus
+  linked_profile_id: string | null
+  submitted_at: string
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+  reviewer?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
 
 export interface Subsystem {
   id: string
@@ -297,6 +318,48 @@ export interface TimelineMilestone {
   updated_by: string
   created_at: string
   updated_at: string
+}
+
+export interface AuditLogEntry {
+  id: string
+  user_id: string | null
+  action: string
+  entity_type: string | null
+  entity_id: string | null
+  before: Record<string, unknown> | null
+  after: Record<string, unknown> | null
+  created_at: string
+  actor?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+export type MigrationLogStatus = 'migrated' | 'exception' | 'skipped'
+
+export interface MigrationLogEntry {
+  id: string
+  migration_batch_id: string
+  entity_type: string
+  legacy_id_or_key: string
+  new_id: string | null
+  match_method: string | null
+  status: MigrationLogStatus
+  notes: string | null
+  created_at: string
+}
+
+export type MigrationExceptionResolutionStatus = 'unresolved' | 'resolved' | 'ignored'
+
+export interface MigrationException {
+  id: string
+  migration_batch_id: string
+  entity_type: string
+  raw_value: string | null
+  context: Record<string, unknown> | null
+  resolution_status: MigrationExceptionResolutionStatus
+  resolved_to_profile_id: string | null
+  resolved_by: string | null
+  resolved_at: string | null
+  created_at: string
+  resolvedToProfile?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
 }
 
 export interface CompetitionSettings {

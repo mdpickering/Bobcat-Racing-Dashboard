@@ -22,7 +22,9 @@ All four result files validate (`node tools/check_results.mjs` ⇒ "ALL FOUR RES
    establish (`chassis`, `brakes`, `rear-suspension`) are kept as **`migration_exceptions` carrying the full legacy record**, so
    they can be resolved later without losing data (§9.12).
 4. **Intended destination areas** for the legacy data: **Drivetrain, Rear Suspension, Front Suspension, Pedals, Shielding**
-   — recorded as the target set for any later mapping. No mapping to them is invented (§9.12, incl. one open clarification, Q-A).
+   — the areas the owner wants to **emphasize**, and the target set for any later mapping. No mapping to them is invented.
+   **All 7 source subsystems are kept** for the initial migration, including Fabrication and SAE Deliverables/Costing (real legacy data);
+   they may be reorganized or archived later (§9.12, Q-A answered).
 
 **State of the evidence**
 1. The old production project is a **legacy 4-table project**: `orders`, `subteams`, `tasks`, `workspace_state`, with
@@ -44,7 +46,7 @@ All four result files validate (`node tools/check_results.mjs` ⇒ "ALL FOUR RES
    `approved = true` and `role = 'cto'` (§8).
 
 **Still open (none of it blocks finishing Phase 6.7 — all are Phase 6.8 entry items):** create the new project + configure Auth,
-apply 0001–0021, first CTO account (B2), and the clarification Q-A (§9.12). Nothing was applied anywhere in Phase 6.7.
+apply 0001–0021, and the first CTO account (B2). Nothing was applied anywhere in Phase 6.7. **Phase 6.7 is approved by the owner; Phase 6.8 has not been started.**
 
 ---
 ## 1. Production schema inventory (what exists — Q1)
@@ -413,11 +415,15 @@ taxonomy subsystems that already exist in the source data:
 
 Subsystem **names are imported verbatim from the source**; they are not renamed to the short labels (renaming is a later, separate choice).
 
-**Open clarification Q-A (does not block finishing 6.7):** the source taxonomy has **seven** subsystems; two are **not** among the five
-areas — `fabrication` (Fabrication & Vehicle Integration; 2 `workspace_state` tasks, 4 categories) and `sae-deliverables` (SAE Deliverables & Costing;
-5 `workspace_state` tasks + 4 relational, 3 categories). Their tasks carry real taxonomy ids, so the source **does** establish them and they are
-**imported as-is with nothing dropped**. If the owner intends only five subsystems, these can be archived later (`subsystems.active = false`,
-archive-over-delete, no data loss) or their tasks re-homed — that is a decision to make explicitly, not one this plan makes.
+**Q-A — ANSWERED by the owner: keep all 7 subsystems for the initial migration.** The source taxonomy has **seven** subsystems; two are not among the
+five emphasized areas — `fabrication` (Fabrication & Vehicle Integration; 2 `workspace_state` tasks, 4 categories) and `sae-deliverables` (SAE Deliverables & Costing;
+5 `workspace_state` tasks + 4 relational, 3 categories). They contain real legacy data, so **both are imported as ordinary, active subsystems with all their
+tasks and categories; nothing is deleted, dropped, archived or re-homed in the initial migration.** They may be reorganized or archived **later**, by an
+explicit owner decision (`subsystems.active = false` is the archive path — archive-over-delete, no data loss).
+
+**The five areas are an emphasis, not a filter.** Drivetrain, Rear Suspension, Front Suspension, Pedals and Shielding are the areas the owner wants to
+emphasize, and remain the intended targets when the held `*_unmapped_subsystem` exceptions are later mapped. They do not change which subsystems, tasks,
+categories or timeline rows are imported: the initial migration creates **all 7** subsystems exactly as the source taxonomy defines them.
 
 ---
 ## 10. Pre-flight checklist (before ANY change) — Path A
@@ -504,7 +510,7 @@ Also: every `legacy_id` unique; `migration_log` covers every legacy row; no orph
 **Remaining blockers for the import (Phase 6.8 entry, not for finishing 6.7)**
 - **B2** No profile exists to attribute NOT NULL `created_by`/`requested_by`/`changed_by`/`updated_by` ⇒ in the **new** project: first CTO signup + promotion (§8) before any import.
 - **B4** The new Supabase project must be created and Auth configured (Dashboard actions only a human can do).
-- **Q-A** (clarification, not a blocker) `fabrication` and `sae-deliverables` are in the source but not among the five destination areas (§9.12). Default: imported as-is, nothing dropped.
+- ~~**Q-A**~~ **Resolved by the owner:** all 7 subsystems are kept (incl. `fabrication` and `sae-deliverables`); the five areas are an emphasis, not a filter (§9.12).
 - **Open checks:** relational rows' categories/deadlines are rule-checked at import time (a category not in its subsystem ⇒ `category_id` NULL + `task_invalid_category` exception; `05_tasks_side_by_side_readonly.sql` gives a human review copy, optional now); the recurring event's day-of-week convention (0 = Sunday) to confirm against the legacy UI.
 
 **Risks**
@@ -525,6 +531,6 @@ Also: every `legacy_id` unique; `migration_log` covers every legacy row; no orph
 1. New project created and Auth configured; `01`/`04` run on it (`all_clear: true`).
 2. 0001–0021 applied per §4 and verified per §11 (identical to bobcat-dev in all migration-owned sections).
 3. First CTO active in the new project (B2); importer id recorded.
-4. Decisions D3/D4 are **recorded** (this document); clarification Q-A answered or accepted as "import as-is".
+4. Decisions D3/D4 and clarification Q-A are **recorded and owner-approved** (this document): union import, unresolved records held as exceptions, all 7 subsystems kept.
 5. Fresh drift check against the fingerprint baseline (§10 #6).
 6. Only then write and rehearse the import SQL (with the trigger-disable list of §9 and the exception design of §9.12) against a scratch replica, and run it in the new project.

@@ -4,3 +4,4 @@ node_modules
 .DS_Store
 supabase/.temp
 tsconfig.tsbuildinfo
+supabase/production-prep/results/

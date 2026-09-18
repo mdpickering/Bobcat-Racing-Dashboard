@@ -1,29 +1,34 @@
-# Phase 6.7 — production schema preparation (READ-ONLY tooling)
+# Phase 6.7 — production schema preparation
 
-Nothing in this folder is a migration and nothing here changes any database.
-The real migrations stay in `supabase/migrations/` (0001–0021) and are applied
-by hand, by a human, in the Supabase SQL Editor — never automatically.
+**Start with [`PRODUCTION_PLAN.md`](PRODUCTION_PLAN.md)** — the complete plan (inventory, diff, migration order,
+data mapping, rollback, risks, blockers).
+
+Nothing in this folder is a migration and nothing here is applied automatically. The real migrations stay in
+`supabase/migrations/` (0001–0021) and are applied by a human, one file at a time, in the Supabase SQL Editor.
 
 ## Rules
-- Never touch or modify `workspace_state`; never migrate production data in this phase.
+- Never modify `workspace_state` or any legacy table; never migrate production data in this phase.
 - No service-role key, DB password or `SUPABASE_DB_URL` is ever needed or used.
-- `01_…` reads only system catalogs (+ counts). `02_…` SELECTs `workspace_state` to
-  return its *shape* only (no names / titles / e-mails). Both are single SELECT statements.
+- The numbered scripts are single SELECT statements. `01`/`04` read catalogs only; `02`/`03` SELECT the legacy
+  tables but return only shapes, ids, counts, enum-like values and hashes — never names, titles, e-mails, vendors or PINs.
 
-## Runbook (inspection)
-1. **Production SQL Editor** → paste `01_inspect_schema_readonly.sql` → Run → copy the single
-   JSON cell → save as `results/prod_01_inventory.json`.
-2. **bobcat-dev SQL Editor** → same file → save as `results/dev_01_inventory.json`.
-3. (After reviewing step 1's `tables` section) **Production** → `02_profile_workspace_state_readonly.sql`
-   → save as `results/prod_02_workspace_state_shape.json`.
-4. Compare: `node tools/compare_inventory.mjs results/prod_01_inventory.json results/dev_01_inventory.json prod dev`
-   - "only in dev" → must be CREATED in production
-   - "only in prod" → legacy/foreign objects (never dropped or renamed)
-   - "differs" → CONFLICT / ALTER candidates
+## Read-only scripts (run in the SQL Editor, save the single JSON cell to `results/`, which is git-ignored)
+| Script | Run on | Save as | Purpose |
+|---|---|---|---|
+| `01_inspect_schema_readonly.sql` | production **and** bobcat-dev | `results/prod_01_inventory.json`, `results/dev_01_inventory.json` | full catalog inventory |
+| `02_profile_workspace_state_readonly.sql` | production | `results/prod_02_workspace_state_shape.json` | shape of `workspace_state` |
+| `03_reconcile_legacy_data_readonly.sql` | production | `results/prod_03_reconcile.json` | tasks source-of-truth, order statuses, timeline values, rule checks, drift fingerprints |
+| `04_preflight_checks_readonly.sql` | the **target** project, right before applying 0001 | (read the result) | must return `all_clear: true` |
 
-`results/` is git-ignored.
+## Other folders
+- `prestep/00_rename_legacy_tasks.sql` — **Path B only, needs explicit approval** (renames legacy `public.tasks`).
+- `rollback/99_rollback_v2_schema.sql` — destructive, explicit-name removal of everything 0001–0021 create.
+  `rollback/00_undo_rename_legacy_tasks.sql` — undoes the Path B rename.
+- `tools/compare_inventory.mjs A.json B.json` — diff two inventories (create / conflict / legacy).
+- `tools/rehearse_migrations.mjs` — apply 0001–0021 to a clean in-memory Postgres (PGlite) with a Supabase stub.
+- `tools/rehearse_production_replica.mjs` — same, against a replica of the REAL production shape: proves the
+  `tasks` collision, the pre-step, the rollback and per-migration object counts.
+  Setup (outside the project): `mkdir %TEMP%\pg && cd %TEMP%\pg && npm init -y && npm i @electric-sql/pglite`,
+  then `node <repo>\supabase\production-prep\tools\<tool>.mjs <repo>`.
 
-## Tools
-- `tools/compare_inventory.mjs` — diffs two inventories (no network, no DB).
-- `tools/rehearse_migrations.mjs` — applies 0001–0021 to a clean in-memory scratch Postgres
-  (PGlite) with a Supabase-shaped stub, to prove ordering and produce a reference inventory.
+`04_…` is generated from the reference inventory of 0001–0021; regenerate it if a migration is added.

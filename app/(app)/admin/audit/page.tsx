@@ -54,9 +54,9 @@ export default async function AdminAuditPage() {
           <Panel className="overflow-hidden">
             <ul className="divide-y divide-border">
               {migrationLog.map((m) => (
-                <li key={m.id} className="flex items-center justify-between px-4 py-2.5 text-xs">
-                  <span className="text-text-primary">{m.entity_type} · {m.legacy_id_or_key}</span>
-                  <span className="text-text-muted">{m.status} · {formatDateTime(m.created_at)}</span>
+                <li key={m.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 px-4 py-2.5 text-xs">
+                  <span className="min-w-0 truncate text-text-primary">{m.entity_type} · {m.legacy_id_or_key}</span>
+                  <span className="flex-shrink-0 text-text-muted">{m.status} · {formatDateTime(m.created_at)}</span>
                 </li>
               ))}
             </ul>
@@ -72,11 +72,11 @@ export default async function AdminAuditPage() {
           <Panel className="overflow-hidden">
             <ul className="divide-y divide-border">
               {auditLogs.map((a) => (
-                <li key={a.id} className="flex items-center justify-between px-4 py-2.5 text-xs">
-                  <span className="text-text-primary">
+                <li key={a.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 px-4 py-2.5 text-xs">
+                  <span className="min-w-0 truncate text-text-primary">
                     {a.actor?.display_name || a.actor?.email || 'Unknown'} · {a.action}
                   </span>
-                  <span className="text-text-muted">{formatDateTime(a.created_at)}</span>
+                  <span className="flex-shrink-0 text-text-muted">{formatDateTime(a.created_at)}</span>
                 </li>
               ))}
             </ul>

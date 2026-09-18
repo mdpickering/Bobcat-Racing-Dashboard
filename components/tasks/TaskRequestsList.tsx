@@ -6,8 +6,9 @@ import Panel from '@/components/ui/Panel'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { reviewTaskRequest } from '@/lib/supabase/queries/tasks'
+import { reviewTaskRequest, createTask } from '@/lib/supabase/queries/tasks'
 import { formatDate } from '@/lib/format'
 import type { TaskRequest } from '@/types/database'
 import { Inbox } from 'lucide-react'
@@ -19,12 +20,30 @@ export default function TaskRequestsList({ requests, canReview, currentUserId }:
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleReview(id: string, status: 'approved' | 'declined') {
-    setBusyId(id)
+  async function handleReview(request: TaskRequest, status: 'approved' | 'declined') {
+    setBusyId(request.id)
     setError(null)
     try {
       const supabase = createClient()
-      await reviewTaskRequest(supabase, id, { status, reviewed_by: currentUserId, reviewed_at: new Date().toISOString() })
+      // Approving a request is expected to produce a real task — the
+      // schema's converted_task_id exists exactly for this link, gated by
+      // a check constraint that only allows it once status = 'approved'.
+      let convertedTaskId: string | null = null
+      if (status === 'approved') {
+        const task = await createTask(supabase, {
+          title: request.title,
+          description: request.description,
+          subsystem_id: request.subsystem_id,
+          priority: 'Medium',
+        })
+        convertedTaskId = task.id
+      }
+      await reviewTaskRequest(supabase, request.id, {
+        status,
+        reviewed_by: currentUserId,
+        reviewed_at: new Date().toISOString(),
+        converted_task_id: convertedTaskId,
+      })
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update this request.')
@@ -52,13 +71,18 @@ export default function TaskRequestsList({ requests, canReview, currentUserId }:
                 {r.requester?.display_name || r.requester?.email} · {r.subsystem?.name} · {formatDate(r.created_at)}
               </p>
               {r.description && <p className="mt-2 text-[11px] text-text-secondary">{r.description}</p>}
+              {r.status === 'approved' && r.converted_task_id && (
+                <Link href={`/tasks/${r.converted_task_id}`} className="mt-2 inline-block text-[11px] text-accent-blue hover:underline">
+                  View task →
+                </Link>
+              )}
             </div>
             {canReview && r.status === 'pending' && (
               <div className="flex flex-shrink-0 gap-2">
-                <Button size="sm" variant="secondary" disabled={busyId === r.id} onClick={() => handleReview(r.id, 'declined')}>
+                <Button size="sm" variant="secondary" disabled={busyId === r.id} onClick={() => handleReview(r, 'declined')}>
                   Decline
                 </Button>
-                <Button size="sm" disabled={busyId === r.id} onClick={() => handleReview(r.id, 'approved')}>
+                <Button size="sm" disabled={busyId === r.id} onClick={() => handleReview(r, 'approved')}>
                   Approve
                 </Button>
               </div>

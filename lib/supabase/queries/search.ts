@@ -21,10 +21,16 @@ export async function globalSearch(supabase: SupabaseClient, query: string): Pro
   if (!q) return []
   const pattern = `%${q}%`
 
-  const [tasks, subsystems, people, purchaseRequests, cadReviews] = await Promise.all([
+  // People search runs as two separate ilike queries (name, email) merged
+  // client-side rather than a single .or() filter — PostgREST's .or()
+  // syntax treats a raw comma or parenthesis in the value as a filter
+  // separator, so a search term containing one (e.g. "Smith, John") would
+  // silently corrupt the query instead of matching literally.
+  const [tasks, subsystems, peopleByName, peopleByEmail, purchaseRequests, cadReviews] = await Promise.all([
     supabase.from('tasks').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(8),
     supabase.from('subsystems').select('id, name, description').eq('active', true).ilike('name', pattern).limit(8),
-    supabase.from('profiles').select('id, display_name, email, role').or(`display_name.ilike.${pattern},email.ilike.${pattern}`).limit(8),
+    supabase.from('profiles').select('id, display_name, email, role').ilike('display_name', pattern).limit(8),
+    supabase.from('profiles').select('id, display_name, email, role').ilike('email', pattern).limit(8),
     supabase.from('purchase_requests').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(8),
     supabase.from('cad_reviews').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(8),
   ])
@@ -37,7 +43,12 @@ export async function globalSearch(supabase: SupabaseClient, query: string): Pro
   for (const s of (subsystems.data ?? []) as unknown as { id: string; name: string; description: string | null }[]) {
     results.push({ type: 'subsystem', id: s.id, title: s.name, subtitle: s.description, href: `/subsystems/${s.id}` })
   }
-  for (const p of (people.data ?? []) as unknown as { id: string; display_name: string | null; email: string | null; role: string }[]) {
+  type PersonRow = { id: string; display_name: string | null; email: string | null; role: string }
+  const people = new Map<string, PersonRow>()
+  for (const p of [...((peopleByName.data ?? []) as PersonRow[]), ...((peopleByEmail.data ?? []) as PersonRow[])]) {
+    people.set(p.id, p)
+  }
+  for (const p of people.values()) {
     results.push({
       type: 'person',
       id: p.id,

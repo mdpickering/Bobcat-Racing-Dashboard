@@ -9,6 +9,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import { createClient } from '@/lib/supabase/client'
 import { markNotificationRead, markAllNotificationsRead } from '@/lib/supabase/queries/notifications'
 import { notificationHref } from '@/lib/notificationLinks'
+import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
 import { timeAgo } from '@/lib/format'
 import type { AppNotification } from '@/types/database'
 
@@ -30,12 +31,14 @@ export default function NotificationsList({ notifications }: { notifications: Ap
     }
     router.push(notificationHref(n))
     router.refresh()
+    broadcastNotificationsChanged()
   }
 
   async function handleMarkAllRead() {
     const supabase = createClient()
     await markAllNotificationsRead(supabase)
     router.refresh()
+    broadcastNotificationsChanged()
   }
 
   if (notifications.length === 0) {

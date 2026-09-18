@@ -37,6 +37,10 @@ export default function CreateCalendarEventModal({ open, onClose, subsystemOptio
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (new Date(endTime) < new Date(startTime)) {
+      setError('End time must be after the start time.')
+      return
+    }
     setSubmitting(true)
     try {
       const supabase = createClient()

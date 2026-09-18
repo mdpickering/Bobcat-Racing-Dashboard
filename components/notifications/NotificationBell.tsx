@@ -11,6 +11,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import { SkeletonList } from '@/components/ui/Skeleton'
 import { timeAgo } from '@/lib/format'
 import { notificationHref } from '@/lib/notificationLinks'
+import { NOTIFICATIONS_CHANGED_EVENT, broadcastNotificationsChanged } from '@/lib/notificationEvents'
 
 export default function NotificationBell() {
   const router = useRouter()
@@ -32,6 +33,11 @@ export default function NotificationBell() {
 
   useEffect(() => {
     refresh()
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh)
+    return () => window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, refresh)
   }, [])
 
   useEffect(() => {
@@ -62,6 +68,7 @@ export default function NotificationBell() {
     await markNotificationRead(supabase, id, true)
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)))
     refresh()
+    broadcastNotificationsChanged()
   }
 
   async function handleMarkAllRead() {
@@ -69,13 +76,17 @@ export default function NotificationBell() {
     await markAllNotificationsRead(supabase)
     setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })))
     setUnreadCount(0)
+    broadcastNotificationsChanged()
   }
 
   async function handleNotificationClick(n: AppNotification) {
     setOpen(false)
     if (!n.read_at) {
       const supabase = createClient()
-      markNotificationRead(supabase, n.id, true).then(refresh)
+      markNotificationRead(supabase, n.id, true).then(() => {
+        refresh()
+        broadcastNotificationsChanged()
+      })
     }
     router.push(notificationHref(n))
   }
@@ -97,7 +108,12 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 z-40 w-80 rounded-xl border border-border bg-surface-raised shadow-panel">
+        // fixed + viewport-relative insets on mobile: an absolute w-80 panel
+        // anchored right-0 to this bell's own (non-edge) position in the
+        // header overflows past the left edge of a narrow screen, since the
+        // anchor point isn't the viewport edge. sm: switches back to the
+        // original panel-relative positioning once there's room for it.
+        <div className="fixed inset-x-3 top-16 z-40 rounded-xl border border-border bg-surface-raised shadow-panel sm:absolute sm:inset-x-auto sm:right-0 sm:top-10 sm:w-80">
           <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
             <span className="text-xs font-bold text-text-primary">Notifications</span>
             <button

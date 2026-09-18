@@ -9,15 +9,38 @@ export interface UserFilters {
   active?: 'true' | 'false'
 }
 
+function applyNonSearchFilters(query: ReturnType<SupabaseClient['from']>, filters: UserFilters) {
+  let q = query.select('*')
+  if (filters.role) q = q.eq('role', filters.role)
+  if (filters.approved) q = q.eq('approved', filters.approved === 'true')
+  if (filters.active) q = q.eq('active', filters.active === 'true')
+  return q
+}
+
 export async function listAllProfiles(supabase: SupabaseClient, filters: UserFilters = {}): Promise<Profile[]> {
-  let query = supabase.from('profiles').select('*').order('created_at', { ascending: false })
-  if (filters.search) query = query.or(`display_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`)
-  if (filters.role) query = query.eq('role', filters.role)
-  if (filters.approved) query = query.eq('approved', filters.approved === 'true')
-  if (filters.active) query = query.eq('active', filters.active === 'true')
-  const { data, error } = await query
-  if (error) throw error
-  return (data ?? []) as Profile[]
+  if (!filters.search) {
+    const { data, error } = await applyNonSearchFilters(supabase.from('profiles'), filters).order('created_at', { ascending: false })
+    if (error) throw error
+    return (data ?? []) as Profile[]
+  }
+
+  // Two separate ilike queries merged client-side, rather than a single
+  // .or() filter — PostgREST's .or() treats a raw comma/parenthesis in the
+  // value as a filter separator, so a search term containing one would
+  // silently corrupt the query instead of matching literally.
+  const pattern = `%${filters.search}%`
+  const [byName, byEmail] = await Promise.all([
+    applyNonSearchFilters(supabase.from('profiles'), filters).ilike('display_name', pattern),
+    applyNonSearchFilters(supabase.from('profiles'), filters).ilike('email', pattern),
+  ])
+  if (byName.error) throw byName.error
+  if (byEmail.error) throw byEmail.error
+
+  const merged = new Map<string, Profile>()
+  for (const p of [...((byName.data ?? []) as Profile[]), ...((byEmail.data ?? []) as Profile[])]) {
+    merged.set(p.id, p)
+  }
+  return Array.from(merged.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 }
 
 export async function getProfileById(supabase: SupabaseClient, id: string): Promise<Profile | null> {

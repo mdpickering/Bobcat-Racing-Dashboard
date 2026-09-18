@@ -25,7 +25,8 @@ Nothing in this folder is a migration and nothing here is applied automatically.
 `--wait <seconds>` polls until all four are ready.
 
 ## Other folders
-- `prestep/00_rename_legacy_tasks.sql` — **Path B only, needs explicit approval** (renames legacy `public.tasks`).
+- `prestep/00_rename_legacy_tasks.sql` — **NOT USED: Path A (a separate new production project) was chosen**, so nothing is renamed.
+  Kept only as the record of the rejected Path B.
 - `rollback/99_rollback_v2_schema.sql` — destructive, explicit-name removal of everything 0001–0021 create.
   `rollback/00_undo_rename_legacy_tasks.sql` — undoes the Path B rename.
 - `tools/compare_inventory.mjs A.json B.json` — diff two inventories (create / conflict / legacy).

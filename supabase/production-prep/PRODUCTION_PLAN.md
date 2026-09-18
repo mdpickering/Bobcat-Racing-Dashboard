@@ -7,42 +7,44 @@ Evidence base: `results/prod_01_inventory.json` (production catalog inventory, 2
 `results/prod_02_workspace_state_shape.json` (SELECT-only shape profile), `results/prod_03_reconcile.json`
 (legacy reconciliation facts: ids, counts, enum-like values, fingerprints), the 21 migrations in
 `supabase/migrations/`, and scratch rehearsals on an in-memory Postgres (PGlite) — see §12.
-**Open evidence gap:** `results/dev_01_inventory.json` was still the untouched placeholder (132 bytes) when this plan
-was finalized, so the "development schema" used below is the reference inventory produced by applying 0001–0021 to a
-clean database, **not** a live bobcat-dev dump (§13, R6). This does not affect the production diff or the data mapping.
+`results/dev_01_inventory.json` is the **real bobcat-dev catalog inventory** (27 tables, 88 policies, taken 2026-09-18 15:54 UTC). It was checked against a
+reference produced by applying 0001–0021 to a clean scratch database: **identical in every migration-owned section** (§2, R6 closed).
+All four result files validate (`node tools/check_results.mjs` ⇒ "ALL FOUR RESULT FILES READY").
 
 ---
-## 0. Executive summary
+## 0. Executive summary — owner decisions recorded 2026-09-18
 
-1. Production is a **legacy 4-table project**: `orders`, `subteams`, `tasks`, `workspace_state`. It has
-   **0 auth users, 0 functions, 0 enums, 0 triggers, 0 storage buckets/objects**. Every legacy table has a
-   `USING (true)` policy for role `public` (anon), i.e. anyone with the publishable key can read **and write** them.
-2. **BLOCKER B1 — one hard collision.** Production already has `public.tasks` (text id, free-text
-   assignee). Migration 0004 does `create table public.tasks`. Proven on a replica of the real production
-   shape: unmodified 0001–0021 **fails at 0004** (`relation "tasks" already exists`) after 0001–0003 have
-   committed. Nothing else collides.
-3. The standing rule "do not drop or rename existing production tables" makes the schema **impossible to
-   install in this project as-is**. Two ways forward; **a decision is required before Phase 6.8**:
-   - **Path A (recommended): a separate v2 production Supabase project.** Zero collisions, legacy app and
-     data untouched, trivial rollback (discard the project). The 0001–0021 chain is proven on a clean database.
-   - **Path B: same project + rename `public.tasks` → `legacy_tasks`** (`prestep/00_rename_legacy_tasks.sql`).
-     Proven to work, but it renames a production table (against the standing rule) and breaks any legacy
-     code still reading `public.tasks`. Only with an explicit yes.
-4. Data is tiny: 49 tasks (+30 in a separate relational table), 7 subsystems, 25 categories, 15 timeline columns,
-   5 milestone cells, 1 recurring event, 2 orders, 1 subteam. With **0 auth users there is nothing to migrate for
-   auth/profiles**, but that creates **BLOCKER B2**: `created_by` / `requested_by` / `changed_by` / `updated_by`
-   are NOT NULL foreign keys to `profiles`, so a real, approved CTO profile must exist **before** any data import.
-5. The reconciliation data (script 03, real results) settled the mapping questions and exposed two **human decisions**
-   that gate the data import (Phase 6.8), **not** the schema install:
-   - **Resolved:** order statuses (`Requested`→Submitted, `Arrived in Shop`→identical); timeline `highlight`
-     (`none`→false, `emerald`→true) and the odd key `BREAK` (label `W8`); all 49 `workspace_state` tasks pass every
-     new-schema rule; deadlines are 42 blank + 7 ISO dates.
-   - **D3 — two divergent task datasets:** relational `tasks` (30) and `workspace_state.tasks` (49) share only 10 ids,
-     and those 10 have already diverged (title 8, status 5, deadline 10, subsystem 1). A source-of-truth choice is needed (§9.4).
-   - **D4 — legacy subsystem ids that do not exist:** `chassis` (4 tasks + both orders), `brakes` (1 task),
-     `rear-suspension` (1 task + the subteam). They need an explicit mapping to one of the 7 subsystems (§9.12).
-6. Migration **0021 is included** (last in the chain). `profiles.active` defaults to `true`, so the first
-   CTO/admin only needs `approved = true` and `role = 'cto'` (§8).
+**Decisions approved by the project owner**
+1. **Path A — a separate, new production Supabase project.** The legacy project is left exactly as it is.
+   `prestep/00_rename_legacy_tasks.sql` and `rollback/00_undo_rename_legacy_tasks.sql` are kept for the record and are **not used**.
+2. **D3 — import the union of the two legacy task datasets, `workspace_state` winning on overlapping ids** (§9.4).
+3. **D4 — unresolved legacy records are migrated later, not guessed now.** Rows whose subsystem the source data does not
+   establish (`chassis`, `brakes`, `rear-suspension`) are kept as **`migration_exceptions` carrying the full legacy record**, so
+   they can be resolved later without losing data (§9.12).
+4. **Intended destination areas** for the legacy data: **Drivetrain, Rear Suspension, Front Suspension, Pedals, Shielding**
+   — recorded as the target set for any later mapping. No mapping to them is invented (§9.12, incl. one open clarification, Q-A).
+
+**State of the evidence**
+1. The old production project is a **legacy 4-table project**: `orders`, `subteams`, `tasks`, `workspace_state`, with
+   **0 auth users, 0 functions, 0 enums, 0 triggers, 0 storage buckets**. Every legacy table is readable **and writable** by anyone
+   with the public key (R1). It is **read-only source data** for this migration.
+2. The one collision that mattered — legacy `public.tasks` vs migration 0004 — **does not arise under Path A** (the target is
+   a clean project). Proven on a replica of the real production shape: unmodified 0001–0021 fails at 0004 *only* in the old project.
+3. **The schema chain is verified twice:** 0001–0021 apply cleanly, in order, to a clean database (rehearsal), and **the real
+   bobcat-dev inventory is identical to that reference in every migration-owned section** (tables, columns, 120 column ACLs, 87 indexes,
+   94 constraints, 10 enums, 88 policies, bucket) — §2.
+4. Data is tiny: 49 `workspace_state` tasks (+30 in a separate relational table), 7 subsystems, 25 categories, 15 timeline columns,
+   5 milestone cells, 1 recurring event, 2 orders, 1 subteam. With **0 auth users there is nothing to migrate for auth/profiles**, which
+   creates **B2**: `created_by` / `requested_by` / `changed_by` / `updated_by` are NOT NULL foreign keys to `profiles`, so a real,
+   approved CTO profile must exist **in the new project before any data import**.
+5. The reconciliation data settled the mapping: order statuses (`Requested`→Submitted, `Arrived in Shop`→identical); timeline
+   `highlight` (`none`→false, `emerald`→true) and the odd key `BREAK` (label `W8`); all 49 `workspace_state` tasks pass every
+   new-schema rule; deadlines are 42 blank + 7 ISO dates.
+6. Migration **0021 is included** (last in the chain). `profiles.active` defaults to `true`, so the first CTO/admin needs only
+   `approved = true` and `role = 'cto'` (§8).
+
+**Still open (none of it blocks finishing Phase 6.7 — all are Phase 6.8 entry items):** create the new project + configure Auth,
+apply 0001–0021, first CTO account (B2), and the clarification Q-A (§9.12). Nothing was applied anywhere in Phase 6.7.
 
 ---
 ## 1. Production schema inventory (what exists — Q1)
@@ -72,7 +74,7 @@ From `compare_inventory.mjs` (production vs reference inventory):
 | Class | Objects | Action |
 |---|---|---|
 | **CREATE** (in dev, absent in prod) | 26 tables, 10 enum types, 35 functions, 39 triggers (38 on `public`, 1 on `auth.users`), 86 `public` RLS policies + 2 `storage.objects` policies, 120 column-level ACL entries, 1 storage bucket. (Across all 27 v2 tables: 87 indexes and 94 constraints = 27 PK, 47 FK, 13 UNIQUE, 7 CHECK.) | created by 0001–0021 |
-| **CONFLICT** | `public.tasks` (and its index/constraint name `tasks_pkey`, and the row type `tasks`) | **Blocker B1** — Path A avoids it; Path B renames legacy |
+| **CONFLICT** | `public.tasks` (and its index/constraint name `tasks_pkey`, and the row type `tasks`) | only against the **old** project — **avoided by Path A** (§3); nothing is renamed |
 | **ALTER** existing production objects | **none** (the migrations never alter a pre-existing production table) | — |
 | **LEAVE ALONE** | `public.orders`, `public.subteams`, `public.workspace_state`, their policies, grants, realtime membership, all Supabase-managed schemas/triggers/extensions | never dropped, renamed or modified |
 | Silent-overwrite risk (`create or replace function`) | production has **0** functions ⇒ none can be overwritten | — |
@@ -80,24 +82,46 @@ From `compare_inventory.mjs` (production vs reference inventory):
 
 The `04_preflight_checks_readonly.sql` query re-verifies all of the above on the day.
 
+### Real bobcat-dev vs migrations reference vs old production (measured)
+| comparison | result |
+|---|---|
+| **real dev vs reference (0001–0021 on a clean DB)** | **identical** for tables (27 v2), columns, 120 column ACLs, 87 indexes, 94 constraints, 10 enums, 88 policies (86 public + 2 storage), storage bucket. Dev-only extras are all Supabase-managed (below). |
+| **old production vs real dev** | only in dev: 26 tables, 10 enums, 88 policies, 120 column ACLs, 1 bucket; `public.tasks` differs (the collision); only in production: `orders`, `subteams`, `workspace_state`, their 5 open policies and the realtime publications. Extensions and default privileges match. |
+| Supabase-managed extras in dev (beyond the migrations) | function `public.rls_auto_enable()` (SECURITY DEFINER, `search_path=pg_catalog`, returns `event_trigger`) + event trigger `ensure_rls` = the platform's *auto-enable RLS on new tables* feature; 3 extra `storage.buckets` protection triggers (`protect_bucket_control_insert/update/update_role`); 4 auth users (3 `bobcat-test.dev`, 1 real). The old production project has none of these (older platform version). |
+
+The extras are not a problem: `ensure_rls` only turns RLS **on** (the migrations already do), no name collides with a target object, and migration 0017's SQL insert into
+`storage.buckets` succeeded on dev with those triggers present (dev shows the bucket with identical limits). A new Path A project is expected to look like dev.
+
 ---
-## 3. Decision required — how to resolve the `public.tasks` collision
+## 3. Decision record — the `public.tasks` collision: **Path A (approved)**
 
-| | **Path A — new v2 project (recommended)** | **Path B — same project, rename legacy `tasks`** |
+| | **Path A — new v2 project (CHOSEN)** | Path B — same project, rename legacy `tasks` (rejected) |
 |---|---|---|
-| Collision | none | resolved by rename (proven) |
-| Violates "don't rename production tables" | no | **yes** — needs explicit approval |
-| Legacy app / `public.tasks` readers | untouched | **break** until updated |
-| Legacy public-write exposure (§13 R1) | stays isolated in the old project | v2 tables live next to open tables in the same API |
-| Rollback | ignore/delete the new project | `99_rollback…` + `00_undo_rename…` (proven) |
-| Cost | new URL/keys + Auth/Storage config; legacy data read via SELECT → generated INSERTs | none beyond the rename |
-| Migration set | 0001–0021 unchanged | 0001–0021 unchanged + `prestep/00` |
+| Collision | none (clean target) | resolved by rename |
+| Violates "don't rename production tables" | no | yes |
+| Legacy app / `public.tasks` readers | untouched | would break |
+| Legacy public-write exposure (R1) | stays isolated in the old project | v2 tables live beside open tables in one API |
+| Rollback | discard/ignore the new project | `99_rollback…` + `00_undo_rename…` |
+| Migration set | 0001–0021 unchanged | 0001–0021 + `prestep/00` |
 
-Not viable: installing v2 into another schema — every migration, function body and search_path hard-codes
-`public`, and PostgREST exposed-schema changes would be needed. Same for altering legacy `tasks` in place
-(ids text→uuid, columns dropped — destructive).
+Not viable either way: installing v2 into another schema (every migration/function/`search_path` hard-codes `public`), or
+altering legacy `tasks` in place (ids text→uuid, columns dropped — destructive).
 
-Everything below applies to both paths unless marked **[B only]**.
+### Path A operating model
+1. **Create the new project** in the Supabase Dashboard (a human action; record the project ref only — never keys in the repo).
+2. **Configure Auth** in the Dashboard (Site URL, redirect URLs, email confirmation/SMTP) — not SQL.
+3. Run `01_inspect_schema_readonly.sql` on the new project (baseline: `public` empty; managed extras as in bobcat-dev, §2) and
+   `04_preflight_checks_readonly.sql` ⇒ `all_clear: true`.
+4. Apply 0001–0021 exactly as §4 (one file at a time, each in `begin; … commit;`).
+5. Verify with `compare_inventory.mjs <new-project inventory> results/dev_01_inventory.json` (§11).
+6. Point the deployed app at the new project (URL + publishable key; the human sets them; **no service-role key is ever used**).
+7. First CTO signs up and is promoted (§8), *then* the import (Phase 6.8).
+
+**Moving the legacy data across projects (design for 6.8):** the old project is read with a read-only `SELECT` that returns the
+legacy rows as one JSON value; that JSON is pasted as a dollar-quoted `jsonb` literal into the import script and run in the
+**new** project's SQL Editor. No staging table, no cross-project connection, no credentials, and the old project is never written to.
+
+Everything below applies to Path A. (Path-B-only notes were removed from the checklists.)
 
 ---
 ## 4. Migration order (Q11) — exact, per-file, atomic
@@ -107,7 +131,7 @@ file that way; a failure rolls that file back completely). Never skip or reorder
 
 | Stage | Files | New-schema objects after the stage (tables / functions / triggers / policies / enums / indexes / buckets) |
 |---|---|---|
-| **0 pre-flight** | `04_preflight_checks_readonly.sql` → must be `all_clear: true`; **[B only]** `prestep/00_rename_legacy_tasks.sql` first | — |
+| **0 pre-flight** | on the **new** project: `01_…` baseline, then `04_preflight_checks_readonly.sql` → must be `all_clear: true` (no pre-step; Path A) | — |
 | A identity & org | 0001, 0002, 0003 | 5 / 7 / 6 / 15 / 2 / 12 / 0 |
 | B tasks | 0004, 0005, 0006 | 11 / 14 / 14 / 33 / 6 / 32 / 0 |
 | C purchasing & CAD | 0007, 0008, 0009 | 17 / 21 / 23 / 49 / 8 / 55 / 0 |
@@ -264,11 +288,11 @@ decided from counts (recency per row is unknowable). The relational rows' catego
 `05_tasks_side_by_side_readonly.sql` produces the row-by-row report (ids, titles, status, priority, deadline, subsystem,
 category-validity, and the 10 shared pairs side by side) for a human to review; save it as `results/prod_05_tasks_side_by_side.json`.
 
-**Decision D3 — task source of truth**
+**Decision D3 — task source of truth — DECIDED (owner-approved): option 2, union with `workspace_state` winning (see §9.12)**
 | option | effect |
 |---|---|
 | 1. `workspace_state` only (49) | simplest; the 20 relational-only tasks are **not** carried into v2 (they stay in the untouched legacy table) |
-| **2. Union, `workspace_state` wins on the 10 shared ids (recommended default)** | 39 + 10 from `workspace_state` = 49, **plus the 20 relational-only rows** = up to **69**. `workspace_state` is the later-written store. Nothing is silently dropped; each shared id is imported once (the relational version is logged `skipped`, "superseded"). Rows whose subsystem is unmapped (D4) or whose category is invalid become exceptions and are not imported until resolved. Caveat: the ids `t1…t17` look like early seed data — review with script 05 before accepting |
+| **2. Union, `workspace_state` wins on the 10 shared ids — ✅ APPROVED** | 39 + 10 from `workspace_state` = 49, **plus the 20 relational-only rows** = up to **69**. `workspace_state` is the later-written store. Nothing is silently dropped; each shared id is imported once (the relational version is logged `skipped`, "superseded"). Rows whose subsystem is unmapped (D4) are held as `migration_exceptions` with the full record (§9.12) and imported later once explicitly mapped; a row whose category is invalid is imported with `category_id` NULL plus a `task_invalid_category` exception. Caveat: the ids `t1…t17` look like early seed data — review with script 05 before accepting |
 | 3. relational wins on the shared ids | not recommended (older store) |
 
 ### 9.5 purchase_requests + purchase_request_items ← `public.orders` (2)  (`workspace_state.orders` is empty)
@@ -280,7 +304,7 @@ subsystem **`chassis` ×2 (not in the taxonomy → D4)**; both have `vendor_url`
 |---|---|---|
 | `purchase_requests.legacy_id` / `purchase_request_items.legacy_id` | `orders.id` | preserved |
 | `title` | `item` | |
-| `subsystem_id` | `subsystem_id` | `chassis` is not a v2 subsystem ⇒ **D4**; unresolved ⇒ exception, row **not** imported |
+| `subsystem_id` | `subsystem_id` | `chassis` is not a v2 subsystem and the source does not establish a mapping ⇒ **both orders are held as `purchase_request_unmapped_subsystem` exceptions with the full legacy row in `context` (§9.12); no purchase rows are created initially** and no subsystem is guessed. The status/field mapping below is applied at the later re-import once the owner maps `chassis`. |
 | `vendor` | `vendor` | |
 | `description` | `urgency`, `requested_by` | `Urgency: Immediate Need · Legacy requester: <raw>` (no `legacy_requested_by` column exists; also 1 exception row) |
 | `requested_by` | — | **importer id** |
@@ -334,33 +358,78 @@ exist; `subsystem_members` (leads/members) after sign-up; `purchase_status_histo
 `timeline_milestones → timeline_columns / subsystems`. All FKs are created by the migrations; the import only
 has to insert parents before children.
 
-### 9.12 Decisions required from you before the import (Phase 6.8) — D3 and D4
-**D3 — which task dataset is the source of truth** — see §9.4 (recommended default: union, `workspace_state` wins on the 10 shared ids).
+### 9.12 Decisions D3 / D4 — approved, and how unresolved records are kept (owner-approved 2026-09-18)
 
-**D4 — legacy subsystem ids that are not in the taxonomy.** `subsystems.id` is preserved from the taxonomy, and
-`tasks.subsystem_id` / `purchase_requests.subsystem_id` are NOT NULL foreign keys, so these rows cannot be imported until
-each unknown id is mapped to one of the 7 real subsystems. **The data does not say which; nothing is defaulted.**
+**D3 — approved:** union of the two task datasets, `workspace_state` wins on the 10 shared ids (§9.4). Accounting invariant for the import:
+`49 (workspace_state, all imported) + 10 shared relational rows (logged 'skipped — superseded') + 20 relational-only rows`
+where the 20 are either imported or held as exceptions ⇒ **imported + held = 69 tasks exactly**, nothing unaccounted for.
 
-| unknown legacy id | used by | candidates (from names only — a human must confirm) |
+**D4 — approved policy: do not guess a subsystem; keep unresolved records as `migration_exceptions`, resolve them later.**
+`subsystems.id` is preserved from the taxonomy and `tasks.subsystem_id` / `purchase_requests.subsystem_id` are NOT NULL foreign keys,
+so a row whose legacy subsystem id is not one of the 7 real ids cannot be inserted. Legacy ids that the source data does **not** establish:
+
+| unknown legacy id | used by | handling |
 |---|---|---|
-| `chassis` | 4 relational tasks, **both orders** | `fabrication` (Fabrication & Vehicle Integration)? — or another, the team knows |
-| `brakes` | 1 relational task | `rear-suspension-brakes` (Rear Suspension & Rear Brakes)? `pedals-driver-controls` (brake pedal)? |
-| `rear-suspension` | 1 relational task, the `subteams` row | `rear-suspension-brakes` |
+| `chassis` | 4 relational tasks, **both orders** | **exception** — no mapping asserted |
+| `brakes` | 1 relational task | **exception** |
+| `rear-suspension` | 1 relational task, the `subteams` row | **exception** (even though it resembles `rear-suspension-brakes`, the source does not establish that they are the same) |
 
-Unresolved ⇒ those rows become `migration_exceptions` and are **not** imported: **both orders** and **up to 6 relational
-tasks** (fewer if some of those 6 are among the 10 shared ids, where the `workspace_state` version — which uses real taxonomy
-ids — wins under D3 option 2; script 05 shows exactly which). Everything in `workspace_state` (49 tasks, all categories,
-timeline, recurring event) is unaffected by D4.
+Only rows that would otherwise be imported are affected: **both orders** and **up to 6 relational tasks** (fewer if some of those 6
+are among the 10 shared ids, where the `workspace_state` version — real taxonomy ids — wins). All 49 `workspace_state` tasks are unaffected.
+Earlier "candidate" mappings in previous drafts of this plan were **withdrawn**; none is asserted.
+
+**How nothing is lost — exception record design (no schema change, no new migration).** `migration_exceptions` already has
+`entity_type`, `raw_value`, `context jsonb`, `resolution_status` (default `unresolved`). One row per held record:
+
+| column | content |
+|---|---|
+| `migration_batch_id` | one uuid per import run (same value written to `migration_log`) |
+| `entity_type` | `task_unmapped_subsystem`, `purchase_request_unmapped_subsystem`, `subteam_unmapped_subsystem`; people/other: `task_assignee`, `subsystem_lead`, `subsystem_member`, `purchase_requester`, `task_invalid_category`, `purchase_status` |
+| `raw_value` | a human-readable one-liner **shown in the Admin UI** (e.g. `task t1787328031626 · legacy subsystem "chassis" · <title>`) |
+| `context` | the **complete legacy record** (every source column/JSON field) + `source` (`public.tasks` / `workspace_state.tasks` / `public.orders` / `public.subteams`), `legacy_id`, `unmapped_field`, `unmapped_value`, source fingerprint |
+| `resolution_status` | stays `unresolved` until the record is actually imported |
+plus a `migration_log` row `(entity_type, legacy_id) → new_id NULL, status 'exception'`. The legacy source tables are also untouched, so every held record exists **twice** (exception `context` + old project).
+
+**Resolving later (a future step, not Phase 6.7/6.8's first import).** The owner supplies an explicit written mapping
+`legacy subsystem id → real subsystem id` (targets restricted to the five destination areas below unless the owner says otherwise). A small
+re-import SQL, using the same trigger-disable mechanics as the initial import, reads the unresolved exceptions, inserts the tasks/purchase
+requests with the mapped subsystem, sets `migration_log` to `migrated` with the new id, and marks the exception `resolved`.
+
+**Operational caution (verified in the code):** the Admin "Migration exceptions" panel shows `entity_type`, status and `raw_value`, and its
+Resolve / Ignore buttons **only change `resolution_status`** — they do **not** import anything. Admins must **not** click Resolve/Ignore on
+`*_unmapped_subsystem` rows before the re-import has run, or the record would look finished while never being imported (its data would
+still be safe in `context`).
+
+**Intended destination areas (owner):** Drivetrain, Rear Suspension, Front Suspension, Pedals, Shielding. They correspond, by id and name, to the
+taxonomy subsystems that already exist in the source data:
+
+| destination area | subsystem id (from the source taxonomy) | source name |
+|---|---|---|
+| Drivetrain | `drivetrain-fitment` | Powertrain & Drivetrain Tuning |
+| Rear Suspension | `rear-suspension-brakes` | Rear Suspension & Rear Brakes |
+| Front Suspension | `front-suspension` | Front Suspension & Steering |
+| Pedals | `pedals-driver-controls` | Pedal Box & Driver Controls |
+| Shielding | `shielding-safety` | Shielding & Cockpit Safety |
+
+Subsystem **names are imported verbatim from the source**; they are not renamed to the short labels (renaming is a later, separate choice).
+
+**Open clarification Q-A (does not block finishing 6.7):** the source taxonomy has **seven** subsystems; two are **not** among the five
+areas — `fabrication` (Fabrication & Vehicle Integration; 2 `workspace_state` tasks, 4 categories) and `sae-deliverables` (SAE Deliverables & Costing;
+5 `workspace_state` tasks + 4 relational, 3 categories). Their tasks carry real taxonomy ids, so the source **does** establish them and they are
+**imported as-is with nothing dropped**. If the owner intends only five subsystems, these can be archived later (`subsystems.active = false`,
+archive-over-delete, no data loss) or their tasks re-homed — that is a decision to make explicitly, not one this plan makes.
 
 ---
-## 10. Pre-flight checklist (before ANY change)
+## 10. Pre-flight checklist (before ANY change) — Path A
 
-1. `04_preflight_checks_readonly.sql` on the target ⇒ `all_clear: true` (fails on `tasks`/`tasks_pkey` for an
-   un-renamed production project — expected).
-2. Decision on Path A/B recorded. **[B only]** explicit approval for the rename; confirm nothing live reads `public.tasks`.
-3. Re-run `01_…` and compare with `results/prod_01_inventory.json` (schema drift check) and re-run `03_…`
-   comparing `fingerprints` (legacy tables are anon-writable ⇒ data can change). **Baseline captured 2026-09-18 from `prod_03`
-   (hashes only, no content):**
+1. New Supabase project created; project ref recorded; **no keys stored in the repo**.
+2. `01_inspect_schema_readonly.sql` on the new project (baseline) and `04_preflight_checks_readonly.sql` ⇒ **`all_clear: true`**
+   (a clean project passes; tested).
+3. Auth settings configured (Site URL, redirects, email confirmation/SMTP); backup/PITR availability for the new project's plan confirmed.
+4. Migration files on the commit being applied match the rehearsed set (record `git rev-parse HEAD`).
+5. Human present; **one file per SQL Editor run, each wrapped in `begin; … commit;`**.
+6. **Before the import (6.8):** re-run `01_…` on the OLD project and compare with `results/prod_01_inventory.json` (schema drift), and re-run `03_…`
+   comparing `fingerprints` (the legacy tables are anon-writable ⇒ data can change). **Baseline captured 2026-09-18 from `prod_03` (hashes only, no content):**
 
    | source | md5 baseline |
    |---|---|
@@ -376,36 +445,37 @@ timeline, recurring event) is unaffected by D4.
    | table `public.subteams` | `eefd49f2fe63111d3e87f4e355dc5160` |
 
    Any difference ⇒ the source moved since this plan; redo the reconciliation before importing.
-4. Export legacy data (SELECT → JSON, saved offline): `workspace_state`, `tasks`, `orders`, `subteams`.
-5. Confirm backup/PITR availability for the target project's plan.
-6. Auth settings configured (Site URL, redirects, email confirmation/SMTP).
-7. Migration files on the commit being applied match the rehearsed set (`git rev-parse` recorded).
-8. Human present; one file per SQL Editor run, each wrapped in `begin; … commit;`.
+7. Export the legacy data offline (SELECT → JSON): `workspace_state`, `tasks`, `orders`, `subteams` (this is also the import payload).
 
 ## 11. Verification checklist
 
-Per stage: run `01_…` and compare to §4 counts. After Stage G (before any data):
-- `compare_inventory.mjs <target> <reference>`: **only** legacy objects differ ([B] legacy `tasks`→`legacy_tasks` + open policies/publications).
-- 27 tables all `rls=true`; `select … from pg_proc` shows RPC functions `EXECUTE` only for `authenticated`; **no** `anon` grant on any v2 table (column ACLs = 120).
-- Bucket `task-attachments` private, 20 MiB, 12 MIME types; exactly 2 `task_attachments_storage_*` policies.
+**Per stage:** run `01_…` on the new project and compare with the §4 counts.
+**After Stage G (before any data):** `node tools/compare_inventory.mjs <new-project inventory> results/dev_01_inventory.json new dev` must show **no difference in any
+migration-owned section** (tables, columns, column ACLs, indexes, constraints, enums, functions, triggers, policies, bucket). Expected, tolerated differences:
+auth users (dev has 4 test users), and Supabase-managed items if the two projects are on different platform versions. bobcat-dev itself carries these
+managed extras beyond the migrations — the new project will very likely too: function `public.rls_auto_enable()` + event trigger `ensure_rls`
+(auto-enable RLS on new tables), extra `storage.*` bucket-protection triggers, extensions `pg_stat_statements` / `supabase_vault` / `uuid-ossp`.
+- 27 tables all `rls=true`; RPC functions `EXECUTE` only for `authenticated`; **no** `anon` grant on any v2 table (column ACLs = 120).
+- Bucket `task-attachments` private, 20 MiB, 12 MIME types; exactly 2 `task_attachments_storage_*` policies (dev: identical).
 - Trigger `on_auth_user_created` present and enabled; all v2 triggers `tgenabled='O'`.
-- Behavioural smoke (in the app, as CTO/member/lead): sign-up → pending → approve; deactivate ⇒ `/deactivated`; task/purchase/CAD create; cross-user isolation. (Same 6.6 suite.)
-After import (6.8), expected row counts:
+- Behavioural smoke in the app as CTO / member / lead (the 6.6 suite): sign-up → pending → approve; deactivate ⇒ `/deactivated`; task/purchase/CAD create; cross-user isolation.
+
+**After the import (6.8), expected row counts:**
 
 | table | expected |
 |---|---|
-| `subsystems` | 7 |
+| `subsystems` | 7 (ids preserved verbatim) |
 | `subsystem_categories` | 25 |
-| `tasks` | **49** (D3 option 1) or **up to 69** (option 2, recommended) — minus rows held back as exceptions by D4 (≤ 6 relational tasks) |
+| `tasks` | 49 (`workspace_state`) **+ N** relational-only rows with a valid subsystem, where **imported + held = 69** (§9.12); N is computed at import time (≤ 20) |
 | `timeline_columns` | 15 (keys `W1…W7, BREAK, W9…W15`; exactly 1 with `highlight = true`: `W3`) |
 | `timeline_milestones` | 5 (all `W4`) |
 | `recurring_events` | 1 (`day_of_week = 2`, `12:30`, `navy`) |
-| `purchase_requests` / `purchase_request_items` / `purchase_status_history` | 2 / 2 / 2 if D4 maps `chassis`; otherwise 0 |
+| `purchase_requests` / `_items` / `_status_history` | **0 / 0 / 0** initially — both orders are `chassis` ⇒ held as 2 `purchase_request_unmapped_subsystem` exceptions |
+| `migration_exceptions` (unresolved) | ≥ 2 orders + the held tasks + people entries (assignees, leads, members, requester) + 1 `subteam_unmapped_subsystem` |
 | `profiles` | 1 (importer) + real sign-ups |
 | `notifications`, `audit_logs`, `calendar_events`, `milestones`, `competition_settings` | 0 (import is silent) |
 
-Also: every `legacy_id` unique; `migration_log` covers every legacy row; unresolved exceptions listed; no orphan FKs;
-notification count unchanged; every user trigger `tgenabled = 'O'` again.
+Also: every `legacy_id` unique; `migration_log` covers every legacy row; no orphan FKs; every user trigger `tgenabled = 'O'` again; the old project's fingerprints unchanged.
 
 ---
 ## 12. Rollback strategy per stage (Q12)
@@ -415,41 +485,46 @@ notification count unchanged; every user trigger `tgenabled = 'O'` again.
 | A file errors mid-run | each file runs in one transaction ⇒ that file leaves **no trace**; earlier files stay | yes — 0004 failed with 0001–0003 intact |
 | Undo a whole install (pre-cutover, no user data) | `rollback/99_rollback_v2_schema.sql` — one transaction, drops exactly 27 tables, 35 functions, 10 enums, the auth trigger and 2 storage policies **by name, no CASCADE** | yes — replica returned identical to its pre-migration inventory (tables, columns, constraints, indexes, policies, functions, triggers, enums, publications). Not SQL-reversible: the empty `task-attachments` bucket (Supabase blocks DELETE on `storage.*`; remove in Dashboard) |
 | Partial revert to stage N | run 99, re-apply files up to N | — (no per-file down scripts: they'd be error-prone; the install is additive) |
-| **[B only]** undo rename | `rollback/00_undo_rename_legacy_tasks.sql` after 99 | yes |
+| ~~undo rename~~ (Path B only — **not used**, Path A chosen) | `rollback/00_undo_rename_legacy_tasks.sql` | kept for the record |
 | Data import (6.8) | single transaction ⇒ all-or-nothing; legacy source never modified, so re-import is always possible; pre-cutover full rollback = 99 | design (6.8) |
 | After users exist | 99 is **destructive** — restore from backup/PITR instead | — |
 | Cutover | keep the legacy app on the untouched old project/tables until verified; rollback = redeploy previous app version | — |
-| Path A | nothing to undo in the old project; discard the new one | — |
+| **Path A (chosen)** | nothing to undo in the old project (it is never written to); worst case, discard/ignore the new project | — |
 
 ---
-## 13. Risks and blockers
+## 13. Risks and blockers (status after the owner's decisions)
 
-**Blockers**
-- **B1** `public.tasks` collision ⇒ choose Path A or B (§3). *Blocks 6.8.*
-- **B2** No profile exists to attribute NOT NULL `created_by`/`requested_by`/`changed_by`/`updated_by` ⇒ first CTO signup + promotion (§8) before import.
-- **B3 — resolved by script 03:** order statuses, `highlight` semantics, category/subsystem consistency of the 49 `workspace_state` tasks (0 violations, so `tasks_before_write` cannot throw for them), non-ISO deadlines (none).
-- **D3 (decision, blocks the task import)** two divergent task datasets: 30 relational vs 49 `workspace_state`, 10 shared ids that already disagree (§9.4). Recommended default: union, `workspace_state` wins. Review `05_tasks_side_by_side_readonly.sql` output first.
-- **D4 (decision, blocks part of the import)** legacy subsystem ids `chassis` / `brakes` / `rear-suspension` are not in the taxonomy (§9.12). Blocks both orders and up to 6 relational tasks; does **not** block the 49 `workspace_state` tasks.
-- **Open check:** relational rows' categories/deadlines are not yet rule-checked (script 05 does it); recurring-event day-of-week convention (0 = Sunday) to confirm against the legacy UI.
+**Resolved**
+- **B1** `public.tasks` collision — **resolved by Path A** (clean target project). No production table is renamed or altered.
+- **B3** reconciliation unknowns — **resolved by script 03** (order statuses, `highlight`, rule checks; 49 tasks pass every rule).
+- **D3** task source of truth — **decided:** union, `workspace_state` wins (§9.4, §9.12).
+- **D4** unmapped subsystem ids — **decided:** keep as exceptions with the full record, resolve later, never guess (§9.12).
+- **R6** dev-vs-reference equality — **verified:** the real bobcat-dev inventory is identical to the migrations reference in every migration-owned section (§2).
+
+**Remaining blockers for the import (Phase 6.8 entry, not for finishing 6.7)**
+- **B2** No profile exists to attribute NOT NULL `created_by`/`requested_by`/`changed_by`/`updated_by` ⇒ in the **new** project: first CTO signup + promotion (§8) before any import.
+- **B4** The new Supabase project must be created and Auth configured (Dashboard actions only a human can do).
+- **Q-A** (clarification, not a blocker) `fabrication` and `sae-deliverables` are in the source but not among the five destination areas (§9.12). Default: imported as-is, nothing dropped.
+- **Open checks:** relational rows' categories/deadlines are rule-checked at import time (a category not in its subsystem ⇒ `category_id` NULL + `task_invalid_category` exception; `05_tasks_side_by_side_readonly.sql` gives a human review copy, optional now); the recurring event's day-of-week convention (0 = Sunday) to confirm against the legacy UI.
 
 **Risks**
-- **R1 (security, pre-existing)** Every legacy table is world-readable **and writable** with the public key, and `taxonomy[].leadPin` (7 plaintext 4-digit PINs) sits in that public table. Not changed here (rule: don't modify legacy). Recommend: treat PINs as compromised/retired, never migrate them, and restrict/close the legacy policies at cutover (a Phase 6.8+ decision).
-- **R2** Source drift: legacy is anon-writable ⇒ fingerprints (script 03) re-checked at import time.
-- **R3** SQL Editor atomicity is assumed, not proven on Supabase ⇒ always wrap files in explicit `begin/commit` (proven in rehearsal).
-- **R4** Rehearsals used PGlite + a Supabase stub (validates SQL order/syntax/inventory/rollback, not Supabase-managed behaviour). `postgres` must own the tables to `DISABLE TRIGGER` — production tables are owned by `postgres`; verify for the new tables (created by the same role).
+- **R1 (security, pre-existing, old project)** Every legacy table is world-readable **and writable** with the public key, and `taxonomy[].leadPin` (7 plaintext 4-digit PINs) sits in that public table. Not changed (rule: don't modify legacy). Path A keeps v2 out of that exposure. Recommend: treat the PINs as compromised/retired, never migrate them, and decide separately, after cutover, how to close the old project's policies.
+- **R2** Source drift: legacy is anon-writable ⇒ fingerprint baseline (§10 #6) re-checked immediately before the import.
+- **R3** SQL Editor atomicity is assumed, not proven on Supabase ⇒ always wrap each file in explicit `begin/commit` (proven in rehearsal).
+- **R4** Rehearsals used PGlite + a Supabase stub (validates SQL order/syntax/inventory/rollback, not Supabase-managed behaviour); the real bobcat-dev result independently confirms the chain on Supabase. `postgres` must own the new tables to `DISABLE TRIGGER` — same role that creates them.
 - **R5** Auth is dashboard config (email confirmation, redirects) and can block the first CTO login.
-- **R6** `dev_01_inventory.json` is **still the untouched placeholder** (132 bytes): equality of live bobcat-dev with the migrations-derived reference is unverified. Cheap fix: run `01_…` on bobcat-dev, save the JSON to that file, then `node tools/check_results.mjs` and `node tools/compare_inventory.mjs results/dev_01_inventory.json <reference>`; only Supabase-managed objects should differ. It does not change the production diff or the data mapping.
-- **R7** `audit_logs` stays empty: **no writer exists** (no insert grant, no trigger). Not implemented (per instruction). Where to add later: (a) `admin_set_user_role/approved/active` (0020) — the natural first writers; (b) purchase/CAD approval transitions; (c) task status/owner changes; a `SECURITY DEFINER` insert helper or triggers would be needed, plus a new migration.
-- **R8** Attribution loss: legacy creators/timestamps don't exist ⇒ all imported rows are attributed to the importer with raw legacy text preserved.
-- **R9** Bucket removal and 0017's bucket upsert are outside SQL rollback / need pre-flight #5.
+- **R7** `audit_logs` stays empty: **no writer exists** (no insert grant, no trigger). Not implemented (per instruction). Where to add later: (a) `admin_set_user_role/approved/active` (0020) — the natural first writers; (b) purchase/CAD approval transitions; (c) task status/owner changes; a `SECURITY DEFINER` insert helper or triggers plus a new migration.
+- **R8** Attribution loss: legacy creators/timestamps don't exist ⇒ imported rows are attributed to the importer with raw legacy text preserved.
+- **R9** Bucket removal and 0017's bucket upsert are outside SQL rollback / covered by pre-flight check #5.
 - **R10** Legacy people-to-account matching is manual (exceptions) — an admin task, not automatable safely.
-- **R11** 14 trigger functions with default PUBLIC EXECUTE — accepted, not callable directly.
+- **R11** 14 of 24 trigger functions keep default PUBLIC EXECUTE — accepted, not callable directly.
+- **R12** The Admin "Resolve/Ignore" buttons on exceptions only change status (§9.12 caution) — a process risk for the `*_unmapped_subsystem` rows.
+- **R13** Cross-project data transport is a pasted `jsonb` literal (size ≈ tens of KB, fine); it must be generated from the fingerprint-verified source.
 
-## 14. Phase 6.8 entry criteria (not started)
-1. Path A/B decided (B1) and target ready + Auth configured.
-2. 0001–0021 applied and verified (§11); `04_…` was `all_clear` beforehand.
-3. First CTO active (B2); importer id recorded.
-4. **D3** (task source of truth) and **D4** (subsystem mapping) decided in writing; script 05 output reviewed.
-5. Fresh drift check against the fingerprint baseline (§10 #3).
-6. Only then write and rehearse the import SQL (with the trigger-disable list of §9) against a scratch replica.
-(Phase 6.8 has **not** been started.)
+## 14. Phase 6.8 entry criteria (Phase 6.8 has **not** been started)
+1. New project created and Auth configured; `01`/`04` run on it (`all_clear: true`).
+2. 0001–0021 applied per §4 and verified per §11 (identical to bobcat-dev in all migration-owned sections).
+3. First CTO active in the new project (B2); importer id recorded.
+4. Decisions D3/D4 are **recorded** (this document); clarification Q-A answered or accepted as "import as-is".
+5. Fresh drift check against the fingerprint baseline (§10 #6).
+6. Only then write and rehearse the import SQL (with the trigger-disable list of §9 and the exception design of §9.12) against a scratch replica, and run it in the new project.

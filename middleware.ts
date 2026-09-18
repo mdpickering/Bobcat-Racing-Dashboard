@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-const AUTH_PATHS = ['/login', '/signup', '/pending-approval']
+const AUTH_PATHS = ['/login', '/signup', '/pending-approval', '/deactivated']
 
 export async function middleware(request: NextRequest) {
   const { response, user, supabase } = await updateSession(request)
@@ -18,13 +18,21 @@ export async function middleware(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('approved')
+      .select('approved, active')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.approved && pathname !== '/pending-approval') {
+    if (!profile?.approved) {
       const url = request.nextUrl.clone()
       url.pathname = '/pending-approval'
+      return NextResponse.redirect(url)
+    }
+
+    // RLS already blocks a deactivated user's data access (migration 0021);
+    // this just shows them why instead of a shell full of empty/error states.
+    if (!profile.active) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/deactivated'
       return NextResponse.redirect(url)
     }
   }

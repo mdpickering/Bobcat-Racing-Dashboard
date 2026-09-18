@@ -28,8 +28,14 @@ export default async function TasksPage({
     supabase.from('subsystem_members').select('subsystem_id').eq('user_id', profile.id).eq('is_lead', true),
   ])
   const categories = (categoriesData ?? []) as SubsystemCategory[]
-  const isAnySubsystemLead = (leadRows ?? []).length > 0
-  const canCreate = isCtoOrAdmin(profile) || isAnySubsystemLead
+  const ledSubsystemIds = new Set((leadRows ?? []).map((r) => r.subsystem_id as string))
+  const isAnySubsystemLead = ledSubsystemIds.size > 0
+  const admin = isCtoOrAdmin(profile)
+  const canCreate = admin || isAnySubsystemLead
+  // tasks_insert requires cto/admin or lead of that specific subsystem, so
+  // the create form only offers those; the request form and filters keep
+  // the full list (any approved user may request a task for any subsystem).
+  const createSubsystems = admin ? subsystems : subsystems.filter((s) => ledSubsystemIds.has(s.id))
 
   const tab = searchParams.tab === 'requests' ? 'requests' : 'board'
 
@@ -47,7 +53,7 @@ export default async function TasksPage({
           <h1 className="text-lg font-bold text-text-primary">Tasks</h1>
           <p className="mt-0.5 text-xs font-mono text-text-muted">Requests submitted by the team, awaiting review.</p>
         </div>
-        <TasksToolbar canCreate={canCreate} subsystems={subsystems} categories={categories} activeTab="requests" pendingRequestCount={pendingCount} />
+        <TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} activeTab="requests" pendingRequestCount={pendingCount} />
         <TaskRequestsList requests={requests} canReview={canCreate} currentUserId={profile.id} />
       </div>
     )
@@ -82,7 +88,7 @@ export default async function TasksPage({
           {tasks.length} task{tasks.length === 1 ? '' : 's'} matching your filters
         </p>
       </div>
-      <TasksToolbar canCreate={canCreate} subsystems={subsystems} categories={categories} activeTab="board" pendingRequestCount={pendingRequestCount} />
+      <TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} activeTab="board" pendingRequestCount={pendingRequestCount} />
       <TaskFilters subsystems={subsystems} categories={categories} />
       <TaskList tasks={tasks} />
     </div>

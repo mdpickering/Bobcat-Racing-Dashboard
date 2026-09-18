@@ -11,12 +11,13 @@ import type { Subsystem, SubsystemCategory } from '@/types/database'
 interface TasksToolbarProps {
   canCreate: boolean
   subsystems: Subsystem[]
+  createSubsystems: Subsystem[]
   categories: SubsystemCategory[]
   activeTab: 'board' | 'requests'
   pendingRequestCount: number
 }
 
-export default function TasksToolbar({ canCreate, subsystems, categories, activeTab, pendingRequestCount }: TasksToolbarProps) {
+export default function TasksToolbar({ canCreate, subsystems, createSubsystems, categories, activeTab, pendingRequestCount }: TasksToolbarProps) {
   const [createOpen, setCreateOpen] = useState(false)
   const [requestOpen, setRequestOpen] = useState(false)
 
@@ -48,7 +49,7 @@ export default function TasksToolbar({ canCreate, subsystems, categories, active
         )}
       </div>
 
-      <CreateTaskModal open={createOpen} onClose={() => setCreateOpen(false)} subsystems={subsystems} categories={categories} />
+      <CreateTaskModal open={createOpen} onClose={() => setCreateOpen(false)} subsystems={createSubsystems} categories={categories} />
       <RequestTaskModal open={requestOpen} onClose={() => setRequestOpen(false)} subsystems={subsystems} />
     </div>
   )

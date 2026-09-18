@@ -22,6 +22,7 @@ export default async function AppLayout({
     .single()
 
   if (!profile?.approved) redirect('/pending-approval')
+  if (!profile.active) redirect('/deactivated')
 
   return <AppShell profile={profile as Profile}>{children}</AppShell>
 }

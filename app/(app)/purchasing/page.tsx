@@ -24,8 +24,16 @@ export default async function PurchasingPage({
     listSubsystems(supabase),
     supabase.from('subsystem_members').select('subsystem_id').eq('user_id', profile.id).eq('is_lead', true),
   ])
-  const isAnySubsystemLead = (leadRows ?? []).length > 0
-  const canCreate = isCtoOrAdmin(profile) || isAnySubsystemLead
+  const ledSubsystemIds = new Set((leadRows ?? []).map((r) => r.subsystem_id as string))
+  const isAnySubsystemLead = ledSubsystemIds.size > 0
+  const admin = isCtoOrAdmin(profile)
+  const canCreate = admin || isAnySubsystemLead
+  // The create form must only offer subsystems the requester can actually
+  // submit for — purchase_requests_insert requires cto/admin or lead of
+  // that specific subsystem, so a lead who leads only one subsystem
+  // picking a default from the full list (as the filter dropdown
+  // correctly does) would otherwise default to one they can't submit for.
+  const createSubsystemOptions = admin ? subsystems : subsystems.filter((s) => ledSubsystemIds.has(s.id))
 
   let requests
   try {
@@ -45,7 +53,7 @@ export default async function PurchasingPage({
           {requests.length} request{requests.length === 1 ? '' : 's'} matching your filters
         </p>
       </div>
-      <PurchasingToolbar canCreate={canCreate} subsystems={subsystems} />
+      <PurchasingToolbar canCreate={canCreate} subsystems={createSubsystemOptions} />
       <PurchaseFilters subsystems={subsystems} />
       <PurchaseRequestList requests={requests} />
     </div>

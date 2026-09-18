@@ -4,10 +4,12 @@ Status: **plan only. Nothing was applied to any Supabase project. `workspace_sta
 table were never modified.** Production was inspected read-only via the SQL Editor (scripts 01 and 02).
 
 Evidence base: `results/prod_01_inventory.json` (production catalog inventory, 2026-09-18),
-`results/prod_02_workspace_state_shape.json` (SELECT-only shape profile), the 21 migrations in
+`results/prod_02_workspace_state_shape.json` (SELECT-only shape profile), `results/prod_03_reconcile.json`
+(legacy reconciliation facts: ids, counts, enum-like values, fingerprints), the 21 migrations in
 `supabase/migrations/`, and scratch rehearsals on an in-memory Postgres (PGlite) — see §12.
-Note: `results/dev_01_inventory.json` was **empty**, so the "development schema" used below is the
-reference inventory produced by applying 0001–0021 to a clean database, not a live bobcat-dev dump (§13, R6).
+**Open evidence gap:** `results/dev_01_inventory.json` was still the untouched placeholder (132 bytes) when this plan
+was finalized, so the "development schema" used below is the reference inventory produced by applying 0001–0021 to a
+clean database, **not** a live bobcat-dev dump (§13, R6). This does not affect the production diff or the data mapping.
 
 ---
 ## 0. Executive summary
@@ -26,13 +28,19 @@ reference inventory produced by applying 0001–0021 to a clean database, not a 
    - **Path B: same project + rename `public.tasks` → `legacy_tasks`** (`prestep/00_rename_legacy_tasks.sql`).
      Proven to work, but it renames a production table (against the standing rule) and breaks any legacy
      code still reading `public.tasks`. Only with an explicit yes.
-4. Data is tiny: 49 tasks, 7 subsystems, 25 categories, 15 timeline columns, 5 milestone cells, 1 recurring
-   event, ~2 orders, 1 subteam. With **0 auth users there is nothing to migrate for auth/profiles**, but that
-   creates **BLOCKER B2**: `created_by` / `requested_by` / `changed_by` / `updated_by` are NOT NULL foreign
-   keys to `profiles`, so a real, approved CTO profile must exist **before** any data import.
-5. Three data facts must still be pinned down (script `03_…`): does the relational `tasks` table (~30 rows)
-   overlap `workspace_state.tasks` (49)? what are the `orders` statuses? what do timeline `highlight` values
-   mean? (§9.4–9.6, B3). They gate the data import (Phase 6.8), **not** the schema install.
+4. Data is tiny: 49 tasks (+30 in a separate relational table), 7 subsystems, 25 categories, 15 timeline columns,
+   5 milestone cells, 1 recurring event, 2 orders, 1 subteam. With **0 auth users there is nothing to migrate for
+   auth/profiles**, but that creates **BLOCKER B2**: `created_by` / `requested_by` / `changed_by` / `updated_by`
+   are NOT NULL foreign keys to `profiles`, so a real, approved CTO profile must exist **before** any data import.
+5. The reconciliation data (script 03, real results) settled the mapping questions and exposed two **human decisions**
+   that gate the data import (Phase 6.8), **not** the schema install:
+   - **Resolved:** order statuses (`Requested`→Submitted, `Arrived in Shop`→identical); timeline `highlight`
+     (`none`→false, `emerald`→true) and the odd key `BREAK` (label `W8`); all 49 `workspace_state` tasks pass every
+     new-schema rule; deadlines are 42 blank + 7 ISO dates.
+   - **D3 — two divergent task datasets:** relational `tasks` (30) and `workspace_state.tasks` (49) share only 10 ids,
+     and those 10 have already diverged (title 8, status 5, deadline 10, subsystem 1). A source-of-truth choice is needed (§9.4).
+   - **D4 — legacy subsystem ids that do not exist:** `chassis` (4 tasks + both orders), `brakes` (1 task),
+     `rear-suspension` (1 task + the subteam). They need an explicit mapping to one of the 7 subsystems (§9.12).
 6. Migration **0021 is included** (last in the chain). `profiles.active` defaults to `true`, so the first
    CTO/admin only needs `approved = true` and `role = 'cto'` (§8).
 
@@ -47,7 +55,7 @@ PostgreSQL 17.6. Extensions: `pg_stat_statements`, `pgcrypto` (schema `extension
 | `public.tasks` | ~30 rows (estimate). `id text PK`, `title text NOT NULL`, `subsystem_id text`, `category text`, `priority text default 'Medium'`, `status text default 'To Do'`, `assignee text`, `deadline date`, `notes text`, `created_at timestamptz`. No FKs, no other indexes. |
 | `public.orders` | ~2 rows. `id text PK`, `item`, `subsystem_id`, `vendor`, `vendor_url`, `part_number`, `qty int default 1`, `unit_price numeric(10,2) default 0`, `urgency text default 'Next Batch Order'`, `requested_by text`, `status text default 'Requested'`, `submitted_at timestamptz`. |
 | `public.subteams` | ~1 row. `id text PK`, `name`, `lead text`, `members text[]`, `subsystem_id text`. |
-| `public.workspace_state` | 1 row. `id text PK`, jsonb columns `taxonomy`, `tasks`, `orders`, `timeline_columns`, `recurring_events`, `timeline_milestones`, `updated_at`. Row `id` is 29 chars. |
+| `public.workspace_state` | 1 row. `id text PK`, jsonb columns `taxonomy`, `tasks`, `orders`, `timeline_columns`, `recurring_events`, `timeline_milestones`, `updated_at`. Row `id` = `bobcat_master_workspace_state`; last updated **2026-09-08 17:09 UTC**. |
 | RLS / policies | RLS on for all four, but every policy is `USING (true)` for role `public`: `Allow all on orders/subteams/tasks` (ALL), `Enable public read for all` (SELECT) + `Enable public write/upsert for all` (ALL) on `workspace_state`. |
 | Grants | `anon`, `authenticated`, `service_role` hold `arwdDxtm` on all four (Supabase default privileges). |
 | Realtime | `supabase_realtime` publishes all four tables. The v2 app uses no realtime. |
@@ -201,79 +209,120 @@ can skip already-migrated rows.
 | `active` | — | `true`; `description` NULL |
 | **not migrated** | `lead`, `members[]`, **`leadPin`** | `lead`/`members` → `migration_exceptions` (entity `subsystem_lead` / `subsystem_member`, raw text) for later `subsystem_members` assignment. **`leadPin` is never migrated** (plaintext credential; §13 R1). |
 
+Verified (script 03): 7 subsystems, **0 duplicate names**; every one has a lead and a `leadPin` (7 PINs); member strings total 4
+(front-suspension 1, pedals-driver-controls 1, sae-deliverables 2, others 0).
+
+| id (preserved) | name | categories |
+|---|---|---|
+| `drivetrain-fitment` | Powertrain & Drivetrain Tuning | 3 |
+| `fabrication` | Fabrication & Vehicle Integration | 4 |
+| `front-suspension` | Front Suspension & Steering | 4 |
+| `pedals-driver-controls` | Pedal Box & Driver Controls | 4 |
+| `rear-suspension-brakes` | Rear Suspension & Rear Brakes | 4 |
+| `sae-deliverables` | SAE Deliverables & Costing | 3 |
+| `shielding-safety` | Shielding & Cockpit Safety | 3 |
+
 ### 9.2 subsystem_categories ← `taxonomy[].categories[]` (25)
 `subsystem_id` = parent id; `name` = `name`; `engineering_rule` = `rule`; `active` = true; new uuid.
-Unique `(subsystem_id,name)`. No `legacy_id` column ⇒ record `(category, '<subsystemId>::<name>') → new uuid` in `migration_log`.
+**25 categories, 0 duplicate names within a subsystem** (the `(subsystem_id,name)` UNIQUE constraint cannot fire).
+No `legacy_id` column ⇒ record `(category, '<subsystemId>::<name>') → new uuid` in `migration_log`.
 
-### 9.3 tasks ← `workspace_state.tasks[]` (49) [+ relational `public.tasks` per Q1]
+### 9.3 tasks ← `workspace_state.tasks[]` (49) — verified against script 03
 | new | from | rule |
 |---|---|---|
-| `id` | — | new uuid; **`legacy_id` = legacy id** (text, 3–14 chars, UNIQUE) |
+| `id` | — | new uuid; **`legacy_id` = legacy id** (text, 3–14 chars, all 49 unique, UNIQUE column) |
 | `title` / `description` | `title` / `notes` | blank notes → NULL |
-| `subsystem_id` | `subsystemId` | must exist in 9.1 (else exception, skip row) |
-| `category_id` | `category` (name) | lookup `(subsystem_id, name)` in 9.2. **`tasks_before_write` raises if a category belongs to another subsystem** ⇒ mismatch → `category_id` NULL + exception (count from script 03, Q4) |
-| `status` | `status` | identical enum values: To Do / In Progress / Complete (0 unmapped) |
-| `priority` | `priority` | identical: Critical/High/Medium/Low (0 unmapped) |
-| `deadline` (timestamptz) | `deadline` (string) | only **7 of 49** are ISO `YYYY-MM-DD`; the other 42 are blank (expected) or another format — script 03 (`blank_deadline_count`, `non_iso_deadline_values`) says which. Blank → NULL; ISO date → **midnight UTC**, the exact convention the app itself writes (`new Date(d).toISOString()`) and reads (`slice(0,10)`); any other format → exception, deadline NULL (never guessed) |
+| `subsystem_id` | `subsystemId` | **all 49 exist in the taxonomy** (0 unknown) |
+| `category_id` | `category` (name) | lookup `(subsystem_id, name)` in 9.2. **All 49 resolve in their own subsystem** (0 blank, 0 mismatches), so the `tasks_before_write` category rule cannot fire for this set |
+| `status` | `status` | To Do 37 / In Progress 11 / Complete 1 — identical to the new enum, **0 unmapped** |
+| `priority` | `priority` | Medium 31 / High 9 / Critical 7 / Low 2 — identical, **0 unmapped** |
+| `deadline` (timestamptz) | `deadline` (string) | **42 blank → NULL; 7 ISO dates (2026-09-15 … 2026-11-30) → midnight UTC**, the exact convention the app writes (`new Date(d).toISOString()`) and reads (`slice(0,10)`); **0 non-ISO values** |
 | `created_by` | — | **importer profile id** (legacy has no creator) |
-| `created_at` | relational `created_at` if matched, else import time | jsonb tasks carry no timestamp |
-| `completed_at` | — | for `Complete` (1 task): import time (real completion time unknown) |
-| `legacy_assignee_raw` | `assignee` | raw text (0–13 chars), blank → NULL; also an exception per distinct name |
-| `primary_owner_id`, `task_assignees` | — | none (no profiles). Assign in the app after sign-up / from resolved exceptions (a 6.8 relink step). |
+| `created_at` | — | import time (these rows carry no timestamp; only `workspace_state.updated_at` = 2026-09-08 exists) |
+| `completed_at` | — | for the 1 `Complete` task: import time (real completion time unknown) |
+| `legacy_assignee_raw` | `assignee` | raw text; **40 of 49 blank → NULL; 4 distinct names on 9 tasks, 2 names shared by several tasks**; one exception per distinct name |
+| `primary_owner_id`, `task_assignees` | — | none (no profiles). Assigned in the app after sign-up / from resolved exceptions (6.8 relink step) |
+Duplicate titles within a subsystem: 0.
 
-### 9.4 relational `public.tasks` (~30) — **source-of-truth question (Q1)**
-Not assumed. Script 03 reports `ids_in_both`, `only_in_relational_ids`, `only_in_jsonb_count` and whether
-overlapping rows differ in status/title/assignee/subsystem/deadline. Rules once known: match on legacy id;
-if relational rows are a subset/duplicate ⇒ jsonb wins and relational is skipped (logged `skipped`); relational-only
-rows are imported with the same mapping (status/priority are free text there — anything outside the enum ⇒ exception).
+### 9.4 relational `public.tasks` (30) — what the data shows, and decision **D3**
+Script 03 measured the two stores against each other:
 
-### 9.5 purchase_requests + purchase_request_items ← `public.orders` (~2) (`workspace_state.orders` is empty)
+| fact | value |
+|---|---|
+| rows | relational **30**, `workspace_state` **49** |
+| ids in both | **10** |
+| only in `workspace_state` | **39** |
+| only in relational (20) | `t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12 t13 t14 t15 t16 t17 t28 t1787328031626 t1787328873948` |
+| on the 10 shared ids, fields that **differ** | title **8**, status **5**, deadline **10**, subsystem **1**, assignee 0 |
+| relational status / priority | To Do 20 / In Progress 9 / Complete 1 — Critical 11 / High 10 / Medium 9; all valid for the new enums |
+| relational `created_at` | 2026-08-21 … 2026-08-25 (the table has **no** `updated_at`) |
+| `workspace_state.updated_at` | 2026-09-08 17:09 UTC (later than every relational row's creation) |
+| relational subsystem ids | 24 rows use taxonomy ids (front-suspension 4, sae-deliverables 4, shielding-safety 4, drivetrain-fitment 4, pedals-driver-controls 4, rear-suspension-brakes 4) and **6 rows use ids that are not in the taxonomy**: `chassis` 4, `brakes` 1, `rear-suspension` 1 (→ **D4**) |
+
+The two stores are **not copies**: they overlap only partly and the overlap has diverged. Which one is "right" cannot be
+decided from counts (recency per row is unknowable). The relational rows' categories and deadlines have **not** been rule-checked yet.
+`05_tasks_side_by_side_readonly.sql` produces the row-by-row report (ids, titles, status, priority, deadline, subsystem,
+category-validity, and the 10 shared pairs side by side) for a human to review; save it as `results/prod_05_tasks_side_by_side.json`.
+
+**Decision D3 — task source of truth**
+| option | effect |
+|---|---|
+| 1. `workspace_state` only (49) | simplest; the 20 relational-only tasks are **not** carried into v2 (they stay in the untouched legacy table) |
+| **2. Union, `workspace_state` wins on the 10 shared ids (recommended default)** | 39 + 10 from `workspace_state` = 49, **plus the 20 relational-only rows** = up to **69**. `workspace_state` is the later-written store. Nothing is silently dropped; each shared id is imported once (the relational version is logged `skipped`, "superseded"). Rows whose subsystem is unmapped (D4) or whose category is invalid become exceptions and are not imported until resolved. Caveat: the ids `t1…t17` look like early seed data — review with script 05 before accepting |
+| 3. relational wins on the shared ids | not recommended (older store) |
+
+### 9.5 purchase_requests + purchase_request_items ← `public.orders` (2)  (`workspace_state.orders` is empty)
+Facts: ids `o1787624828935`, `o1787626195417`; statuses **Requested 1, Arrived in Shop 1**; urgency **Immediate Need ×2**;
+subsystem **`chassis` ×2 (not in the taxonomy → D4)**; both have `vendor_url` and `part_number`; qty 2–4; **no zero/NULL prices**;
+1 distinct requester (none blank); submitted 2026-08-25.
+
 | new | from | rule |
 |---|---|---|
 | `purchase_requests.legacy_id` / `purchase_request_items.legacy_id` | `orders.id` | preserved |
 | `title` | `item` | |
-| `subsystem_id` | `subsystem_id` | must exist (9.1) else exception |
+| `subsystem_id` | `subsystem_id` | `chassis` is not a v2 subsystem ⇒ **D4**; unresolved ⇒ exception, row **not** imported |
 | `vendor` | `vendor` | |
-| `description` | `urgency`, `requested_by` | `Urgency: … / Legacy requester: …` (no `legacy_requested_by` column exists; also an exception row) |
+| `description` | `urgency`, `requested_by` | `Urgency: Immediate Need · Legacy requester: <raw>` (no `legacy_requested_by` column exists; also 1 exception row) |
 | `requested_by` | — | **importer id** |
 | `status` + **`legacy_status_raw`** | `status` | raw text **always** stored in `legacy_status_raw`; enum mapped below |
-| item: `description`/`quantity`/`unit_cost`/`link`/`notes` | `item`/`qty`/`unit_price`/`vendor_url`/`part_number` | `unit_price = 0` ⇒ NULL ("unknown"; confirm); `notes = 'Part #: …'` |
+| item `description`/`quantity`/`unit_cost`/`link`/`notes` | `item`/`qty`/`unit_price`/`vendor_url`/`part_number` | prices are all > 0 ⇒ kept **as-is** (no 0→NULL rule needed); `notes = 'Part #: …'` |
 | `created_at` | `submitted_at` | |
 | history | — | one `purchase_status_history` row per order: `from NULL → mapped`, `changed_by` importer, `changed_at = submitted_at`, note `Imported; legacy status: <raw>` (the trigger that normally writes it is disabled) |
 | `reviewed_by/at` | — | NULL (legacy reviewer unknown) |
 
-**Legacy status mapping** (proposal; legacy default is `Requested`; confirm against script 03 `orders.status_values`):
-
+**Legacy status mapping (confirmed by the data — only these two values exist):**
 | legacy | → `purchase_status` |
 |---|---|
-| Requested | Submitted |
-| Approved | Approved |
-| Ordered | Ordered |
-| Shipped / In Transit | In Transit |
-| Received / Arrived / Delivered | Arrived in Shop |
-| Complete / Completed | Completed |
-| Rejected / Denied | Rejected |
-| Cancelled | Cancelled |
-| **anything else** | **Draft** + `migration_exceptions` (`purchase_status`) — never guessed |
+| `Requested` (1 order; also the column default) | **Submitted** |
+| `Arrived in Shop` (1 order) | **Arrived in Shop** (already identical to the new enum label) |
+| anything else appearing at import time | **Draft** + `migration_exceptions` (`purchase_status`) — never guessed; `legacy_status_raw` keeps the raw value |
 
-### 9.6 timeline_columns ← `timeline_columns[]` (15)
-`key` = `key` (**preserved**, e.g. `W4`; it is the FK target of the milestone cells — case must match exactly);
-`label` = `label`; `sort_order` = array position (1..15; text keys don't sort); `active` true;
-`highlight` (legacy **string**, 4–7 chars) → boolean: **needs Q5** (`highlight_values` in script 03) before a rule is fixed.
+### 9.6 timeline_columns ← `timeline_columns[]` (15) — resolved
+Keys: `W1 W2 W3 W4 W5 W6 W7 BREAK W9 W10 W11 W12 W13 W14 W15`. **The 8th column has key `BREAK` but label `W8`.**
+- `key` = legacy `key` **verbatim, including `BREAK`** (case exact; it is the FK target of milestone cells); `label` = legacy `label` (`W8`).
+  The UI renders `col.label` and uses `col.key` only for cell lookup, so `BREAK`/`W8` displays as "W8".
+- `sort_order` = array position 1…15 (`BREAK` = 8); `active` = true.
+- `highlight` (legacy string) → boolean: **`none` (14) → false; `emerald` (1, on `W3`) → true.** Rule: any value other than `none`/blank → true.
+  The colour name is not representable (the new column is boolean; the UI uses the gold highlight) — the raw value is kept in `migration_log.notes`.
+- 0 duplicate keys.
 
-### 9.7 timeline_milestones ← `timeline_milestones{subsystemId:{colKey:text}}` (5 cells)
-One row per (subsystem, column): `(subsystem_id, timeline_column_key)` preserved, `milestone_text` = text,
-`updated_by` = importer. Cells whose subsystem or column doesn't exist ⇒ exception (script 03 reports orphans).
-`fabrication` has an empty object ⇒ no rows.
+### 9.7 timeline_milestones ← `timeline_milestones{subsystemId:{colKey:text}}` (5 cells) — resolved
+Exactly 5 cells, **all in column `W4`**: `drivetrain-fitment`, `front-suspension`, `pedals-driver-controls`, `rear-suspension-brakes`,
+`shielding-safety` (text lengths 13–32). **0 cells with an unknown subsystem or column.** `fabrication` has an empty object ⇒ no row.
+`(subsystem_id, timeline_column_key)` preserved; `updated_by` = importer.
 
-### 9.8 recurring_events ← `recurring_events[]` (1)
-`title`; `day_of_week` = `dayOfWeek` (must be 0–6, 0 = Sunday — verify the legacy convention); `time_label` = `time`
-(e.g. `18:00`); `color` = `color`; `subsystem_id` NULL; new uuid (legacy id → `migration_log`).
+### 9.8 recurring_events ← `recurring_events[]` (1) — resolved
+`dayOfWeek` **2**, `time` **`12:30`**, `color` **`navy`** (a colour *name*, not hex — stored verbatim in the free-text `color`),
+title 14 chars, no other keys. `day_of_week = 2` (Tuesday under the new schema's 0 = Sunday convention). **Residual check before
+import:** confirm the legacy UI also counts 0 = Sunday, otherwise the event lands a day off. `subsystem_id` NULL; new uuid (legacy id → `migration_log`).
 
 ### 9.9 No legacy source (created empty)
 `calendar_events`, `milestones`, `competition_settings` (entered by CTO/Admin in the UI), `member_applications`,
-`task_requests`, comments, attachments, CAD, notifications, `audit_logs`. `public.subteams` (~1 row) has no target
-table: recorded in `migration_log` as `skipped`; its lead/members join the exception list.
+`task_requests`, comments, attachments, CAD, notifications, `audit_logs`.
+
+`public.subteams` (1 row, id `st_1787328826054`): `subsystem_id = rear-suspension` (**not** a taxonomy id — D4), a lead, and **4
+members**. v2 has no "team" concept, so it has no target table: recorded in `migration_log` as `skipped`; its lead and 4
+members join the exception list (entity `subsystem_lead` / `subsystem_member`) for the CTO to assign once accounts exist.
 
 ### 9.10 ID preservation summary
 Preserved verbatim: `subsystems.id`, `timeline_columns.key`, milestone composite keys. Preserved in `legacy_id`
@@ -285,6 +334,24 @@ exist; `subsystem_members` (leads/members) after sign-up; `purchase_status_histo
 `timeline_milestones → timeline_columns / subsystems`. All FKs are created by the migrations; the import only
 has to insert parents before children.
 
+### 9.12 Decisions required from you before the import (Phase 6.8) — D3 and D4
+**D3 — which task dataset is the source of truth** — see §9.4 (recommended default: union, `workspace_state` wins on the 10 shared ids).
+
+**D4 — legacy subsystem ids that are not in the taxonomy.** `subsystems.id` is preserved from the taxonomy, and
+`tasks.subsystem_id` / `purchase_requests.subsystem_id` are NOT NULL foreign keys, so these rows cannot be imported until
+each unknown id is mapped to one of the 7 real subsystems. **The data does not say which; nothing is defaulted.**
+
+| unknown legacy id | used by | candidates (from names only — a human must confirm) |
+|---|---|---|
+| `chassis` | 4 relational tasks, **both orders** | `fabrication` (Fabrication & Vehicle Integration)? — or another, the team knows |
+| `brakes` | 1 relational task | `rear-suspension-brakes` (Rear Suspension & Rear Brakes)? `pedals-driver-controls` (brake pedal)? |
+| `rear-suspension` | 1 relational task, the `subteams` row | `rear-suspension-brakes` |
+
+Unresolved ⇒ those rows become `migration_exceptions` and are **not** imported: **both orders** and **up to 6 relational
+tasks** (fewer if some of those 6 are among the 10 shared ids, where the `workspace_state` version — which uses real taxonomy
+ids — wins under D3 option 2; script 05 shows exactly which). Everything in `workspace_state` (49 tasks, all categories,
+timeline, recurring event) is unaffected by D4.
+
 ---
 ## 10. Pre-flight checklist (before ANY change)
 
@@ -292,7 +359,23 @@ has to insert parents before children.
    un-renamed production project — expected).
 2. Decision on Path A/B recorded. **[B only]** explicit approval for the rename; confirm nothing live reads `public.tasks`.
 3. Re-run `01_…` and compare with `results/prod_01_inventory.json` (schema drift check) and re-run `03_…`
-   comparing `fingerprints` (legacy tables are anon-writable ⇒ data can change).
+   comparing `fingerprints` (legacy tables are anon-writable ⇒ data can change). **Baseline captured 2026-09-18 from `prod_03`
+   (hashes only, no content):**
+
+   | source | md5 baseline |
+   |---|---|
+   | `workspace_state.tasks` | `1eb724f93f71730f43f5760366456ff8` |
+   | `workspace_state.taxonomy` | `68605bf421fdd84b5116526cf91dbdbb` |
+   | `workspace_state.orders` | `d751713988987e9331980363e24189ce` |
+   | `workspace_state.timeline_columns` | `e3ffea8a87f2d86777f4733ca7679e3b` |
+   | `workspace_state.recurring_events` | `239a0c95988fd4d94d277ca80dd562be` |
+   | `workspace_state.timeline_milestones` | `43eb4eb1ff583ad31bdbc309559678d5` |
+   | `workspace_state.updated_at` | `2026-09-08T17:09:28.632+00:00` |
+   | table `public.tasks` | `5e34cca3ff667b070de136004e2d598d` |
+   | table `public.orders` | `53df8fc92d204df9c8bb93af878306cb` |
+   | table `public.subteams` | `eefd49f2fe63111d3e87f4e355dc5160` |
+
+   Any difference ⇒ the source moved since this plan; redo the reconciliation before importing.
 4. Export legacy data (SELECT → JSON, saved offline): `workspace_state`, `tasks`, `orders`, `subteams`.
 5. Confirm backup/PITR availability for the target project's plan.
 6. Auth settings configured (Site URL, redirects, email confirmation/SMTP).
@@ -307,7 +390,22 @@ Per stage: run `01_…` and compare to §4 counts. After Stage G (before any dat
 - Bucket `task-attachments` private, 20 MiB, 12 MIME types; exactly 2 `task_attachments_storage_*` policies.
 - Trigger `on_auth_user_created` present and enabled; all v2 triggers `tgenabled='O'`.
 - Behavioural smoke (in the app, as CTO/member/lead): sign-up → pending → approve; deactivate ⇒ `/deactivated`; task/purchase/CAD create; cross-user isolation. (Same 6.6 suite.)
-After import (6.8): row counts = 7 / 25 / 49(+/-Q1) / 15 / 5 / 1 / orders; every `legacy_id` unique; `migration_log` covers every legacy row; unresolved exceptions listed; no orphan FKs; notification count unchanged (import silent); all triggers re-enabled.
+After import (6.8), expected row counts:
+
+| table | expected |
+|---|---|
+| `subsystems` | 7 |
+| `subsystem_categories` | 25 |
+| `tasks` | **49** (D3 option 1) or **up to 69** (option 2, recommended) — minus rows held back as exceptions by D4 (≤ 6 relational tasks) |
+| `timeline_columns` | 15 (keys `W1…W7, BREAK, W9…W15`; exactly 1 with `highlight = true`: `W3`) |
+| `timeline_milestones` | 5 (all `W4`) |
+| `recurring_events` | 1 (`day_of_week = 2`, `12:30`, `navy`) |
+| `purchase_requests` / `purchase_request_items` / `purchase_status_history` | 2 / 2 / 2 if D4 maps `chassis`; otherwise 0 |
+| `profiles` | 1 (importer) + real sign-ups |
+| `notifications`, `audit_logs`, `calendar_events`, `milestones`, `competition_settings` | 0 (import is silent) |
+
+Also: every `legacy_id` unique; `migration_log` covers every legacy row; unresolved exceptions listed; no orphan FKs;
+notification count unchanged; every user trigger `tgenabled = 'O'` again.
 
 ---
 ## 12. Rollback strategy per stage (Q12)
@@ -329,7 +427,10 @@ After import (6.8): row counts = 7 / 25 / 49(+/-Q1) / 15 / 5 / 1 / orders; every
 **Blockers**
 - **B1** `public.tasks` collision ⇒ choose Path A or B (§3). *Blocks 6.8.*
 - **B2** No profile exists to attribute NOT NULL `created_by`/`requested_by`/`changed_by`/`updated_by` ⇒ first CTO signup + promotion (§8) before import.
-- **B3** Q1/Q2/Q5 open (script 03): tasks source of truth, order statuses, `highlight` semantics; also Q4 category/subsystem consistency (a mismatch throws in `tasks_before_write`).
+- **B3 — resolved by script 03:** order statuses, `highlight` semantics, category/subsystem consistency of the 49 `workspace_state` tasks (0 violations, so `tasks_before_write` cannot throw for them), non-ISO deadlines (none).
+- **D3 (decision, blocks the task import)** two divergent task datasets: 30 relational vs 49 `workspace_state`, 10 shared ids that already disagree (§9.4). Recommended default: union, `workspace_state` wins. Review `05_tasks_side_by_side_readonly.sql` output first.
+- **D4 (decision, blocks part of the import)** legacy subsystem ids `chassis` / `brakes` / `rear-suspension` are not in the taxonomy (§9.12). Blocks both orders and up to 6 relational tasks; does **not** block the 49 `workspace_state` tasks.
+- **Open check:** relational rows' categories/deadlines are not yet rule-checked (script 05 does it); recurring-event day-of-week convention (0 = Sunday) to confirm against the legacy UI.
 
 **Risks**
 - **R1 (security, pre-existing)** Every legacy table is world-readable **and writable** with the public key, and `taxonomy[].leadPin` (7 plaintext 4-digit PINs) sits in that public table. Not changed here (rule: don't modify legacy). Recommend: treat PINs as compromised/retired, never migrate them, and restrict/close the legacy policies at cutover (a Phase 6.8+ decision).
@@ -337,7 +438,7 @@ After import (6.8): row counts = 7 / 25 / 49(+/-Q1) / 15 / 5 / 1 / orders; every
 - **R3** SQL Editor atomicity is assumed, not proven on Supabase ⇒ always wrap files in explicit `begin/commit` (proven in rehearsal).
 - **R4** Rehearsals used PGlite + a Supabase stub (validates SQL order/syntax/inventory/rollback, not Supabase-managed behaviour). `postgres` must own the tables to `DISABLE TRIGGER` — production tables are owned by `postgres`; verify for the new tables (created by the same role).
 - **R5** Auth is dashboard config (email confirmation, redirects) and can block the first CTO login.
-- **R6** `dev_01_inventory.json` was empty: equality of live bobcat-dev with the migrations-derived reference is unverified. Cheap fix: run `01_…` on bobcat-dev and compare.
+- **R6** `dev_01_inventory.json` is **still the untouched placeholder** (132 bytes): equality of live bobcat-dev with the migrations-derived reference is unverified. Cheap fix: run `01_…` on bobcat-dev, save the JSON to that file, then `node tools/check_results.mjs` and `node tools/compare_inventory.mjs results/dev_01_inventory.json <reference>`; only Supabase-managed objects should differ. It does not change the production diff or the data mapping.
 - **R7** `audit_logs` stays empty: **no writer exists** (no insert grant, no trigger). Not implemented (per instruction). Where to add later: (a) `admin_set_user_role/approved/active` (0020) — the natural first writers; (b) purchase/CAD approval transitions; (c) task status/owner changes; a `SECURITY DEFINER` insert helper or triggers would be needed, plus a new migration.
 - **R8** Attribution loss: legacy creators/timestamps don't exist ⇒ all imported rows are attributed to the importer with raw legacy text preserved.
 - **R9** Bucket removal and 0017's bucket upsert are outside SQL rollback / need pre-flight #5.
@@ -345,5 +446,10 @@ After import (6.8): row counts = 7 / 25 / 49(+/-Q1) / 15 / 5 / 1 / orders; every
 - **R11** 14 trigger functions with default PUBLIC EXECUTE — accepted, not callable directly.
 
 ## 14. Phase 6.8 entry criteria (not started)
-Path decided (B1) → target ready + Auth configured → 0001–0021 applied and verified (§11) → first CTO active (B2) →
-script 03 results in hand (B3) → fresh drift check (R2) → then write and rehearse the import SQL.
+1. Path A/B decided (B1) and target ready + Auth configured.
+2. 0001–0021 applied and verified (§11); `04_…` was `all_clear` beforehand.
+3. First CTO active (B2); importer id recorded.
+4. **D3** (task source of truth) and **D4** (subsystem mapping) decided in writing; script 05 output reviewed.
+5. Fresh drift check against the fingerprint baseline (§10 #3).
+6. Only then write and rehearse the import SQL (with the trigger-disable list of §9) against a scratch replica.
+(Phase 6.8 has **not** been started.)

@@ -19,6 +19,10 @@ Nothing in this folder is a migration and nothing here is applied automatically.
 | `02_profile_workspace_state_readonly.sql` | production | `results/prod_02_workspace_state_shape.json` | shape of `workspace_state` |
 | `03_reconcile_legacy_data_readonly.sql` | production | `results/prod_03_reconcile.json` | tasks source-of-truth, order statuses, timeline values, rule checks, drift fingerprints |
 | `04_preflight_checks_readonly.sql` | the **target** project, right before applying 0001 | (read the result) | must return `all_clear: true` |
+| `05_tasks_side_by_side_readonly.sql` | production (before the import, for decisions D3/D4) | `results/prod_05_tasks_side_by_side.json` | row-by-row report of the two divergent task datasets + unknown subsystem ids. Returns task titles (needed to compare) but no assignee names/notes/vendors; keep the file local. |
+
+`node tools/check_results.mjs` validates the saved result files (empty / placeholder / SQL-error / wrong-query / wrong-project);
+`--wait <seconds>` polls until all four are ready.
 
 ## Other folders
 - `prestep/00_rename_legacy_tasks.sql` — **Path B only, needs explicit approval** (renames legacy `public.tasks`).

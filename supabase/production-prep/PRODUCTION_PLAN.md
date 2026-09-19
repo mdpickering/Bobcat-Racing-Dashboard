@@ -564,7 +564,7 @@ Also: every `legacy_id` unique; `migration_log` covers every legacy row; no orph
 - **R13** Cross-project data transport is a pasted `jsonb` literal (tens of KB) generated from the fingerprint-verified source.
 - **R14 (new) The live database used to be the test database.** Every Phase-6.x test (RLS probes, deactivation tests, admin flows) ran against bobcat-dev. After go-live, no test account, probe row or destructive test may touch it; further testing needs a **separate test project, to be created later (not now)**.
 - **R15 (new) Cleanup is irreversible.** After the cleanup transaction commits the test data is gone (the `06_` snapshot is the only record; nothing in it is worth restoring). After the real import, **backups/PITR are the only safety net** — confirm the plan's backup capability before importing (§10 #4).
-- **R16 (new) Disposable accounts carry a real privilege.** `cto1@bobcat-test.dev` is a CTO account with a password that was pasted into chat; `lead1`/`member1` likewise. On a live database these are credentials to admin functions — they must be **deleted, not merely re-passworded**, before any real data or user exists.
+- **R16 (new) Disposable accounts carry a real privilege — and 2 of them are currently pinned by HOLD rows** (`lead1`, `member1` cannot be deleted while the kept task / task request exist; §15.8). `cto1@bobcat-test.dev` is a CTO account with a password that was pasted into chat; `lead1`/`member1` likewise. On a live database these are credentials to admin functions — they must be **deleted, not merely re-passworded**, before any real data or user exists.
 - **R17 (new) Storage cannot be cleaned with SQL.** Supabase blocks direct `DELETE` on `storage.objects`/`storage.buckets` (`protect_*_delete`); the 2 test files must be removed from the Dashboard/Storage API, and the bucket + its 2 policies must **stay**.
 - **R18 (new) `rls_auto_enable()` / `ensure_rls` and the extra storage triggers are Supabase-managed** items that live in bobcat-dev but not in the old project — part of the baseline, not something to remove.
 - **R19 (new) The rollback script is now a live-database hazard.** `rollback/99_rollback_v2_schema.sql` drops all 27 tables. It refuses to run without an explicit session confirmation (tested); it must never be run on bobcat-dev.
@@ -632,7 +632,7 @@ be run before any classification is final.
 |---|---|---|---|
 | 0 | **Freeze** bobcat-dev | Dashboard: pause sign-ups; nobody creates test data | — |
 | 1 | **Snapshot** | run `06_…` and `01_…` on bobcat-dev → `results/dev_06_data_inventory.json`, fresh `01` | `check_results.mjs` validates; `01` identical to baseline/reference |
-| 2 | **Classify** | ✅ **done 2026-09-19** from `06_` (§15.8); re-run with `07_` output (§15.9) | every HOLD has a question for the owner — **15 HOLD + 67 DELETE\* awaiting the owner / script 07** |
+| 2 | **Classify** | ✅ **done 2026-09-19** from `06_` + `07_` (§15.8, §15.9) | **17 HOLD awaiting the owner's decision** (216 DELETE, 3 KEEP, 0 unresolved) |
 | 3 | **Approve** | the owner approves the list and the keep-list in writing | **no deletion before this** |
 | 4 | **Generate** the final cleanup SQL from the rehearsed order (§15.6) with a precondition (exact counts equal the approved snapshot ⇒ detects drift) and post-conditions | reviewed by the owner | dry-run counts match |
 | 5 | **Delete application data** in one transaction (SQL Editor, `begin … commit`) | children-first order; assertions: only the owner's profile remains | any failed assertion ⇒ rollback, nothing deleted |
@@ -654,52 +654,57 @@ be run before any classification is final.
 - Also rehearsed: the rollback script's confirmation guard (refuses unconfirmed; restores a replica exactly when confirmed).
 The final SQL (step 4) is deliberately **not** written yet: it is generated from the approved list, not before it.
 
-### 15.8 The approval list (produced 2026-09-19 from `06_`; summary only — the row-by-row list with e-mails/titles is local: `results/dev_cleanup_classification.md`)
+### 15.8 The approval list — FINAL classification (inventories 06 + 07; summary only — the row-by-row list with e-mails/titles is local: `results/dev_cleanup_classification.md`)
 `node tools/classify_dev_cleanup.mjs` classifies **every** item — 229 table rows + 4 auth users + 2 storage files + the bucket = **236** — and checks that every counted row is covered.
-Rules: **KEEP** = the owner's account; **HOLD** = names the owner's account (*direct*), or has no actor column but was created/updated inside the owner's demonstrated session window
-2026-09-18 03:55–04:16 UTC (*probable*), or is a test row that cannot be deleted without destroying/altering a HOLD row (*dependency*); **DELETE** = test data; **DELETE\*** = test child row whose actor
-fields were not in inventory 06 (see 15.9).
+Rules: **KEEP** = the owner's account and the bucket; **HOLD** = names the owner's account in *any* actor field (*direct*), or has no actor column but was created/updated inside one of the owner's
+demonstrated session windows (*probable*), or is a test row that cannot be deleted without destroying/altering a HOLD row (*dependency*); **DELETE** = confirmed test data. No unresolved (DELETE\*) rows remain.
 
-| table | rows | DELETE | DELETE\* | HOLD | KEEP |
-|---|---|---|---|---|---|
-| auth users / profiles | 4 / 4 | 3 / 3 | | | 1 / 1 |
-| subsystems | 3 | 1 | | 2 | |
-| subsystem_members | 4 | 4 | | | |
-| subsystem_categories | 11 | 10 | | 1 | |
-| timeline_columns / timeline_milestones | 6 / 2 | 3 / 1 | | 3 / 1 | |
-| competition_settings | 5 | 5 | | | |
-| recurring_events / milestones | 2 / 2 | 1 / 2 | | 1 / 0 | |
-| calendar_events / migration_exceptions / member_applications | 3 / 3 / 6 | all | | | |
-| tasks | 23 | 22 | | 1 | |
-| task_assignees / task_requests / task_comments | 5 / 13 / 14 | 3 / 13 / 12 | | 2 / 0 / 2 | |
-| comment_mentions / task_attachments | 12 / 7 | 7 (attachments) | 12 (mentions) | | |
-| purchase_requests / _items / _status_history | 11 / 2 / 35 | 10 | 2 items + 34 history | 1 + 1 history | |
-| cad_reviews / _versions / _comments | 18 / 13 / 6 | 18 | 13 + 6 | | |
-| notifications | 19 | 19 | | | |
-| storage objects / bucket | 2 / 1 | 2 | | | 1 (bucket) |
-| **TOTAL** | **236** | **151** | **67** | **15** | **3** |
+**FINAL TOTALS: DELETE 216 · HOLD 17 · KEEP 3 · unresolved 0 (= 236).** Nothing has been deleted.
 
-**The 15 HOLD items** (ids/titles only; each is a *test* artifact of the owner's own UI session on 2026-09-18 ~04:03–04:10 UTC):
+| table | rows | DELETE | HOLD | KEEP |
+|---|---|---|---|---|
+| auth users / profiles | 4 / 4 | 3 / 3 | | 1 / 1 |
+| subsystems / subsystem_members / subsystem_categories | 3 / 4 / 11 | 1 / 4 / 10 | 2 / 0 / 1 | |
+| timeline_columns / timeline_milestones | 6 / 2 | 3 / 1 | 3 / 1 | |
+| competition_settings / recurring_events / milestones | 5 / 2 / 2 | 5 / 1 / 2 | 0 / 1 / 0 | |
+| calendar_events / migration_exceptions / member_applications | 3 / 3 / 6 | 3 / 3 / 6 | | |
+| tasks / task_assignees | 23 / 5 | 22 / 3 | 1 / 2 | |
+| task_requests / task_comments / comment_mentions / task_attachments | 13 / 14 / 12 / 7 | 12 / 12 / 11 / 7 | 1 / 2 / 1 / 0 | |
+| purchase_requests / _items / _status_history | 11 / 2 / 35 | 10 / 2 / 34 | 1 / 0 / 1 | |
+| cad_reviews / _versions / _comments | 18 / 13 / 6 | 18 / 13 / 6 | | |
+| notifications | 19 | 19 | | |
+| storage objects / bucket | 2 / 1 | 2 / 0 | | 0 / 1 |
+| **TOTAL** | **236** | **216** | **17** | **3** |
+
+**The owner's demonstrated sessions** (from every action attributed to the owner's account): **2026-09-17 22:31–22:45 UTC** and **2026-09-18 03:55–04:15 UTC**.
+
+**The 17 HOLD items** (ids/titles only; every one is a *test* artifact from the owner's own UI testing):
 | type | item |
 |---|---|
+| **direct** (7) | task request "Still Pending" (status *approved*, requested by a test account, **reviewed by the owner** on 2026-09-17 22:39 UTC) in `test-drivetrain` |
 | direct | 2 task comments by the owner (2 and 5 characters) on task "Phase 6.5 conversion test" |
-| direct | purchase request "TESTING" (Draft) in subsystem `chunk4-test-brakes` (+ its 1 auto-generated status-history row) |
+| direct | 1 comment mention: the owner's 5-character comment @mentions a test account |
+| direct | purchase request "TESTING" (Draft) in `chunk4-test-brakes` + its 1 status-history row (changed by the owner) |
 | direct | timeline cell `test-drivetrain / w2` "Sprocket order placed", last edited by the owner |
-| probable | recurring event "Tech Meeting" (Tue 12:30, no colour) — **resembles the real legacy event** (same weekday/time), so the import would duplicate it |
-| probable | timeline columns `t6e-w2-…` ("Week 2") and `t6e-w1-…` ("Week One (renamed)") — edited at 04:06 UTC |
-| probable | category `G-cat-…271` under `test-drivetrain` — edited at 03:55 UTC |
-| dependency | task "Phase 6.5 conversion test" (+ its 2 assignee rows), subsystems `test-drivetrain` and `chunk4-test-brakes`, timeline column `w2` |
+| **probable** (4) | recurring event "Tech Meeting" (Tue 12:30, no colour) — **resembles the real legacy event** (same weekday/time), so the import would duplicate it |
+| probable | timeline columns `t6e-w2-…` ("Week 2") and `t6e-w1-…` ("Week One (renamed)") — edited 2026-09-18 04:06 UTC |
+| probable | category `G-cat-…271` under `test-drivetrain` — edited 2026-09-18 03:55 UTC |
+| **dependency** (6) | task "Phase 6.5 conversion test" (parent of the owner's comments) + its 2 assignee rows; subsystems `test-drivetrain` and `chunk4-test-brakes`; timeline column `w2` |
 
-**Consequences if the HOLD rows are kept:** the test account `lead1` **cannot be deleted** (it created the kept task, RESTRICT); deleting `member1` would **alter** the kept task (its primary owner is cleared and its
-assignee rows cascade away). `lead1` is a team-lead account whose password was shared in chat (R16) — so keeping the HOLD rows leaves a known credential alive on the live database unless it is at least disabled (banned).
+**What 07 changed:** it turned the earlier 15 HOLD into 17 — script 07 revealed the owner's **task-request review** (a new direct association in a table that inventory 06 did not list) and the **@mention** in the
+owner's comment; the status-history row moved from *dependency* to *direct*. Of the 67 former DELETE\* rows, **66 are confirmed test-only and became DELETE** (34 purchase history, 2 line items, 13 CAD versions, 6 CAD comments, 11 mentions) and **1 became HOLD** (the mention); the
+19 notifications are now confirmed row by row (all addressed to test accounts). No CAD row, CAD reviewer column or notification names the owner.
 
-**Owner options:** (1) **recommended — approve deleting all HOLD rows** (they are all test artifacts): the database ends with only the owner's account; (2) keep some/all HOLD rows and accept the residue
-(`lead1` remains, at minimum banned and its password reset; the listed subsystems/columns remain and must be cleaned later); (3) approve a subset. Nothing is deleted until the owner answers.
+**Consequences if the HOLD rows are kept** (both are hard foreign-key blocks): the test account **`lead1` cannot be deleted** (it created the kept task) and the test account **`member1` cannot be deleted** (it is the
+requester of the kept task request). Both are known-credential accounts whose passwords were shared in chat (R16) — two live logins would remain on the production database.
 
-### 15.9 Gate: script 07 must be clean before approval (the 67 DELETE\* rows)
-Inventory 06 only *counted* purchase status history (34), purchase line items (2), CAD versions (13), CAD comments (6) and comment mentions (12) and omitted the reviewer columns
-(`reviewed_by` on purchases and task requests, `reviewer_id` on CAD reviews). `07_child_rows_actors_readonly.sql` (read-only, validated on the fixture) lists them row by row with actor e-mails.
-**Any row that names the owner's account there moves from DELETE\* to HOLD; otherwise DELETE\* becomes DELETE.** Save as `results/dev_07_child_actors.json`; the classifier is re-run with it.
+**Owner options:** (1) **recommended — approve deleting all 17 HOLD rows** (all test artifacts): **233 DELETE + 3 KEEP**, the database ends with only the owner's account; (2) keep some/all HOLD rows and accept the
+residue (`lead1` and `member1` remain — at minimum banned and their passwords reset — plus the listed subsystems/columns, to be cleaned later); (3) approve a subset (the dependency rows must follow their parents).
+Nothing is deleted until the owner answers.
+
+### 15.9 Inventory 07 — gate cleared
+`07_child_rows_actors_readonly.sql` was run on bobcat-dev (2026-09-19 21:54 UTC, 12 minutes after 06) and saved as `results/dev_07_child_actors.json`; it validates, and **every overlapping row count matches 06** (nothing changed in between).
+It resolved the 67 former DELETE\* rows (§15.8). The classifier now uses it. **The approval list is final — pending the owner's decision on the 17 HOLD rows.**
 
 ### 15.10 What has NOT been done
 No row, account, file or setting in bobcat-dev was deleted or changed; nothing was imported; the old project was not touched; `workspace_state` was not touched; no cutover step was taken; Phase 6.8 has not started.

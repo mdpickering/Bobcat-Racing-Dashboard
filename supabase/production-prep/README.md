@@ -38,6 +38,13 @@ Postgres only. `rollback/99_rollback_v2_schema.sql` must never be run on bobcat-
 (2 storage files + 3 test auth users) and `10_post_dashboard_verify_readonly.sql`. Regenerate with `node tools/generate_cleanup_sql.mjs`; rehearse with `tools/rehearse_cleanup_sql.mjs`.
 Run order: 08a → 08b → Dashboard steps → 10. **Never run any of it on the old legacy project** (08 refuses if `workspace_state`/`orders`/`subteams` exist). See `PRODUCTION_PLAN.md` §15.11.
 
+## Data extraction and import (Phase 6.8 preparation — nothing executed)
+`import/30_extract_legacy_source_readonly.sql` — run on the **OLD** project only (read-only; strips the plaintext lead PINs inside the query) → save as `results/prod_30_source_export.json`.
+`node tools/validate_source_export.mjs` validates it (blocks on PINs / missing sections; reports drift vs the recorded baseline).
+`node tools/generate_import_sql.mjs` builds `results/import/40a_import_DRY_RUN.sql` (ends in ROLLBACK) and `40b_import_EXECUTE.sql` (ends in COMMIT) from the validated export via `import/40_import_template.sql`
+(git-ignored output: it embeds the legacy data). Run them on **bobcat-dev only**: 40a → read the result → 40b → `import/41_post_import_verify_readonly.sql`.
+`tools/rehearse_import.mjs` (+ `tools/synthetic_legacy.mjs`) rehearses the whole pipeline on a scratch Postgres with synthetic, PIN-bearing legacy data. See `PRODUCTION_PLAN.md` §16.
+
 ## Other folders
 - `prestep/00_rename_legacy_tasks.sql` — **NOT USED**: bobcat-dev has no legacy `tasks` table and the old project is never modified, so nothing is renamed.
   Kept only as the record of the rejected Path B.

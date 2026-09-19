@@ -745,3 +745,67 @@ the fixture equals the inventory; the dry run passes and changes nothing; execut
 a disabled trigger, a third storage file, and the owner missing from `auth.users`.
 **Caveats:** the rehearsal ran as a Postgres superuser on PGlite, not as Supabase's `postgres` role — the **dry run on bobcat-dev is the real confirmation**. The schema counts (27 / 88 / 38 / 36) come from `dev_01_inventory.json` (2026-09-18); if anything in
 bobcat-dev changed since, the run aborts safely and rolls back.
+
+
+## 16. Phase 6.8 — data extraction and import preparation (prepared 2026-09-19; **NOTHING executed, no data extracted, no import**)
+Starting state (reported by the owner, 2026-09-19): bobcat-dev is clean and verified — `all_ok = true`, 1 auth user, 1 profile, 0 application rows, 0 storage objects, 27 tables, 88 policies, bucket + its 2 policies intact, no test users.
+The old live project is the read-only legacy source; the live website is **not** pointed at bobcat-dev; no cutover has started; no service-role key or password is used.
+
+### 16.1 Source extraction (OLD project, read-only): `import/30_extract_legacy_source_readonly.sql`
+One `SELECT`, run by the owner on the **old** project, saved as `results/prod_30_source_export.json` (git-ignored). It returns:
+| section | content |
+|---|---|
+| `workspace_state` | the full document: `id`, `updated_at`, `taxonomy` (7 subsystems, 25 categories with engineering rules, leads, members), `tasks` (49), `orders` (empty), `timeline_columns` (15), `recurring_events` (1), `timeline_milestones` (5 cells) |
+| `tasks` | all 30 rows, all columns of the legacy relational table |
+| `orders` | both rows, all columns |
+| `subteams` | the 1 row, all columns |
+| `fingerprints` | md5 hashes on the **original** data, same formulas as script 03 → drift check against the §10 baseline |
+| `export_meta` / `row_counts` | format marker, timestamp, source database, and the **count** of PINs removed |
+
+**Expected size: about 20–40 KB** (a worst-case synthetic copy built from the real field-length maxima measured 28.5 KB minified / 35 KB pretty). It contains titles, notes and people's names (needed as raw legacy values), so it stays local.
+**Security:** `taxonomy[].leadPin` (plaintext PINs) is **stripped inside the SELECT** (`e - 'leadPin'`) — the PINs never leave the old database, never enter the export file, chat or import SQL. The extraction is read-only (verified: source rows identical before/after).
+**Validation:** `node tools/validate_source_export.mjs` blocks on any PIN/credential-like key, a missing section, duplicate ids/names, a `$legacy$` sequence (would break the SQL literal); it reports drift against the baseline fingerprints and counts (49 / 30 / 2 / 1 / 7 / 25 / 15 / 5 / 1) and the D3/D4 facts (shared ids, relational-only ids, unknown subsystem ids).
+
+### 16.2 Import design (bobcat-dev): `import/40_import_template.sql` → generated `results/import/40a_import_DRY_RUN.sql` / `40b_import_EXECUTE.sql`
+The generator (`tools/generate_import_sql.mjs`) refuses unless the export validates (a drift warning needs an explicit `--accept-drift`), embeds the export as one minified jsonb literal with its md5, and writes data-bearing SQL only to the git-ignored `results/import/`. **The import script does not exist as executable SQL until the validated export exists.**
+| requirement | how it is met |
+|---|---|
+| preserve all 7 subsystems / 25 categories | inserted verbatim from the taxonomy: text ids preserved; categories get new uuids and are mapped by `(subsystem_id, name)`; `migration_log` records each |
+| timeline | 15 columns, **keys preserved incl. `BREAK` (label `W8`)**, `sort_order` = position; highlight `none`→false, `emerald`→true; 5 cells (all `W4`, `updated_by` = importer); the recurring event (Tue 12:30, `navy`) |
+| **union of tasks, `workspace_state` wins** | workspace_state rows first; a relational row whose id exists there is **not** imported (logged `task_relational_superseded`, `skipped`) but donates its `created_at`; the relational-only rows are imported |
+| **hold unresolved chassis/brakes/rear-suspension** | a row whose subsystem is not one of the 7 is **never guessed**: it is held in `migration_exceptions` (`task_unmapped_subsystem` / `purchase_request_unmapped_subsystem` / `subteam_unmapped_subsystem`) with the **complete legacy record** in `context` (plus `unmapped_field/value`), and `migration_log` status `exception`. An explicit, owner-approved alias map exists only for a *later* re-import (`--aliases`), empty now |
+| **never migrate PINs** | stripped at extraction; the validator blocks them; the SQL aborts if the payload text contains `leadpin`; a post-check asserts no exception/log row mentions it |
+| legacy ids / raw values | `tasks.legacy_id`, `legacy_assignee_raw`, `purchase_requests.legacy_id` + `legacy_status_raw`, item `legacy_id`; anything without a column goes to `migration_log`/exception `context` |
+| **purchase status mapping** | `Requested`→Submitted; `Arrived in Shop`→Arrived in Shop; plus synonyms (Approved, Ordered, Shipped/In Transit, Received/Arrived/Delivered, Complete(d), Rejected/Denied, Cancelled); **anything else → Draft + a `purchase_status` exception**; raw text always in `legacy_status_raw`. Both real orders are `chassis` ⇒ held (0 purchase rows initially); the full path (request + item + history row) is exercised in the rehearsal with an explicit alias |
+| deadlines | ISO date → **midnight UTC** (the app's own convention); blank → NULL; any other format → NULL + `task_invalid_deadline` exception; invalid category → `category_id` NULL + `task_invalid_category` exception (the task is still imported) |
+| unusable rows | missing title, invalid status or priority ⇒ held as exceptions, not guessed |
+| people | one unresolved exception per distinct assignee, lead, member, order requester (raw text; no accounts exist) |
+| **attribution / my profile** | `created_by`, `requested_by`, `changed_by`, `updated_by` = the importer = **the owner's existing profile** (id read from inventory 06). The profile row is **never written**: its md5 fingerprint is taken before and compared after (abort on any change); the import also requires exactly 1 profile / 1 auth user |
+| **auth.uid()-dependent triggers** | the ones that would overwrite values or notify are **disabled by name** for the transaction (`tasks_before_write`, `timeline_milestones_before_write`, `purchase_requests_before_write`, `_log_status_change`, `_notify_status_change`, `task_assignees_notify_assignment`, `task_requests_notify_reviewed`, `cad_reviews_notify_status_change`, `comment_mentions_notify`, `member_applications_notify_reviewed`), re-enabled before the post-checks, which assert every public/`auth.users` trigger is enabled again and the count is still 38 |
+| **no fake notification spam** | the notification triggers are disabled **and** a post-check requires 0 rows in `notifications` |
+| `migration_log` / `migration_exceptions` | one shared batch id; every legacy record accounted for (workspace_state doc, 7 subsystems, 25 categories, 15 columns, cells, recurring event, all 69 task records, 10 superseded, 2 orders, 1 subteam) |
+The **task accounting** is asserted: workspace_state (49) + relational-only (20) = **69 = imported + held**, with 10 shared relational rows superseded.
+
+### 16.3 Safety features of the import SQL (all inside one transaction)
+1. **Guards:** aborts if legacy tables exist (pasted into the old project), the v2 tables are missing, the payload's md5 differs from the one recorded at generation (corrupted paste), the payload mentions `leadpin`, or the importer is not an approved active cto/admin.
+2. **Clean-state precondition:** exactly 1 profile and 1 auth user, all 26 data tables empty, 27 tables / 88 policies / 38 public triggers / 36 public functions, no trigger already disabled — so the import **cannot run twice** and cannot mix with other data.
+3. **Independent expectation:** the generator computes, in JavaScript and separately from the SQL, the expected row counts (subsystems … tasks, deadlines, categories, assignees, purchases), the exception counts **per type** and the migration_log counts **per entity/status**; the SQL asserts equality. If the two implementations of the mapping disagree the import aborts (this already caught a discrepancy during the rehearsal).
+4. **Invariants:** importer attribution everywhere, no owner set, categories belong to their subsystem, log ↔ tasks consistent, all exceptions unresolved with the one batch id, no PIN reference, owner profile and auth user unchanged, schema unchanged.
+5. **Dry run first:** `40a` is identical but ends in `ROLLBACK` — it proves the whole import on the real bobcat-dev without keeping anything; `41_post_import_verify_readonly.sql` re-checks the bookkeeping after `40b`.
+
+### 16.4 Rehearsal evidence (`tools/rehearse_import.mjs`, scratch Postgres, **never Supabase**) — **39/39 checks**
+Pipeline: a synthetic legacy database shaped like the real one (real ids/counts/distributions/field-length maxima; fake names and **fake PINs**) → the real extraction SQL → the validator → the generator → the import into a scratch copy of the post-cleanup bobcat-dev.
+Passed: extraction contains no PIN and is read-only; the validator accepts it and the generator refuses a drifted export without `--accept-drift`; the dry run passes and rolls back leaving every table empty and the owner profile byte-identical; the execute run matches the expectation; 7 subsystem ids preserved; `BREAK`/`W8` and the single highlighted column; 5 cells + the recurring event; D3 (an overlapping id takes the workspace_state title/subsystem and keeps the relational `created_at`); attribution and no owner; midnight-UTC deadlines; `completed_at` only on Complete; raw assignees; D4 (5 unmapped tasks + both orders + the subteam held with full records, no purchases created); **no PIN anywhere**; 0 notifications and all triggers re-enabled; owner profile unchanged; `migration_log` complete; `41_` returns `all_ok`; a second run is refused; the **mapped-purchase path** (explicit alias): `Requested`→Submitted, `Arrived in Shop`→Arrived in Shop, raw status kept, urgency/requester in the description, part number in the item notes, history from NULL, importer attribution, and the un-aliased brakes/rear-suspension rows still held; **9 negative tests** each abort and leave the target empty (tampered payload, target not empty, legacy table present, importer not admin, a second account, a disabled trigger, a smuggled `leadPin` with a matching md5, an expectation mismatch, corrupted JSON).
+Two defects were found and fixed by the rehearsal before any real run: `migration_log.status` is an enum (text `CASE` needed a cast) and the JS expectation recorded a zero-count key the SQL correctly omits.
+**Caveats:** PGlite as a Postgres superuser is not Supabase's `postgres` role — the **dry run on bobcat-dev is the real confirmation**; the numbers for the real data (held-task count etc.) come from the real export, not the synthetic one.
+
+### 16.5 What the real import is expected to produce
+7 subsystems · 25 categories · 15 timeline columns (1 highlighted) · 5 timeline cells · 1 recurring event · tasks: **imported + held = 69** (the held count = relational-only tasks whose subsystem is `chassis`/`brakes`/`rear-suspension`, ≤ 6; `workspace_state` tasks are never held) · **0** purchase requests (both orders `chassis` ⇒ held) · **0** notifications · `migration_exceptions`: held records, unresolved people (assignees, leads, members, requester), informational category/deadline flags.
+
+### 16.6 Exact next manual steps (nothing below has been done)
+1. **Old project → SQL Editor:** run `supabase/production-prep/import/30_extract_legacy_source_readonly.sql` (read-only), copy the single JSON cell, save it as `supabase/production-prep/results/prod_30_source_export.json`.
+2. `node supabase/production-prep/tools/validate_source_export.mjs` → expect **VALID** (all 10 fingerprints equal the baseline). If it warns about drift, tell me before anything else.
+3. I generate `results/import/40a_import_DRY_RUN.sql` and `40b_import_EXECUTE.sql` from the validated export and show you the summary (row counts, held tasks, exceptions).
+4. **bobcat-dev → SQL Editor:** run `40a_import_DRY_RUN.sql`; read the result ("IMPORT DRY RUN PASSED …") and tell me.
+5. Only after that, on your instruction: run `40b_import_EXECUTE.sql`, then `41_post_import_verify_readonly.sql` (must return `all_ok: true`).
+6. Then Phase 6.8 continues with app-level verification against the imported data; the live website is still **not** switched (cutover is a separate, later stage).

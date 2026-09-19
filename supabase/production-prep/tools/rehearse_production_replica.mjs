@@ -1,4 +1,4 @@
-﻿// Phase 6.7 tool: rehearse migrations against a scratch replica of the REAL production shape
+// Phase 6.7 tool: rehearse migrations against a scratch replica of the REAL production shape
 // (four legacy tables + open policies + realtime publication, built from results/prod_01_inventory.json).
 // Scenarios: S0 replica snapshot | S1 unmodified 0001-0021 (fails at 0004: tasks exists) |
 //            S2 prestep rename + 0001-0021 | S3 rollback/99 + undo rename | S4 object counts after every migration.
@@ -101,7 +101,9 @@ let s2db;
 console.log('\n### S3: rollback (99 then undo-rename) on the S2 database');
 {
   const db = s2db;
-  await run(db, 'rollback/99_rollback_v2_schema.sql');
+  // the rollback script refuses to run without an explicit confirmation (safety guard, live-DB promotion)
+  try { await run(db, 'rollback/99_rollback_v2_schema.sql'); console.log('  GUARD FAILED: rollback ran without confirmation'); } catch (e) { console.log('  guard OK: rollback refuses without confirmation ->', String(e.message).slice(0, 70)); await db.exec('rollback;'); }
+  await db.exec("select set_config('app.confirm_rollback_v2','DROP-EVERYTHING',false);"); await run(db, 'rollback/99_rollback_v2_schema.sql');
   await run(db, 'rollback/00_undo_rename_legacy_tasks.sql');
   await snap(db, 'replica_s3_after_rollback');
   console.log('  rollback executed without error');

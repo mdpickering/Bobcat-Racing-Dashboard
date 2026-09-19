@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'results');
-const wrapperKeys = ['inventory', 'profile', 'reconcile', 'preflight'];
+const wrapperKeys = ['inventory', 'profile', 'reconcile', 'preflight', 'dev_data_inventory'];
 
 const specs = [
   { file: 'prod_01_inventory.json', kind: 'inventory', label: 'production catalog inventory (script 01)',
@@ -21,6 +21,9 @@ const specs = [
     keys: ['shape', 'row_count', 'top_level_keys', 'enum_like_values'] },
   { file: 'prod_03_reconcile.json', kind: 'reconcile', label: 'legacy data reconciliation (script 03)',
     keys: ['workspace_state', 'fingerprints', 'tasks_reconcile', 'orders', 'subteams', 'taxonomy', 'task_rules_check', 'timeline', 'recurring_events'] },
+  // Phase 6.8 preparation: optional (does not affect "ALL READY"); wrapper key is dev_data_inventory
+  { file: 'dev_06_data_inventory.json', kind: 'devdata', optional: true, label: 'bobcat-dev auth users + test data (script 06)',
+    keys: ['meta', 'auth_users', 'profiles', 'row_counts', 'tasks', 'storage_objects', 'member_applications'] },
 ];
 
 function unwrap(text) {
@@ -66,6 +69,9 @@ function check(spec) {
     if (!isDev && !names.includes('public.workspace_state')) res.warnings.push('no public.workspace_state — is this the production project?');
   } else if (spec.kind === 'profile') {
     res.summary = `${v.row_count} row(s), ${(v.shape || []).length} JSON paths, ${v.total_json_nodes} nodes`;
+  } else if (spec.kind === 'devdata') {
+    const rc = v.row_counts || {};
+    res.summary = `${(v.auth_users || []).length} auth users, ${(v.profiles || []).length} profiles, ${Object.values(rc).reduce((a, b) => a + Number(b), 0)} rows in ${Object.keys(rc).length} tables, ${(v.storage_objects || []).length} storage objects`;
   } else {
     const tr = v.tasks_reconcile || {};
     res.summary = `relational tasks=${tr.relational_count}, jsonb tasks=${tr.jsonb_count}, in both=${tr.ids_in_both}, orders=${v.orders?.count}`;
@@ -88,6 +94,8 @@ function runOnce(quiet = false) {
   }
   if (!quiet) {
     for (const r of results) {
+      const opt = specs.find((s) => s.file === r.file)?.optional;
+      if (opt && !r.ok && /^(MISSING|EMPTY|PLACEHOLDER)/.test(r.status)) { console.log(`○ ${r.file.padEnd(38)} (optional, not provided yet)`); continue; }
       console.log(`${r.ok ? '✔' : '✘'} ${r.file.padEnd(38)} ${r.status}`);
       if (r.summary) console.log(`    ${r.summary}`);
       for (const w of r.warnings) console.log(`    ⚠ ${w}`);
@@ -100,8 +108,9 @@ const argv = process.argv.slice(2);
 const wi = argv.indexOf('--wait');
 if (wi === -1) {
   const r = runOnce();
-  const ready = r.every((x) => x.ok);
-  console.log(ready ? '\nALL FOUR RESULT FILES READY.' : '\nNOT READY: ' + r.filter((x) => !x.ok).map((x) => x.file).join(', '));
+  const req = (x) => !specs.find((s) => s.file === x.file)?.optional;
+  const ready = r.filter(req).every((x) => x.ok);
+  console.log(ready ? '\nALL REQUIRED RESULT FILES READY.' : '\nNOT READY: ' + r.filter((x) => req(x) && !x.ok).map((x) => x.file).join(', '));
   process.exit(ready ? 0 : 1);
 } else {
   const secs = Number(argv[wi + 1]) || 590;
@@ -111,7 +120,7 @@ if (wi === -1) {
     const r = runOnce(true);
     const sig = r.map((x) => x.file + ':' + x.status.slice(0, 20)).join('|');
     if (sig !== lastSig) { lastSig = sig; console.log(new Date().toISOString().slice(11, 19), r.map((x) => (x.ok ? '✔' : '✘') + x.file.replace('.json', '')).join('  ')); }
-    if (r.every((x) => x.ok)) { console.log('\nREADY'); runOnce(); process.exit(0); }
+    if (r.filter((x) => !specs.find((s) => s.file === x.file)?.optional).every((x) => x.ok)) { console.log('\nREADY'); runOnce(); process.exit(0); }
     if (Date.now() > end) { console.log('\nTIMEOUT after ' + secs + 's — still waiting on: ' + r.filter((x) => !x.ok).map((x) => x.file).join(', ')); process.exit(2); }
     await new Promise((res) => setTimeout(res, 5000));
   }

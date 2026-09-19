@@ -18,14 +18,19 @@ Nothing in this folder is a migration and nothing here is applied automatically.
 | `01_inspect_schema_readonly.sql` | production **and** bobcat-dev | `results/prod_01_inventory.json`, `results/dev_01_inventory.json` | full catalog inventory |
 | `02_profile_workspace_state_readonly.sql` | production | `results/prod_02_workspace_state_shape.json` | shape of `workspace_state` |
 | `03_reconcile_legacy_data_readonly.sql` | production | `results/prod_03_reconcile.json` | tasks source-of-truth, order statuses, timeline values, rule checks, drift fingerprints |
-| `04_preflight_checks_readonly.sql` | the **target** project, right before applying 0001 | (read the result) | must return `all_clear: true` |
+| `04_preflight_checks_readonly.sql` | a **new/empty** project, right before applying 0001 (**not applicable to bobcat-dev**, which already has 0001–0021) | (read the result) | must return `all_clear: true` on an empty project |
 | `05_tasks_side_by_side_readonly.sql` | production (before the import, for decisions D3/D4) | `results/prod_05_tasks_side_by_side.json` | row-by-row report of the two divergent task datasets + unknown subsystem ids. Returns task titles (needed to compare) but no assignee names/notes/vendors; keep the file local. |
+| `06_inventory_dev_data_readonly.sql` | **bobcat-dev only** (the new live DB, before cleanup) | `results/dev_06_data_inventory.json` (optional file) | auth users + every application table's test data, exact row counts, storage objects. Returns e-mails and titles (needed to classify test data) — keep it local. |
+
+**Target environment (amended 2026-09-19): bobcat-dev is being promoted to the live database; the old project is a read-only source.**
+See `PRODUCTION_PLAN.md` §3 and §15. **Nothing here deletes or imports anything.** `tools/rehearse_cleanup.mjs` rehearses the test-data cleanup on a scratch
+Postgres only. `rollback/99_rollback_v2_schema.sql` must never be run on bobcat-dev (it refuses without an explicit confirmation setting).
 
 `node tools/check_results.mjs` validates the saved result files (empty / placeholder / SQL-error / wrong-query / wrong-project);
 `--wait <seconds>` polls until all four are ready.
 
 ## Other folders
-- `prestep/00_rename_legacy_tasks.sql` — **NOT USED: Path A (a separate new production project) was chosen**, so nothing is renamed.
+- `prestep/00_rename_legacy_tasks.sql` — **NOT USED**: bobcat-dev has no legacy `tasks` table and the old project is never modified, so nothing is renamed.
   Kept only as the record of the rejected Path B.
 - `rollback/99_rollback_v2_schema.sql` — destructive, explicit-name removal of everything 0001–0021 create.
   `rollback/00_undo_rename_legacy_tasks.sql` — undoes the Path B rename.

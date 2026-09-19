@@ -8,8 +8,22 @@
 -- and only with explicit approval. If it hits a dependency error nothing is dropped (one transaction).
 -- Not covered by SQL (Supabase blocks direct DELETE on storage.buckets/objects): the empty
 -- 'task-attachments' bucket must be removed via Dashboard > Storage, if desired.
+--
+-- !!! bobcat-dev IS BEING PROMOTED TO THE NEW LIVE DATABASE (decision recorded 2026-09-19). !!!
+-- !!! NEVER run this on bobcat-dev: it would delete the live schema and every row in it.   !!!
+-- The script therefore REFUSES TO RUN unless the same session first sets an explicit confirmation:
+--     select set_config('app.confirm_rollback_v2', 'DROP-EVERYTHING', false);
+-- (This guard is for a throw-away scratch/test project only.)
 -- =========================================================
 begin;
+
+do $guard$
+begin
+  if coalesce(current_setting('app.confirm_rollback_v2', true), '') <> 'DROP-EVERYTHING' then
+    raise exception 'REFUSING to drop the v2 schema: app.confirm_rollback_v2 is not set. This script destroys every v2 table and all data; it must never run on the live database.';
+  end if;
+end
+$guard$;
 
 drop trigger if exists on_auth_user_created on auth.users;
 drop policy if exists task_attachments_storage_insert on storage.objects;

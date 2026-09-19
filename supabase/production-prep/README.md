@@ -33,6 +33,11 @@ Postgres only. `rollback/99_rollback_v2_schema.sql` must never be run on bobcat-
 `node tools/check_results.mjs` validates the saved result files (empty / placeholder / SQL-error / wrong-query / wrong-project);
 `--wait <seconds>` polls until all four are ready.
 
+## Cleanup SQL for bobcat-dev (generated, **not executed**)
+`cleanup/` holds the owner-approved test-data cleanup: `08a_cleanup_DRY_RUN.sql` (ends in ROLLBACK), `08b_cleanup_EXECUTE.sql` (ends in COMMIT), `09_DASHBOARD_STEPS.md`
+(2 storage files + 3 test auth users) and `10_post_dashboard_verify_readonly.sql`. Regenerate with `node tools/generate_cleanup_sql.mjs`; rehearse with `tools/rehearse_cleanup_sql.mjs`.
+Run order: 08a → 08b → Dashboard steps → 10. **Never run any of it on the old legacy project** (08 refuses if `workspace_state`/`orders`/`subteams` exist). See `PRODUCTION_PLAN.md` §15.11.
+
 ## Other folders
 - `prestep/00_rename_legacy_tasks.sql` — **NOT USED**: bobcat-dev has no legacy `tasks` table and the old project is never modified, so nothing is renamed.
   Kept only as the record of the rejected Path B.

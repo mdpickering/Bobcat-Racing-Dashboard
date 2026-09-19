@@ -211,10 +211,11 @@ policy by design. Pre-flight #7 confirms RLS is on for `storage.objects`. Object
 ## 8. First production CTO/Admin (blocker B2) — using the owner's existing bobcat-dev account
 
 bobcat-dev already has **one non-test auth account (`*@quinnipiac.edu`)** alongside the 3 disposable `*@bobcat-test.dev` accounts. That account is the
-intended **first live CTO** (its exact e-mail, role, `approved` and `active` state come from script `06_…`; this plan does not assume them).
+intended **first live admin/CTO**. Script `06_…` (2026-09-19) confirms it is **role `admin`, approved, active**.
 
-1. From `06_…`: read that profile's `role`, `approved`, `active`. It **must be kept** by the cleanup (§15).
-2. If it is not already `cto`/approved/active, promote it in the SQL Editor (as `postgres`; API grants don't apply), one statement, by a human:
+1. It **must be kept** by the cleanup (§15).
+2. **`admin` is already sufficient**: every CTO-level gate in the schema (`is_cto_or_admin()`, the purchase-approval and CAD-manufacturing gates, the 0020 admin RPCs,
+   the Admin pages) accepts `cto` **or** `admin`. Promote to `cto` only if the owner wants that title — a human SQL statement, not needed for the migration:
    ```sql
    update public.profiles set approved = true, active = true, role = 'cto' where email = '<owner-email>';
    ```
@@ -588,10 +589,10 @@ be run before any classification is final.
 ### 15.1 Auth users (bobcat-dev) — 4
 | account | count | classification | why |
 |---|---|---|---|
-| `*@quinnipiac.edu` (1, email/password, confirmed) | 1 | **KEEP — presumed owner account; confirm from `06_`** | the intended first live CTO (§8); the only non-test account |
+| `*@quinnipiac.edu` (1, email/password, confirmed; created 2026-09-16 03:26 UTC, before the test accounts) | 1 | **KEEP — the owner's real account** (confirmed by script 06: role **`admin`**, approved, active, no subsystem memberships) | the intended first live admin/CTO (§8); the only non-test account |
 | `member1@bobcat-test.dev`, `lead1@bobcat-test.dev`, `cto1@bobcat-test.dev` | 3 | **DISPOSABLE** | created in Phases 6.x for RLS/browser testing; the owner declared them disposable; passwords were shared in chat (R16) |
 
-### 15.2 Application tables — estimated rows (planner statistics, 2026-09-18; exact counts from `06_`)
+### 15.2 Application tables — rows (`06_` inventory, 2026-09-19: **exact counts equal these planner estimates — 229 rows in 27 tables**)
 | table | est. rows | classification | evidence / note |
 |---|---|---|---|
 | `subsystems` | 3 | disposable | the test ids seen in Phase 6.6: `test-suspension`, `test-drivetrain`, `chunk4-test-brakes` (real ones come from the legacy import) |
@@ -631,7 +632,7 @@ be run before any classification is final.
 |---|---|---|---|
 | 0 | **Freeze** bobcat-dev | Dashboard: pause sign-ups; nobody creates test data | — |
 | 1 | **Snapshot** | run `06_…` and `01_…` on bobcat-dev → `results/dev_06_data_inventory.json`, fresh `01` | `check_results.mjs` validates; `01` identical to baseline/reference |
-| 2 | **Classify** | I produce a local row-by-row DELETE / KEEP / HOLD list from `06_` (rules §15.3) | every HOLD has a question for the owner |
+| 2 | **Classify** | ✅ **done 2026-09-19** from `06_` (§15.8); re-run with `07_` output (§15.9) | every HOLD has a question for the owner — **15 HOLD + 67 DELETE\* awaiting the owner / script 07** |
 | 3 | **Approve** | the owner approves the list and the keep-list in writing | **no deletion before this** |
 | 4 | **Generate** the final cleanup SQL from the rehearsed order (§15.6) with a precondition (exact counts equal the approved snapshot ⇒ detects drift) and post-conditions | reviewed by the owner | dry-run counts match |
 | 5 | **Delete application data** in one transaction (SQL Editor, `begin … commit`) | children-first order; assertions: only the owner's profile remains | any failed assertion ⇒ rollback, nothing deleted |
@@ -653,5 +654,52 @@ be run before any classification is final.
 - Also rehearsed: the rollback script's confirmation guard (refuses unconfirmed; restores a replica exactly when confirmed).
 The final SQL (step 4) is deliberately **not** written yet: it is generated from the approved list, not before it.
 
-### 15.8 What has NOT been done
+### 15.8 The approval list (produced 2026-09-19 from `06_`; summary only — the row-by-row list with e-mails/titles is local: `results/dev_cleanup_classification.md`)
+`node tools/classify_dev_cleanup.mjs` classifies **every** item — 229 table rows + 4 auth users + 2 storage files + the bucket = **236** — and checks that every counted row is covered.
+Rules: **KEEP** = the owner's account; **HOLD** = names the owner's account (*direct*), or has no actor column but was created/updated inside the owner's demonstrated session window
+2026-09-18 03:55–04:16 UTC (*probable*), or is a test row that cannot be deleted without destroying/altering a HOLD row (*dependency*); **DELETE** = test data; **DELETE\*** = test child row whose actor
+fields were not in inventory 06 (see 15.9).
+
+| table | rows | DELETE | DELETE\* | HOLD | KEEP |
+|---|---|---|---|---|---|
+| auth users / profiles | 4 / 4 | 3 / 3 | | | 1 / 1 |
+| subsystems | 3 | 1 | | 2 | |
+| subsystem_members | 4 | 4 | | | |
+| subsystem_categories | 11 | 10 | | 1 | |
+| timeline_columns / timeline_milestones | 6 / 2 | 3 / 1 | | 3 / 1 | |
+| competition_settings | 5 | 5 | | | |
+| recurring_events / milestones | 2 / 2 | 1 / 2 | | 1 / 0 | |
+| calendar_events / migration_exceptions / member_applications | 3 / 3 / 6 | all | | | |
+| tasks | 23 | 22 | | 1 | |
+| task_assignees / task_requests / task_comments | 5 / 13 / 14 | 3 / 13 / 12 | | 2 / 0 / 2 | |
+| comment_mentions / task_attachments | 12 / 7 | 7 (attachments) | 12 (mentions) | | |
+| purchase_requests / _items / _status_history | 11 / 2 / 35 | 10 | 2 items + 34 history | 1 + 1 history | |
+| cad_reviews / _versions / _comments | 18 / 13 / 6 | 18 | 13 + 6 | | |
+| notifications | 19 | 19 | | | |
+| storage objects / bucket | 2 / 1 | 2 | | | 1 (bucket) |
+| **TOTAL** | **236** | **151** | **67** | **15** | **3** |
+
+**The 15 HOLD items** (ids/titles only; each is a *test* artifact of the owner's own UI session on 2026-09-18 ~04:03–04:10 UTC):
+| type | item |
+|---|---|
+| direct | 2 task comments by the owner (2 and 5 characters) on task "Phase 6.5 conversion test" |
+| direct | purchase request "TESTING" (Draft) in subsystem `chunk4-test-brakes` (+ its 1 auto-generated status-history row) |
+| direct | timeline cell `test-drivetrain / w2` "Sprocket order placed", last edited by the owner |
+| probable | recurring event "Tech Meeting" (Tue 12:30, no colour) — **resembles the real legacy event** (same weekday/time), so the import would duplicate it |
+| probable | timeline columns `t6e-w2-…` ("Week 2") and `t6e-w1-…` ("Week One (renamed)") — edited at 04:06 UTC |
+| probable | category `G-cat-…271` under `test-drivetrain` — edited at 03:55 UTC |
+| dependency | task "Phase 6.5 conversion test" (+ its 2 assignee rows), subsystems `test-drivetrain` and `chunk4-test-brakes`, timeline column `w2` |
+
+**Consequences if the HOLD rows are kept:** the test account `lead1` **cannot be deleted** (it created the kept task, RESTRICT); deleting `member1` would **alter** the kept task (its primary owner is cleared and its
+assignee rows cascade away). `lead1` is a team-lead account whose password was shared in chat (R16) — so keeping the HOLD rows leaves a known credential alive on the live database unless it is at least disabled (banned).
+
+**Owner options:** (1) **recommended — approve deleting all HOLD rows** (they are all test artifacts): the database ends with only the owner's account; (2) keep some/all HOLD rows and accept the residue
+(`lead1` remains, at minimum banned and its password reset; the listed subsystems/columns remain and must be cleaned later); (3) approve a subset. Nothing is deleted until the owner answers.
+
+### 15.9 Gate: script 07 must be clean before approval (the 67 DELETE\* rows)
+Inventory 06 only *counted* purchase status history (34), purchase line items (2), CAD versions (13), CAD comments (6) and comment mentions (12) and omitted the reviewer columns
+(`reviewed_by` on purchases and task requests, `reviewer_id` on CAD reviews). `07_child_rows_actors_readonly.sql` (read-only, validated on the fixture) lists them row by row with actor e-mails.
+**Any row that names the owner's account there moves from DELETE\* to HOLD; otherwise DELETE\* becomes DELETE.** Save as `results/dev_07_child_actors.json`; the classifier is re-run with it.
+
+### 15.10 What has NOT been done
 No row, account, file or setting in bobcat-dev was deleted or changed; nothing was imported; the old project was not touched; `workspace_state` was not touched; no cutover step was taken; Phase 6.8 has not started.

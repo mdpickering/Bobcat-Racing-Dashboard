@@ -22,6 +22,10 @@ Nothing in this folder is a migration and nothing here is applied automatically.
 | `05_tasks_side_by_side_readonly.sql` | production (before the import, for decisions D3/D4) | `results/prod_05_tasks_side_by_side.json` | row-by-row report of the two divergent task datasets + unknown subsystem ids. Returns task titles (needed to compare) but no assignee names/notes/vendors; keep the file local. |
 | `06_inventory_dev_data_readonly.sql` | **bobcat-dev only** (the new live DB, before cleanup) | `results/dev_06_data_inventory.json` (optional file) | auth users + every application table's test data, exact row counts, storage objects. Returns e-mails and titles (needed to classify test data) — keep it local. |
 
+| `07_child_rows_actors_readonly.sql` | **bobcat-dev only** (supplement to 06) | `results/dev_07_child_actors.json` (optional file) | row-by-row actors for the child tables 06 only counted (purchase history/items, CAD versions/comments, comment mentions, reviewer columns). Must be clean before the cleanup list is approved. |
+
+`node tools/classify_dev_cleanup.mjs` turns the 06 inventory into the DELETE / KEEP / HOLD approval list (`results/dev_cleanup_classification.{json,md}`, git-ignored — contains e-mails/titles).
+
 **Target environment (amended 2026-09-19): bobcat-dev is being promoted to the live database; the old project is a read-only source.**
 See `PRODUCTION_PLAN.md` §3 and §15. **Nothing here deletes or imports anything.** `tools/rehearse_cleanup.mjs` rehearses the test-data cleanup on a scratch
 Postgres only. `rollback/99_rollback_v2_schema.sql` must never be run on bobcat-dev (it refuses without an explicit confirmation setting).

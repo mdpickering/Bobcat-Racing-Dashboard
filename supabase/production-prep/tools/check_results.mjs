@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'results');
-const wrapperKeys = ['inventory', 'profile', 'reconcile', 'preflight', 'dev_data_inventory'];
+const wrapperKeys = ['inventory', 'profile', 'reconcile', 'preflight', 'dev_data_inventory', 'child_actor_inventory'];
 
 const specs = [
   { file: 'prod_01_inventory.json', kind: 'inventory', label: 'production catalog inventory (script 01)',
@@ -24,6 +24,8 @@ const specs = [
   // Phase 6.8 preparation: optional (does not affect "ALL READY"); wrapper key is dev_data_inventory
   { file: 'dev_06_data_inventory.json', kind: 'devdata', optional: true, label: 'bobcat-dev auth users + test data (script 06)',
     keys: ['meta', 'auth_users', 'profiles', 'row_counts', 'tasks', 'storage_objects', 'member_applications'] },
+  { file: 'dev_07_child_actors.json', kind: 'devchild', optional: true, label: 'bobcat-dev child-row actors (script 07)',
+    keys: ['meta', 'purchase_status_history', 'purchase_request_items', 'cad_review_versions', 'cad_review_comments', 'comment_mentions', 'notification_rows'] },
 ];
 
 function unwrap(text) {
@@ -69,6 +71,8 @@ function check(spec) {
     if (!isDev && !names.includes('public.workspace_state')) res.warnings.push('no public.workspace_state — is this the production project?');
   } else if (spec.kind === 'profile') {
     res.summary = `${v.row_count} row(s), ${(v.shape || []).length} JSON paths, ${v.total_json_nodes} nodes`;
+  } else if (spec.kind === 'devchild') {
+    res.summary = `${(v.purchase_status_history || []).length} history, ${(v.cad_review_versions || []).length} CAD versions, ${(v.cad_review_comments || []).length} CAD comments, ${(v.comment_mentions || []).length} mentions, ${(v.notification_rows || []).length} notifications`;
   } else if (spec.kind === 'devdata') {
     const rc = v.row_counts || {};
     res.summary = `${(v.auth_users || []).length} auth users, ${(v.profiles || []).length} profiles, ${Object.values(rc).reduce((a, b) => a + Number(b), 0)} rows in ${Object.keys(rc).length} tables, ${(v.storage_objects || []).length} storage objects`;

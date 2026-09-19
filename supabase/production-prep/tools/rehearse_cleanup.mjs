@@ -94,6 +94,15 @@ console.log('06 ran OK. auth_users:', i06.auth_users.length, '| profiles:', i06.
 console.log('06 flags attachment rows without a file:', i06.task_attachments.filter(a => !a.has_storage_object).map(a => a.file_name).join(','),
   '| storage objects:', i06.storage_objects.length);
 
+// --- (3b) validate 07_child_rows_actors_readonly.sql against the same fixture
+const i07 = (await db.query(fs.readFileSync(path.join(prep, '07_child_rows_actors_readonly.sql'), 'utf8'))).rows[0].child_actor_inventory;
+console.log('07 ran OK. row-level counts vs fixture: history', i07.purchase_status_history.length === before.purchase_status_history,
+  '| items', i07.purchase_request_items.length === before.purchase_request_items,
+  '| cad versions', i07.cad_review_versions.length === before.cad_review_versions,
+  '| cad comments', i07.cad_review_comments.length === before.cad_review_comments,
+  '| mentions', i07.comment_mentions.length === before.comment_mentions,
+  '| notifications', i07.notification_rows.length === before.notifications);
+
 // --- (4) FK-safe deletion order from the real dev constraints
 const devPath = path.join(prep, 'results/dev_01_inventory.json');
 let inv;

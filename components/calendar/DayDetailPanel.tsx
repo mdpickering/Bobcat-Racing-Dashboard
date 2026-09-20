@@ -11,7 +11,8 @@ import Textarea from '@/components/ui/Textarea'
 import Button from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase/client'
 import { updateCalendarEvent, updateMilestone } from '@/lib/supabase/queries/calendar'
-import { formatDateTime, formatDate, isOverdue } from '@/lib/format'
+import { formatDateTime, formatDate } from '@/lib/format'
+import { isDeadlineOverdue } from '@/lib/deadline'
 import type { CalendarEvent, Milestone, Task } from '@/types/database'
 
 interface DayDetailPanelProps {
@@ -238,7 +239,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
               {taskDeadlines.map((t) => (
                 <li key={t.id}>
                   <Link href={`/tasks/${t.id}`} className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-1.5 hover:bg-surface-raised">
-                    <span className={isOverdue(t.deadline, t.status) ? 'font-medium text-rose-400' : 'text-text-primary'}>{t.title}</span>
+                    <span className={isDeadlineOverdue(t.deadline, t.status) ? 'font-medium text-rose-400' : 'text-text-primary'}>{t.title}</span>
                     <Badge tone="slate">{t.subsystem?.name}</Badge>
                   </Link>
                 </li>

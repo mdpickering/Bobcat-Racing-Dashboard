@@ -27,6 +27,11 @@ export default async function CalendarPage({
   const rangeEnd = new Date(year, month + 1, 0, 23, 59, 59)
   const rangeStartDate = `${rangeStart.getFullYear()}-${String(rangeStart.getMonth() + 1).padStart(2, '0')}-${String(rangeStart.getDate()).padStart(2, '0')}`
   const rangeEndDate = `${rangeEnd.getFullYear()}-${String(rangeEnd.getMonth() + 1).padStart(2, '0')}-${String(rangeEnd.getDate()).padStart(2, '0')}`
+  // Task deadlines are date-only, stored as midnight UTC (see lib/deadline.ts), so the
+  // month is selected by UTC bounds. The local-time bounds above would drop a deadline on
+  // the 1st (midnight UTC is before local midnight in the US) and pull in the next 1st.
+  const deadlineRangeStart = new Date(Date.UTC(year, month, 1)).toISOString()
+  const deadlineRangeEnd = new Date(Date.UTC(year, month + 1, 1) - 1).toISOString()
 
   const [subsystems, { data: leadRows }] = await Promise.all([
     listSubsystems(supabase),
@@ -42,7 +47,7 @@ export default async function CalendarPage({
     ;[events, milestones, taskDeadlines, recurringEvents] = await Promise.all([
       listCalendarEventsInRange(supabase, rangeStart.toISOString(), rangeEnd.toISOString()),
       listMilestonesInRange(supabase, rangeStartDate, rangeEndDate),
-      listTaskDeadlinesInRange(supabase, rangeStart.toISOString(), rangeEnd.toISOString()),
+      listTaskDeadlinesInRange(supabase, deadlineRangeStart, deadlineRangeEnd),
       listRecurringEvents(supabase),
     ])
   } catch {

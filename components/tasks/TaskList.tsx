@@ -3,7 +3,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import Panel from '@/components/ui/Panel'
 import Avatar from '@/components/ui/Avatar'
 import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges'
-import { formatDate, isOverdue } from '@/lib/format'
+import { formatDeadline, isDeadlineOverdue } from '@/lib/deadline'
 import type { Task } from '@/types/database'
 import { ListChecks } from 'lucide-react'
 
@@ -26,8 +26,8 @@ export default function TaskList({ tasks }: { tasks: Task[] }) {
                   <span>{task.subsystem?.name ?? 'Unknown'}</span>
                   {task.category?.name && <span>· {task.category.name}</span>}
                   {task.deadline && (
-                    <span className={isOverdue(task.deadline, task.status) ? 'font-semibold text-rose-400' : ''}>
-                      · Due {formatDate(task.deadline)}
+                    <span className={isDeadlineOverdue(task.deadline, task.status) ? 'font-semibold text-rose-400' : ''}>
+                      · Due {formatDeadline(task.deadline)}
                     </span>
                   )}
                 </div>

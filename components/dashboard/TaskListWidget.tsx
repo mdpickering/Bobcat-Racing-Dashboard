@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Panel from '@/components/ui/Panel'
 import EmptyState from '@/components/ui/EmptyState'
 import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges'
-import { formatDate } from '@/lib/format'
+import { formatDeadline } from '@/lib/deadline'
 import type { Task } from '@/types/database'
 import { ClipboardList } from 'lucide-react'
 
@@ -38,7 +38,7 @@ export default function TaskListWidget({ title, tasks, emptyMessage, viewAllHref
                   <div className="truncate font-medium text-text-primary">{task.title}</div>
                   <div className="mt-0.5 truncate text-[10px] text-text-muted">
                     {task.subsystem?.name ?? 'Unknown subsystem'}
-                    {task.deadline ? ` · Due ${formatDate(task.deadline)}` : ''}
+                    {task.deadline ? ` · Due ${formatDeadline(task.deadline)}` : ''}
                   </div>
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-1.5">

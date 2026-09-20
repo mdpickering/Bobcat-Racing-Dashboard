@@ -12,7 +12,7 @@ import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask } from '@/lib/supabase/queries/tasks'
-import { formatDate, isOverdue } from '@/lib/format'
+import { deadlineDateKey, formatDeadline, isDeadlineOverdue } from '@/lib/deadline'
 import type { Task, SubsystemCategory } from '@/types/database'
 
 const STATUSES = ['To Do', 'In Progress', 'Blocked', 'Review', 'Complete']
@@ -32,7 +32,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
   const [description, setDescription] = useState(task.description ?? '')
   const [priority, setPriority] = useState(task.priority)
   const [categoryId, setCategoryId] = useState(task.category_id ?? '')
-  const [deadline, setDeadline] = useState(task.deadline ? task.deadline.slice(0, 10) : '')
+  const [deadline, setDeadline] = useState(deadlineDateKey(task.deadline) ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -120,8 +120,8 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
             <Badge tone="slate">{task.subsystem?.name ?? 'Unknown subsystem'}</Badge>
             {task.category?.name && <Badge tone="slate">{task.category.name}</Badge>}
             {task.deadline && (
-              <span className={isOverdue(task.deadline, task.status) ? 'font-semibold text-rose-400' : 'text-text-muted'}>
-                Due {formatDate(task.deadline)}
+              <span className={isDeadlineOverdue(task.deadline, task.status) ? 'font-semibold text-rose-400' : 'text-text-muted'}>
+                Due {formatDeadline(task.deadline)}
               </span>
             )}
           </div>

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
 import Button from '@/components/ui/Button'
 import DayDetailPanel from './DayDetailPanel'
+import { deadlineDateKey } from '@/lib/deadline'
 import type { CalendarEvent, Milestone, Task } from '@/types/database'
 
 interface MonthCalendarProps {
@@ -47,8 +48,10 @@ export default function MonthCalendar({ year, month, events, milestones, taskDea
     }
     const tByDay = new Map<string, Task[]>()
     for (const t of taskDeadlines) {
-      if (!t.deadline) continue
-      const key = localDateKey(t.deadline)
+      // Deadlines are date-only (see lib/deadline.ts): bucket by their stored calendar
+      // date, not the viewer's local date, or they land on the previous day in the US.
+      const key = deadlineDateKey(t.deadline)
+      if (!key) continue
       if (!tByDay.has(key)) tByDay.set(key, [])
       tByDay.get(key)!.push(t)
     }

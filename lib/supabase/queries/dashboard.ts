@@ -4,6 +4,7 @@ import type { Task, AppNotification, CompetitionSettings, SubsystemMember, TaskR
 import { listNotifications, countUnreadNotifications } from './notifications'
 import { getCurrentCompetitionSettings } from './competition'
 import { isCtoOrAdmin, isTeamLead } from '@/lib/permissions/roles'
+import { isDeadlineOverdue, isDeadlineDueSoon } from '@/lib/deadline'
 
 const TASK_SELECT = `
   *,
@@ -30,9 +31,6 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(supabase: SupabaseClient, profile: Profile): Promise<DashboardData> {
-  const now = new Date()
-  const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-
   const [assigneeRows, mySubsystems, notifications, unreadNotificationCount, competition] = await Promise.all([
     supabase
       .from('task_assignees')
@@ -56,11 +54,9 @@ export async function getDashboardData(supabase: SupabaseClient, profile: Profil
   const primaryTasks = rows.filter((r) => r.role === 'primary').map((r) => r.task as Task)
   const coOwnedTasks = rows.filter((r) => r.role === 'co_owner').map((r) => r.task as Task)
 
-  const notComplete = (t: Task) => t.status !== 'Complete'
-  const overdueTasks = assignedTasks.filter((t) => notComplete(t) && t.deadline && new Date(t.deadline) < now)
-  const dueSoonTasks = assignedTasks.filter(
-    (t) => notComplete(t) && t.deadline && new Date(t.deadline) >= now && new Date(t.deadline) <= in7Days
-  )
+  // Deadlines are date-only: compare calendar dates, not timestamps (see lib/deadline.ts).
+  const overdueTasks = assignedTasks.filter((t) => isDeadlineOverdue(t.deadline, t.status))
+  const dueSoonTasks = assignedTasks.filter((t) => isDeadlineDueSoon(t.deadline, t.status, 7))
   const blockedTasks = assignedTasks.filter((t) => t.status === 'Blocked')
   const reviewTasks = assignedTasks.filter((t) => t.status === 'Review')
 

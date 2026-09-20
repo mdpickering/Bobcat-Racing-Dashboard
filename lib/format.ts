@@ -21,17 +21,8 @@ export function formatDateTime(isoDate: string | null | undefined): string {
   return new Date(isoDate).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
-export function isOverdue(deadline: string | null | undefined, status?: string): boolean {
-  if (!deadline || status === 'Complete') return false
-  return new Date(deadline).getTime() < Date.now()
-}
-
-export function isDueSoon(deadline: string | null | undefined, status?: string, withinDays = 7): boolean {
-  if (!deadline || status === 'Complete') return false
-  const time = new Date(deadline).getTime()
-  const now = Date.now()
-  return time >= now && time <= now + withinDays * 24 * 60 * 60 * 1000
-}
+// Task deadlines are date-only — use formatDeadline / isDeadlineOverdue / isDeadlineDueSoon
+// from lib/deadline.ts for them. The helpers in this file are for real timestamps.
 
 export function daysUntil(isoDate: string | null | undefined): number | null {
   if (!isoDate) return null

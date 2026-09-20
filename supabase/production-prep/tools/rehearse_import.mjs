@@ -126,9 +126,43 @@ await neg('N3 legacy table present => OLD project (guard)', async (d) => { await
 await neg('N4 importer is not an approved admin/cto (importer guard)', async (d) => { await d.exec(`update public.profiles set role='member' where id='${OWNER}'`); }, (b) => b.exec, 'importer');
 await neg('N5 a second account exists (not the post-cleanup state)', async (d) => { await d.exec(`insert into auth.users(id,email) values (gen_random_uuid(),'other@example.test')`); }, (b) => b.exec, 'precondition');
 await neg('N6 a trigger is already disabled (precondition)', async (d) => { await d.exec(`alter table public.tasks disable trigger tasks_before_write`); }, (b) => b.exec, 'precondition');
-await neg('N7 payload smuggles a leadPin (even with a matching md5)', null, (b) => { const p = payloadOf(b.exec); const p2 = p.replace('"lead":"Lead Alpha"', '"lead":"Lead Alpha","leadPin":"1234"'); return b.exec.replace(p, p2).replace(base.expected.payload_md5, crypto.createHash('md5').update(p2).digest('hex')); }, 'leadPin');
+await neg('N7 payload smuggles a leadPin (even with a matching md5)', null, (b) => { const p = payloadOf(b.exec); const p2 = p.replace('"lead":"Lead Alpha"', '"lead":"Lead Alpha","leadPin":"1234"'); return b.exec.replace(p, p2).split(base.expected.payload_md5).join(crypto.createHash('md5').update(p2).digest('hex')); }, 'leadPin');
 await neg('N8 independent expectation disagrees with the SQL result (post-check)', null, (b) => b.exec.replace(/"tasks":\d+,"tasks_complete"/, `"tasks":${E.tasks + 1},"tasks_complete"`), 'post-check');
 await neg('N9 corrupted JSON (never partially imports)', null, (b) => b.exec.replace('"subsystem_aliases"', '"subsystem_aliases').replace('"workspace_state":{"id"', '"workspace_state":{"id" BROKEN'), '');
+
+console.log('\nSTAGE 6  GENERATOR HARDENING (the placeholder-leak fix: no template marker may ever reach a generated file)');
+const tplSrc = fs.readFileSync(path.join(prep, 'import/40_import_TEMPLATE_DO_NOT_RUN.sql'), 'utf8');
+{ const res = await run(new PGlite(), tplSrc); check('the TEMPLATE parses and stops with a clear message (never a cryptic syntax error)', !res.ok && /THIS IS THE TEMPLATE/.test(res.msg) && !/syntax error/i.test(res.msg), res.msg?.slice(0, 90)); }
+const genPath = path.join(prep, 'tools/generate_import_sql.mjs');
+const genWith = (name, tplText, exportPath = exportFile, seedStale = false) => {
+  const tp = path.join(tmp, name + '.template.sql'); fs.writeFileSync(tp, tplText); const out = path.join(tmp, name);
+  if (seedStale) { fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, '40a_import_DRY_RUN.sql'), '-- STALE FILE FROM AN EARLIER RUN'); }
+  let code = 0, msg = ''; try { execFileSync('node', [genPath, '--export', exportPath, '--importer', OWNER, '--out', out, '--accept-drift', '--scratch', '--template', tp], { stdio: 'pipe' }); } catch (e) { code = e.status; msg = String(e.stderr); }
+  return { code, msg, out, files: fs.existsSync(out) ? fs.readdirSync(out) : [] };
+};
+let gr = genWith('bug1', tplSrc.replace('-- @@MODE_END@@', '__MODE_END__'), exportFile, true);
+check('the ORIGINAL DEFECT (a bare __MODE_END__ in the template) is REFUSED, and a stale file from an earlier run is removed', gr.code !== 0 && gr.files.length === 0, gr.msg.replace(/\s+/g, ' ').slice(0, 110));
+gr = genWith('bug2', tplSrc.replace('begin;\n', 'begin;\n-- __STRAY_MARKER__\n'));
+check('any other stray __X__ marker is REFUSED and leaves no file', gr.code !== 0 && gr.files.length === 0, gr.msg.replace(/\s+/g, ' ').slice(0, 110));
+gr = genWith('bug3', tplSrc.replace('-- @@TEMPLATE_GUARD_BEGIN', '-- keep this comment'));
+check('a template guard that could not be stripped is REFUSED and leaves no file', gr.code !== 0 && gr.files.length === 0, gr.msg.replace(/\s+/g, ' ').slice(0, 110));
+gr = genWith('bug4', tplSrc.replace('__IMPORTER__', '00000000-0000-4000-8000-000000000000').replace('__IMPORTER__', '11111111-1111-4111-8111-111111111111'));
+check('two different importer ids in one file are REFUSED', gr.code !== 0 && gr.files.length === 0, gr.msg.replace(/\s+/g, ' ').slice(0, 110));
+gr = genWith('good', tplSrc);
+check('the real template generates cleanly: 3 files, static checks pass', gr.code === 0 && gr.files.length === 3, gr.msg.slice(0, 100));
+// a value that looks like a JavaScript replacement pattern must reach the SQL unchanged
+const ex2 = JSON.parse(JSON.stringify(exp)); const weird = "Cost $& and $' and $1 and $$ and \\ backslash and __PAYLOAD__ __EXPECT__ __IMPORTER__ inside DATA";
+ex2.workspace_state.tasks[0].title = weird; const f2 = path.join(tmp, 'dollar.json'); fs.writeFileSync(f2, JSON.stringify(ex2));
+gr = genWith('dollar', tplSrc, f2);
+check('a legacy value containing $& $\' $1 $$ and marker-LIKE text (__PAYLOAD__ __EXPECT__ __IMPORTER__) is embedded UNCHANGED (data is never re-scanned)', gr.code === 0, gr.msg.replace(/\s+/g, ' ').slice(0, 120));
+const ex3 = JSON.parse(JSON.stringify(exp)); ex3.workspace_state.tasks[0].title = 'contains __MODE_END__ literally'; const f3 = path.join(tmp, 'modeend-data.json'); fs.writeFileSync(f3, JSON.stringify(ex3));
+const gr3 = genWith('modeenddata', tplSrc, f3);
+check('conservative rule: data that contains the literal __MODE_END__ is REFUSED (neither generated file may contain that string)', gr3.code !== 0 && gr3.files.length === 0, gr3.msg.replace(/\s+/g, ' ').slice(0, 110));
+if (gr.code === 0) {
+  db = await target(); r = await run(db, fs.readFileSync(path.join(gr.out, '40b_import_EXECUTE.sql'), 'utf8'));
+  const tt = await one(db, `select title from public.tasks where legacy_id='${ex2.workspace_state.tasks[0].id}'`);
+  check('...and after the import the title is byte-identical to the source', r.ok && tt.title === weird, r.msg || tt.title);
+}
 
 console.log(`\n${fail === 0 ? 'ALL' : 'SOME'} CHECKS: ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

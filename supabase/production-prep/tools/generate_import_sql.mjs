@@ -108,24 +108,56 @@ const expected = {
 };
 const held = srcTasks.length - imported;
 
-// ---- 3) fill the template
-const tpl = fs.readFileSync(path.join(prep, 'import', '40_import_template.sql'), 'utf8');
-const fill = (mode) => tpl
-  .replaceAll('__FILE__', mode === 'dry' ? '40a_import_DRY_RUN.sql' : '40b_import_EXECUTE.sql')
-  .replaceAll('__MODE_BANNER__', mode === 'dry' ? '*** DRY RUN: ends in ROLLBACK, imports nothing ***' : '*** WRITES DATA: ends in COMMIT ***')
-  .replaceAll('__IMPORTER__', importer).replaceAll('__PAYLOAD_MD5__', payloadMd5).replaceAll('__FUNCS__', String(FUNCS))
-  .replaceAll('__EXPECT__', JSON.stringify(expected))
-  .replaceAll('__MODE_END__', mode === 'dry'
-    ? `-- DRY RUN ends here: undo everything, then report.\nrollback;\nselect 'IMPORT DRY RUN PASSED - guards, ${imported} tasks + ${held} held, all post-checks succeeded; then everything was ROLLED BACK. Nothing was imported.' as result,\n       (select count(*) from public.tasks) as tasks_after_rollback, (select count(*) from public.subsystems) as subsystems_after_rollback;`
-    : `-- EXECUTE: keep the import.\ncommit;\nselect 'IMPORT COMMITTED - ${imported} tasks imported, ${held} held as exceptions. Next: run 41_post_import_verify_readonly.sql.' as result,\n       (select count(*) from public.subsystems) as subsystems, (select count(*) from public.subsystem_categories) as categories, (select count(*) from public.tasks) as tasks,\n       (select count(*) from public.migration_exceptions) as exceptions, (select count(*) from public.notifications) as notifications;`)
-  // the payload goes in LAST so no placeholder inside the legacy data is ever substituted
-  .replace('__PAYLOAD__', () => payload);
+// ---- 3) fill the template. HARDENED (Phase 6.8 fix): the template is now parse-safe and self-blocking; the generator removes the template-only guard,
+//         fills every placeholder with PLAIN string replacement (split/join: a "$&", "$'" or "$1" inside any value can never be read as a replacement pattern),
+//         and then REFUSES to leave any file behind unless every static check passes (no marker of any kind, ROLLBACK/COMMIT endings, payload identity, ...).
+import { checkTexts } from './import_sql_checks.mjs';
+const tplPath = arg('--template') ? path.resolve(arg('--template')) : path.join(prep, 'import', '40_import_TEMPLATE_DO_NOT_RUN.sql');   // --template is for TESTING the refusal logic only
+let tpl = fs.readFileSync(tplPath, 'utf8').replace(/\r\n/g, '\n');
+tpl = tpl.replace(/-- @@TEMPLATE_GUARD_BEGIN[\s\S]*?-- @@TEMPLATE_GUARD_END\n/, () => '');
+const fail = (m) => { for (const f of ['40a_import_DRY_RUN.sql', '40b_import_EXECUTE.sql', 'expected.json']) fs.rmSync(path.join(outDir, f), { force: true }); console.error('GENERATION FAILED (no files left behind): ' + m); process.exit(1); };
 fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(path.join(outDir, '40a_import_DRY_RUN.sql'), fill('dry'));
-fs.writeFileSync(path.join(outDir, '40b_import_EXECUTE.sql'), fill('exec'));
-fs.writeFileSync(path.join(outDir, 'expected.json'), JSON.stringify({ importer, payload_md5: payloadMd5, payload_kb: +(payload.length / 1024).toFixed(1), aliases, expected, held_tasks: held }, null, 1));
+for (const f of ['40a_import_DRY_RUN.sql', '40b_import_EXECUTE.sql', 'expected.json']) fs.rmSync(path.join(outDir, f), { force: true });   // never leave a stale file from an earlier run
+if (/TEMPLATE_GUARD|template_guard/.test(tpl)) fail('the template guard could not be removed');
+const put = (s, key, val) => s.split(key).join(String(val));
+const modeEndBlock = (mode) => mode === 'dry'
+  ? `-- DRY RUN ends here: undo everything, then report.\nrollback;\nselect 'IMPORT DRY RUN PASSED - guards, ${imported} tasks + ${held} held, all post-checks succeeded; then everything was ROLLED BACK. Nothing was imported.' as result,\n       (select count(*) from public.tasks) as tasks_after_rollback, (select count(*) from public.subsystems) as subsystems_after_rollback;`
+  : `-- EXECUTE: keep the import.\ncommit;\nselect 'IMPORT COMMITTED - ${imported} tasks imported, ${held} held as exceptions. Next: run 41_post_import_verify_readonly.sql.' as result,\n       (select count(*) from public.subsystems) as subsystems, (select count(*) from public.subsystem_categories) as categories, (select count(*) from public.tasks) as tasks,\n       (select count(*) from public.migration_exceptions) as exceptions, (select count(*) from public.notifications) as notifications;`;
+const fill = (mode) => {
+  const fname = mode === 'dry' ? '40a_import_DRY_RUN.sql' : '40b_import_EXECUTE.sql';
+  let s = tpl;
+  s = put(s, '__FILE__', fname);
+  s = put(s, '__MODE_BANNER__', mode === 'dry' ? '*** DRY RUN: ends in ROLLBACK, imports nothing ***' : '*** WRITES DATA: ends in COMMIT ***');
+  s = put(s, '__IMPORTER__', importer); s = put(s, '__PAYLOAD_MD5__', payloadMd5); s = put(s, '__FUNCS__', FUNCS);
+  s = put(s, '__EXPECT__', JSON.stringify(expected));
+  const re = /-- @@MODE_END@@[^\n]*/;
+  if (!re.test(s)) fail('the template has no MODE_END marker line');
+  s = s.replace(re, () => modeEndBlock(mode));
+  s = `-- GENERATED ${fname} | ${mode === 'dry' ? 'DRY RUN (ends in ROLLBACK)' : 'EXECUTE (ends in COMMIT)'} | payload md5 ${payloadMd5} | expects ${imported} tasks + ${held} held | generated, runnable file (all placeholders resolved)\n`
+    + s.replace(/\s+$/, '') + `\n-- END OF GENERATED SCRIPT ${fname} (if you can read this line, the whole file was pasted)\n`;
+  const i = s.indexOf('__PAYLOAD__');                                            // the payload goes in LAST, by index, so nothing inside it is ever re-scanned
+  if (i < 0 || s.indexOf('__PAYLOAD__', i + 1) >= 0) fail('the template must contain exactly one __PAYLOAD__ marker');
+  return s.slice(0, i) + payload + s.slice(i + '__PAYLOAD__'.length);
+};
+const dryText = fill('dry'), execText = fill('exec');
+const expectedObj = { importer, payload_md5: payloadMd5, payload_kb: +(payload.length / 1024).toFixed(1), aliases, expected, held_tasks: held };
+const sha = (t) => crypto.createHash('sha256').update(t, 'utf8').digest('hex');
+expectedObj.files = { '40a_import_DRY_RUN.sql': { lines: dryText.split('\n').length, sha256: sha(dryText) }, '40b_import_EXECUTE.sql': { lines: execText.split('\n').length, sha256: sha(execText) } };
+
+// ---- 4) static verification BEFORE anything is left on disk
+let ownerForCheck = null;
+try { const d6 = JSON.parse(fs.readFileSync(path.join(prep, 'results', 'dev_06_data_inventory.json'), 'utf8')); const o = d6.profiles.filter((p) => !/@bobcat-test\.dev$/i.test(p.email || '')); if (o.length === 1) ownerForCheck = o[0].id; } catch { /* optional */ }
+const checks = checkTexts({ dry: dryText, exec: execText, expected: expectedObj, exportObj: x, ownerId: scratch ? null : ownerForCheck, baseline: null, payloadMd5Ref: null });
+const bad = checks.filter((c) => !c.ok);
+if (bad.length) fail(`${bad.length} static check(s) failed: ` + bad.map((c) => `${c.name} [${c.detail}]`).join(' | '));
+
+// ---- 5) write (only now)
+fs.writeFileSync(path.join(outDir, '40a_import_DRY_RUN.sql'), dryText);
+fs.writeFileSync(path.join(outDir, '40b_import_EXECUTE.sql'), execText);
+fs.writeFileSync(path.join(outDir, 'expected.json'), JSON.stringify(expectedObj, null, 1));
 
 console.log(`generated${scratch ? ' (SCRATCH variant)' : ''} into ${outDir}`);
+console.log(`static checks: ${checks.length}/${checks.length} passed (no template marker of any kind, 40a=ROLLBACK, 40b=COMMIT, payload identical to the validated export, no writes to profiles/auth)`);
 console.log(`payload ${(payload.length / 1024).toFixed(1)} KB, md5 ${payloadMd5}${drifted ? '  [DRIFT ACCEPTED]' : ''} | importer ${importer} | aliases ${JSON.stringify(aliases)}`);
 console.log(`expected: subsystems ${expected.subsystems}, categories ${expected.categories}, timeline columns ${expected.timeline_columns} (${expected.timeline_columns_highlighted} highlighted), cells ${expected.timeline_milestones}, recurring ${expected.recurring_events}`);
 console.log(`          tasks imported ${imported} + held ${held} = ${srcTasks.length} (${wsIds.size} workspace_state + ${x.tasks.filter((t) => !wsIds.has(t.id)).length} relational-only; ${x.tasks.filter((t) => wsIds.has(t.id)).length} superseded) | purchases ${pr} | exceptions ${JSON.stringify(ex)}`);

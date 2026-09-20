@@ -41,7 +41,8 @@ Run order: 08a → 08b → Dashboard steps → 10. **Never run any of it on the 
 ## Data extraction and import (Phase 6.8 preparation — nothing executed)
 `import/30_extract_legacy_source_readonly.sql` — run on the **OLD** project only (read-only; strips the plaintext lead PINs inside the query) → save as `results/prod_30_source_export.json`.
 `node tools/validate_source_export.mjs` validates it (blocks on PINs / missing sections; reports drift vs the recorded baseline).
-`node tools/generate_import_sql.mjs` builds `results/import/40a_import_DRY_RUN.sql` (ends in ROLLBACK) and `40b_import_EXECUTE.sql` (ends in COMMIT) from the validated export via `import/40_import_template.sql`
+`node tools/generate_import_sql.mjs` builds `results/import/40a_import_DRY_RUN.sql` (ends in ROLLBACK) and `40b_import_EXECUTE.sql` (ends in COMMIT) from the validated export via `import/40_import_TEMPLATE_DO_NOT_RUN.sql` (**a template — never paste it; it stops with a clear message if run**; the ONLY files to run are the two generated ones in `results/import/`).
+Before pasting anything, run `node tools/check_generated_import_sql.mjs` — 50 static checks (no unresolved template marker of any kind, 40a=ROLLBACK, 40b=COMMIT, payload identical to the validated export, no PINs, no writes to profiles/auth, expected counts)
 (git-ignored output: it embeds the legacy data). Run them on **bobcat-dev only**: 40a → read the result → 40b → `import/41_post_import_verify_readonly.sql`.
 `tools/rehearse_import.mjs` (+ `tools/synthetic_legacy.mjs`) rehearses the whole pipeline on a scratch Postgres with synthetic, PIN-bearing legacy data. See `PRODUCTION_PLAN.md` §16.
 

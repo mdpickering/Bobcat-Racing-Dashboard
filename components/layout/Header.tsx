@@ -64,7 +64,9 @@ export default function Header({ profile, onOpenMobileNav }: HeaderProps) {
         <Search size={16} />
       </button>
 
-      <div className="flex items-center gap-2">
+      {/* ml-auto pins the theme/notification/account controls to the far right edge
+          (the search form is max-w-sm, so without it they sat right beside it). */}
+      <div className="ml-auto flex flex-shrink-0 items-center gap-2">
         <ThemeToggle />
         <NotificationBell />
 

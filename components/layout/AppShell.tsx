@@ -1,18 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import type { Profile } from '@/types/user'
+import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/sidebarPreference'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
 export default function AppShell({ profile, children }: { profile: Profile; children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  // Layout is driven by <html data-sidebar> (set before first paint); this state only
+  // mirrors it for aria attributes and the collapsed-rail tooltips.
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    setCollapsed(readSidebarCollapsed())
+  }, [])
+
+  function toggleSidebar() {
+    const next = !collapsed
+    setCollapsed(next)
+    writeSidebarCollapsed(next)
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg text-text-primary">
       <div className="hidden md:block">
-        <Sidebar profile={profile} />
+        <Sidebar profile={profile} collapsible collapsed={collapsed} onToggleCollapsed={toggleSidebar} />
       </div>
 
       {mobileOpen && (

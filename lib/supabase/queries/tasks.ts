@@ -158,12 +158,16 @@ export async function createTaskRequest(
   return data as unknown as TaskRequest
 }
 
+// Approve/decline goes through review_task_request (migration 0022): one transaction that
+// re-checks the caller is cto/admin or the subsystem's team lead (an explicit 42501 error
+// otherwise), creates the task on approval, and records the review. reviewed_by/reviewed_at
+// are stamped by the database, never sent from here. Returns the new task's id on approval.
 export async function reviewTaskRequest(
   supabase: SupabaseClient,
   requestId: string,
-  patch: { status: 'approved' | 'declined'; reviewed_by: string; reviewed_at: string; converted_task_id?: string | null }
-) {
-  const { data, error } = await supabase.from('task_requests').update(patch).eq('id', requestId).select().single()
+  decision: 'approved' | 'declined'
+): Promise<string | null> {
+  const { data, error } = await supabase.rpc('review_task_request', { p_request_id: requestId, p_decision: decision })
   if (error) throw error
-  return data as unknown as TaskRequest
+  return (data as string | null) ?? null
 }

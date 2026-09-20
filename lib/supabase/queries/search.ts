@@ -16,10 +16,19 @@ export interface SearchResult {
 // stay subsystem-scoped for members, profiles stays limited to approved
 // teammates). No table here needs an ilike search-specific policy of
 // its own; the existing SELECT policies apply exactly as normal.
-export async function globalSearch(supabase: SupabaseClient, query: string): Promise<SearchResult[]> {
+//
+// perTypeLimit is how many rows each category may return: the full results page keeps the
+// original 8; the header's search suggestions ask for fewer.
+export async function globalSearch(
+  supabase: SupabaseClient,
+  query: string,
+  opts: { perTypeLimit?: number } = {}
+): Promise<SearchResult[]> {
   const q = query.trim()
   if (!q) return []
-  const pattern = `%${q}%`
+  const limit = opts.perTypeLimit ?? 8
+  // Escape LIKE wildcards so a typed % or _ (or \) matches literally instead of everything.
+  const pattern = `%${q.replace(/[\\%_]/g, '\\$&')}%`
 
   // People search runs as two separate ilike queries (name, email) merged
   // client-side rather than a single .or() filter — PostgREST's .or()
@@ -27,12 +36,12 @@ export async function globalSearch(supabase: SupabaseClient, query: string): Pro
   // separator, so a search term containing one (e.g. "Smith, John") would
   // silently corrupt the query instead of matching literally.
   const [tasks, subsystems, peopleByName, peopleByEmail, purchaseRequests, cadReviews] = await Promise.all([
-    supabase.from('tasks').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(8),
-    supabase.from('subsystems').select('id, name, description').eq('active', true).ilike('name', pattern).limit(8),
-    supabase.from('profiles').select('id, display_name, email, role').ilike('display_name', pattern).limit(8),
-    supabase.from('profiles').select('id, display_name, email, role').ilike('email', pattern).limit(8),
-    supabase.from('purchase_requests').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(8),
-    supabase.from('cad_reviews').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(8),
+    supabase.from('tasks').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(limit),
+    supabase.from('subsystems').select('id, name, description').eq('active', true).ilike('name', pattern).limit(limit),
+    supabase.from('profiles').select('id, display_name, email, role').ilike('display_name', pattern).limit(limit),
+    supabase.from('profiles').select('id, display_name, email, role').ilike('email', pattern).limit(limit),
+    supabase.from('purchase_requests').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(limit),
+    supabase.from('cad_reviews').select('id, title, subsystem:subsystems(name)').ilike('title', pattern).limit(limit),
   ])
 
   const results: SearchResult[] = []

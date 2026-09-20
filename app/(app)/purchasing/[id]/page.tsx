@@ -34,10 +34,12 @@ export default async function PurchaseRequestDetailPage({ params }: { params: { 
   const isLeadHere = subsystemMembers.some((m) => m.user_id === profile.id && m.is_lead)
   const canApprove = isCtoOrAdmin(profile)
   const canManage = canApprove || isLeadHere
+  // Mirrors the purchase_requests_delete RLS policy (migration 0022); the database decides.
+  const canDelete = !request.legacy_id && (canApprove || (request.requested_by === profile.id && request.status === 'Draft'))
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <PurchaseRequestDetailHeader request={request} canManage={canManage} canApprove={canApprove} />
+      <PurchaseRequestDetailHeader request={request} canManage={canManage} canApprove={canApprove} canDelete={canDelete} itemCount={items.length} />
       <PurchaseLineItemsPanel purchaseRequestId={request.id} items={items} canManage={canManage} />
       <PurchaseStatusHistoryPanel history={history} />
     </div>

@@ -31,13 +31,33 @@ export async function getPurchaseRequestById(supabase: SupabaseClient, id: strin
   return data as unknown as PurchaseRequest | null
 }
 
+// A purchase request must carry a valid product link (the existing purchase_request_items.link
+// field). create_purchase_request inserts the request and its first line item in one
+// transaction, and the database rejects a request that would be left without a linked item
+// (migration 0022) — so a bare insert into purchase_requests no longer succeeds.
 export async function createPurchaseRequest(
   supabase: SupabaseClient,
-  input: { subsystem_id: string; title: string; description?: string | null; vendor?: string | null }
-) {
-  const { data, error } = await supabase.from('purchase_requests').insert(input).select(PURCHASE_REQUEST_SELECT).single()
+  input: { subsystem_id: string; title: string; description?: string | null; vendor?: string | null; product_url: string }
+): Promise<string> {
+  const { data, error } = await supabase.rpc('create_purchase_request', {
+    p_subsystem_id: input.subsystem_id,
+    p_title: input.title,
+    p_description: input.description ?? null,
+    p_vendor: input.vendor ?? null,
+    p_product_url: input.product_url,
+  })
   if (error) throw error
-  return data as unknown as PurchaseRequest
+  return data as string
+}
+
+// RLS decides who may delete (cto/admin, or the creator while still a Draft); a blocked delete
+// is a silent zero-row result, so ask for the deleted row back and treat "nothing deleted" as an error.
+export async function deletePurchaseRequest(supabase: SupabaseClient, id: string) {
+  const { data, error } = await supabase.from('purchase_requests').delete().eq('id', id).select('id')
+  if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error('This purchase request could not be deleted. You may not have permission, or it no longer exists.')
+  }
 }
 
 export async function updatePurchaseRequest(supabase: SupabaseClient, id: string, patch: Record<string, unknown>) {
@@ -58,7 +78,7 @@ export async function listPurchaseRequestItems(supabase: SupabaseClient, purchas
 
 export async function addPurchaseRequestItem(
   supabase: SupabaseClient,
-  input: { purchase_request_id: string; description: string; quantity: number; unit_cost?: number | null; link?: string | null; notes?: string | null }
+  input: { purchase_request_id: string; description: string; quantity: number; unit_cost?: number | null; link: string; notes?: string | null }
 ) {
   const { data, error } = await supabase.from('purchase_request_items').insert(input).select().single()
   if (error) throw error

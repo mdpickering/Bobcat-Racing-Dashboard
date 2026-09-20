@@ -8,14 +8,23 @@ import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { reviewTaskRequest, createTask } from '@/lib/supabase/queries/tasks'
+import { reviewTaskRequest } from '@/lib/supabase/queries/tasks'
 import { formatDate } from '@/lib/format'
+import { getErrorMessage } from '@/lib/errors'
 import type { TaskRequest } from '@/types/database'
 import { Inbox } from 'lucide-react'
 
 const STATUS_TONE = { pending: 'amber', approved: 'emerald', declined: 'rose' } as const
 
-export default function TaskRequestsList({ requests, canReview, currentUserId }: { requests: TaskRequest[]; canReview: boolean; currentUserId: string }) {
+interface TaskRequestsListProps {
+  requests: TaskRequest[]
+  // cto/admin may review every request; a team lead only those of subsystems they lead.
+  // Mirrors canReviewTaskRequest() in lib/permissions/roles.ts — the database re-checks it.
+  canReviewAll: boolean
+  reviewableSubsystemIds: string[]
+}
+
+export default function TaskRequestsList({ requests, canReviewAll, reviewableSubsystemIds }: TaskRequestsListProps) {
   const router = useRouter()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -25,28 +34,12 @@ export default function TaskRequestsList({ requests, canReview, currentUserId }:
     setError(null)
     try {
       const supabase = createClient()
-      // Approving a request is expected to produce a real task — the
-      // schema's converted_task_id exists exactly for this link, gated by
-      // a check constraint that only allows it once status = 'approved'.
-      let convertedTaskId: string | null = null
-      if (status === 'approved') {
-        const task = await createTask(supabase, {
-          title: request.title,
-          description: request.description,
-          subsystem_id: request.subsystem_id,
-          priority: 'Medium',
-        })
-        convertedTaskId = task.id
-      }
-      await reviewTaskRequest(supabase, request.id, {
-        status,
-        reviewed_by: currentUserId,
-        reviewed_at: new Date().toISOString(),
-        converted_task_id: convertedTaskId,
-      })
+      // One database call: it re-checks authorization, creates the task on approval and
+      // records the review atomically (no orphan task if the review step fails).
+      await reviewTaskRequest(supabase, request.id, status)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update this request.')
+      setError(getErrorMessage(err, 'Could not update this request.'))
     } finally {
       setBusyId(null)
     }
@@ -77,7 +70,7 @@ export default function TaskRequestsList({ requests, canReview, currentUserId }:
                 </Link>
               )}
             </div>
-            {canReview && r.status === 'pending' && (
+            {(canReviewAll || reviewableSubsystemIds.includes(r.subsystem_id)) && r.status === 'pending' && (
               <div className="flex flex-shrink-0 gap-2">
                 <Button size="sm" variant="secondary" disabled={busyId === r.id} onClick={() => handleReview(r, 'declined')}>
                   Decline

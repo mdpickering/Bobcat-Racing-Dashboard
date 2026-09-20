@@ -3,17 +3,20 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Pencil, Check, X } from 'lucide-react'
+import { ChevronLeft, Pencil, Check, X, Trash2 } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
 import Badge from '@/components/ui/Badge'
 import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import CadStatusBadge, { ALL_CAD_STATUSES } from './CadStatusBadge'
 import { createClient } from '@/lib/supabase/client'
-import { updateCadReview } from '@/lib/supabase/queries/cad'
+import { updateCadReview, deleteCadReview } from '@/lib/supabase/queries/cad'
 import { formatDate } from '@/lib/format'
+import { getErrorMessage } from '@/lib/errors'
+import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
 import type { CadReview, CadReviewStatus } from '@/types/database'
 
 interface CadReviewDetailHeaderProps {
@@ -22,10 +25,27 @@ interface CadReviewDetailHeaderProps {
   canManage: boolean
   canApproveManufacturing: boolean
   isSubmitter: boolean
+  // cto/admin (any non-imported review) or the creator while it is still a Draft nobody
+  // else has commented on — the database enforces the same rule; this only shows the button.
+  canDelete: boolean
+  versionCount: number
+  commentCount: number
 }
 
-export default function CadReviewDetailHeader({ review, canEditDetails, canManage, canApproveManufacturing, isSubmitter }: CadReviewDetailHeaderProps) {
+export default function CadReviewDetailHeader({
+  review,
+  canEditDetails,
+  canManage,
+  canApproveManufacturing,
+  isSubmitter,
+  canDelete,
+  versionCount,
+  commentCount,
+}: CadReviewDetailHeaderProps) {
   const router = useRouter()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(review.title)
   const [description, setDescription] = useState(review.description ?? '')
@@ -73,6 +93,22 @@ export default function CadReviewDetailHeader({ review, canEditDetails, canManag
   async function handleSaveDetails() {
     await persist({ title, description: description || null })
     setEditing(false)
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const supabase = createClient()
+      await deleteCadReview(supabase, review.id)
+      // the database also removes notifications that pointed at this review
+      broadcastNotificationsChanged()
+      router.push('/cad')
+      router.refresh()
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Could not delete this CAD review.'))
+      setDeleting(false)
+    }
   }
 
   return (
@@ -140,7 +176,31 @@ export default function CadReviewDetailHeader({ review, canEditDetails, canManag
             <CadStatusBadge status={review.status} />
           )}
         </div>
+        {canDelete && (
+          <Button size="sm" variant="danger" className="ml-auto" onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
+            <Trash2 size={12} /> Delete
+          </Button>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete CAD review?"
+        busy={deleting}
+        error={deleteError}
+        description={
+          <>
+            <p>
+              <span className="font-semibold text-text-primary">{review.title}</span> ({review.status}) will be permanently deleted.
+            </p>
+            <p>
+              This also removes its {versionCount} revision{versionCount === 1 ? '' : 's'} (with their links), {commentCount} comment{commentCount === 1 ? '' : 's'} and any notifications about it. This cannot be undone.
+            </p>
+          </>
+        }
+      />
     </Panel>
   )
 }

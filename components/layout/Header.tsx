@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, Search, LogOut, ChevronDown, UserCog } from 'lucide-react'
+import { Menu, Search, X, LogOut, ChevronDown, UserCog } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types/user'
 import Avatar from '@/components/ui/Avatar'
 import ThemeToggle from '@/components/theme/ThemeToggle'
 import NotificationBell from '@/components/notifications/NotificationBell'
+import SearchAutocomplete from '@/components/search/SearchAutocomplete'
 
 interface HeaderProps {
   profile: Profile
@@ -18,8 +19,8 @@ interface HeaderProps {
 export default function Header({ profile, onOpenMobileNav }: HeaderProps) {
   const router = useRouter()
   const supabase = createClient()
-  const [search, setSearch] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -27,13 +28,8 @@ export default function Header({ profile, onOpenMobileNav }: HeaderProps) {
     router.refresh()
   }
 
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (search.trim()) router.push(`/search?q=${encodeURIComponent(search.trim())}`)
-  }
-
   return (
-    <header className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-border bg-surface px-4 md:px-6">
+    <header className="relative flex h-16 flex-shrink-0 items-center gap-3 border-b border-border bg-surface px-4 md:px-6">
       <button
         type="button"
         onClick={onOpenMobileNav}
@@ -43,26 +39,39 @@ export default function Header({ profile, onOpenMobileNav }: HeaderProps) {
         <Menu size={18} />
       </button>
 
-      <form onSubmit={handleSearchSubmit} className="hidden flex-1 max-w-sm items-center gap-2 rounded-lg border border-border bg-bg px-3 py-1.5 text-xs sm:flex">
-        <Search size={14} className="text-text-muted" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tasks, people, subsystems…"
-          className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted"
-        />
-      </form>
+      <SearchAutocomplete className="hidden max-w-sm flex-1 sm:block" />
 
       <div className="flex-1 sm:hidden" />
 
       <button
         type="button"
-        onClick={() => router.push('/search')}
+        onClick={() => setMobileSearchOpen(true)}
         aria-label="Search"
         className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised sm:hidden"
       >
         <Search size={16} />
       </button>
+
+      {/* Phone: the search field takes over the header row (the icon above opens it), so the
+          suggestion list gets the full width instead of being squeezed between the controls. */}
+      {mobileSearchOpen && (
+        <div className="absolute inset-0 z-40 flex items-center gap-2 bg-surface px-4 sm:hidden">
+          <SearchAutocomplete
+            autoFocus
+            className="min-w-0 flex-1"
+            onDone={() => setMobileSearchOpen(false)}
+            onEscape={() => setMobileSearchOpen(false)}
+          />
+          <button
+            type="button"
+            onClick={() => setMobileSearchOpen(false)}
+            aria-label="Close search"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* ml-auto pins the theme/notification/account controls to the far right edge
           (the search form is max-w-sm, so without it they sat right beside it). */}

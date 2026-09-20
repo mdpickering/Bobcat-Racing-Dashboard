@@ -10,6 +10,8 @@ import EmptyState from '@/components/ui/EmptyState'
 import { Package } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { addPurchaseRequestItem, updatePurchaseRequestItem, deletePurchaseRequestItem } from '@/lib/supabase/queries/purchasing'
+import { validateProductUrl } from '@/lib/validation'
+import { getErrorMessage } from '@/lib/errors'
 import type { PurchaseRequestItem } from '@/types/database'
 
 interface PurchaseLineItemsPanelProps {
@@ -35,8 +37,13 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
 
   const total = items.reduce((sum, item) => sum + (item.unit_cost ?? 0) * item.quantity, 0)
 
+  // Every line item needs a product link (also enforced by the database, migration 0022).
+  const linkError = validateProductUrl(link)
+  const showLinkError = linkError !== null && link.trim() !== ''
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
+    if (linkError) return
     setBusy(true)
     setError(null)
     try {
@@ -46,7 +53,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         description,
         quantity: Number(quantity) || 1,
         unit_cost: unitCost ? Number(unitCost) : null,
-        link: link || null,
+        link: link.trim(),
       })
       setDescription('')
       setQuantity('1')
@@ -55,7 +62,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       setAdding(false)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add line item.')
+      setError(getErrorMessage(err, 'Could not add line item.'))
     } finally {
       setBusy(false)
     }
@@ -84,7 +91,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       await deletePurchaseRequestItem(supabase, itemId)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not remove line item.')
+      setError(getErrorMessage(err, 'Could not remove line item.'))
     } finally {
       setBusy(false)
     }
@@ -104,7 +111,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
 
       {items.length === 0 && !adding ? (
-        <EmptyState icon={Package} title="No line items yet" description="Add parts, quantities, and vendor links to this request." />
+        <EmptyState icon={Package} title="No line items yet" description="Add parts, quantities, and product links to this request." />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -174,15 +181,25 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       )}
 
       {canManage && adding && (
-        <form onSubmit={handleAdd} className="mt-3 space-y-2 border-t border-border pt-3 text-xs">
+        <form onSubmit={handleAdd} noValidate className="mt-3 space-y-2 border-t border-border pt-3 text-xs">
           <Input required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Item description" />
           <div className="grid grid-cols-3 gap-2">
             <Input type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="Qty" />
             <Input type="number" min={0} step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="Unit cost" />
-            <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Link (optional)" />
+            <Input
+              type="url"
+              inputMode="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              aria-required="true"
+              aria-invalid={showLinkError}
+              placeholder="Product link (required)"
+              className={showLinkError ? 'border-rose-500/60 focus:border-rose-400' : ''}
+            />
           </div>
+          {showLinkError && <p className="text-[11px] text-rose-400">{linkError}</p>}
           <div className="flex gap-2">
-            <Button size="sm" type="submit" disabled={busy || !description}>
+            <Button size="sm" type="submit" disabled={busy || !description || linkError !== null}>
               Add
             </Button>
             <Button size="sm" type="button" variant="ghost" onClick={() => setAdding(false)}>

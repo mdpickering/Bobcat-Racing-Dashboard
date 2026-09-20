@@ -3,27 +3,37 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Pencil, Check, X } from 'lucide-react'
+import { ChevronLeft, Pencil, Check, X, Trash2 } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
 import Badge from '@/components/ui/Badge'
 import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import PurchaseStatusBadge, { ALL_PURCHASE_STATUSES } from './PurchaseStatusBadge'
 import { createClient } from '@/lib/supabase/client'
-import { updatePurchaseRequest } from '@/lib/supabase/queries/purchasing'
+import { updatePurchaseRequest, deletePurchaseRequest } from '@/lib/supabase/queries/purchasing'
 import { formatDate } from '@/lib/format'
+import { getErrorMessage } from '@/lib/errors'
+import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
 import type { PurchaseRequest, PurchaseStatus } from '@/types/database'
 
 interface PurchaseRequestDetailHeaderProps {
   request: PurchaseRequest
   canManage: boolean
   canApprove: boolean
+  // cto/admin (any non-imported request) or the creator while it is still a Draft — the
+  // database enforces the same rule; this only decides whether to show the button.
+  canDelete: boolean
+  itemCount: number
 }
 
-export default function PurchaseRequestDetailHeader({ request, canManage, canApprove }: PurchaseRequestDetailHeaderProps) {
+export default function PurchaseRequestDetailHeader({ request, canManage, canApprove, canDelete, itemCount }: PurchaseRequestDetailHeaderProps) {
   const router = useRouter()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(request.title)
   const [description, setDescription] = useState(request.description ?? '')
@@ -64,6 +74,22 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
   async function handleSaveDetails() {
     await persist({ title, description: description || null, vendor: vendor || null })
     setEditing(false)
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const supabase = createClient()
+      await deletePurchaseRequest(supabase, request.id)
+      // the database also removes notifications that pointed at this request
+      broadcastNotificationsChanged()
+      router.push('/purchasing')
+      router.refresh()
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Could not delete this purchase request.'))
+      setDeleting(false)
+    }
   }
 
   return (
@@ -129,7 +155,31 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
             <PurchaseStatusBadge status={request.status} />
           )}
         </div>
+        {canDelete && (
+          <Button size="sm" variant="danger" className="ml-auto" onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
+            <Trash2 size={12} /> Delete
+          </Button>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete purchase request?"
+        busy={deleting}
+        error={deleteError}
+        description={
+          <>
+            <p>
+              <span className="font-semibold text-text-primary">{request.title}</span> ({request.status}) will be permanently deleted.
+            </p>
+            <p>
+              This also removes its {itemCount} line item{itemCount === 1 ? '' : 's'}, its status history and any notifications about it. This cannot be undone.
+            </p>
+          </>
+        }
+      />
     </Panel>
   )
 }

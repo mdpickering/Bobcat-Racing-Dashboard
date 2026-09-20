@@ -37,6 +37,11 @@ export default async function CadReviewDetailPage({ params }: { params: { id: st
   const canManage = canApproveManufacturing || isLeadHere
   const canEditDetails = canManage || isSubmitter
   const canAddVersion = canManage || isSubmitter
+  // Mirrors the cad_reviews_delete RLS policy (migration 0022); the database decides.
+  const canDelete =
+    !review.legacy_id &&
+    (canApproveManufacturing ||
+      (isSubmitter && review.status === 'Draft' && !comments.some((c) => c.user_id !== profile.id)))
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -46,6 +51,9 @@ export default async function CadReviewDetailPage({ params }: { params: { id: st
         canManage={canManage}
         canApproveManufacturing={canApproveManufacturing}
         isSubmitter={isSubmitter}
+        canDelete={canDelete}
+        versionCount={versions.length}
+        commentCount={comments.length}
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -44,6 +44,17 @@ export async function updateCadReview(supabase: SupabaseClient, id: string, patc
   return data as unknown as CadReview
 }
 
+// RLS decides who may delete (cto/admin, or the creator while still a Draft nobody else has
+// commented on); versions and comments go with the review via ON DELETE CASCADE. A blocked
+// delete is a silent zero-row result, so ask for the deleted row back.
+export async function deleteCadReview(supabase: SupabaseClient, id: string) {
+  const { data, error } = await supabase.from('cad_reviews').delete().eq('id', id).select('id')
+  if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error('This CAD review could not be deleted. You may not have permission, or it no longer exists.')
+  }
+}
+
 export async function listCadReviewVersions(supabase: SupabaseClient, cadReviewId: string): Promise<CadReviewVersion[]> {
   const { data, error } = await supabase
     .from('cad_review_versions')

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { listTasks, listTaskRequests } from '@/lib/supabase/queries/tasks'
 import { listSubsystems } from '@/lib/supabase/queries/subsystems'
-import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import { isCtoOrAdmin, canReviewTaskRequest } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 import type { SubsystemCategory } from '@/types/database'
 import TaskFilters from '@/components/tasks/TaskFilters'
@@ -36,6 +36,12 @@ export default async function TasksPage({
   // the create form only offers those; the request form and filters keep
   // the full list (any approved user may request a task for any subsystem).
   const createSubsystems = admin ? subsystems : subsystems.filter((s) => ledSubsystemIds.has(s.id))
+  // Approving/declining a task request is narrower than creating a task: cto/admin, or a
+  // profile-role team lead for the subsystems they lead. A member flagged as a subsystem
+  // lead can create tasks there but cannot review requests (see can_review_task_request).
+  const reviewableSubsystemIds = subsystems
+    .filter((s) => canReviewTaskRequest(profile, ledSubsystemIds, s.id))
+    .map((s) => s.id)
 
   const tab = searchParams.tab === 'requests' ? 'requests' : 'board'
 
@@ -54,7 +60,7 @@ export default async function TasksPage({
           <p className="mt-0.5 text-xs font-mono text-text-muted">Requests submitted by the team, awaiting review.</p>
         </div>
         <TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} activeTab="requests" pendingRequestCount={pendingCount} />
-        <TaskRequestsList requests={requests} canReview={canCreate} currentUserId={profile.id} />
+        <TaskRequestsList requests={requests} canReviewAll={admin} reviewableSubsystemIds={reviewableSubsystemIds} />
       </div>
     )
   }

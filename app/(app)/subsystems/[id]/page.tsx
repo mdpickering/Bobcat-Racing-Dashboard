@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getSubsystemById, listSubsystemCategories, listAllSubsystemCategories, listSubsystemMembers } from '@/lib/supabase/queries/subsystems'
+import { getSubsystemById, listSubsystemCategories, listAllSubsystemCategories, listSubsystemMembers, listUnassignedApprovedProfiles } from '@/lib/supabase/queries/subsystems'
 import { listAllProfiles } from '@/lib/supabase/queries/admin'
 import { listTasks } from '@/lib/supabase/queries/tasks'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
@@ -44,9 +44,18 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
   const isMemberHere = members.some((m) => m.user_id === profile.id)
   const canAcceptTasks = isMemberHere && profile.approved && profile.active
 
+  // Member-management candidate pool (migration 0025): admin keeps its existing full "any
+  // approved profile" picker; a lead-only viewer gets the narrower "eligible new members" list
+  // (approved, active, not yet on any team) instead — matching what subsystem_members_insert_own_team
+  // actually allows them to add. A viewer who is neither sees no picker at all (canManageMembers below).
+  const canManageMembers = admin || isLeadHere
   const [categories, candidateProfiles] = await Promise.all([
     admin ? listAllSubsystemCategories(supabase, params.id).catch(() => []) : listSubsystemCategories(supabase, params.id).catch(() => []),
-    admin ? listAllProfiles(supabase, { approved: 'true' }).catch(() => []) : Promise.resolve([]),
+    admin
+      ? listAllProfiles(supabase, { approved: 'true' }).catch(() => [])
+      : isLeadHere
+        ? listUnassignedApprovedProfiles(supabase).catch(() => [])
+        : Promise.resolve([]),
   ])
 
   const leads = members.filter((m) => m.is_lead)
@@ -66,7 +75,14 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <SubsystemMembersPanel subsystemId={params.id} members={members} candidateProfiles={candidateProfiles} canManage={admin} />
+        <SubsystemMembersPanel
+          subsystemId={params.id}
+          subsystemName={subsystem.name}
+          members={members}
+          candidateProfiles={candidateProfiles}
+          canManage={canManageMembers}
+          canRemoveOrPromote={admin}
+        />
         <CategoryManagementPanel subsystemId={params.id} categories={categories} canManage={canManageCategories} />
       </div>
 

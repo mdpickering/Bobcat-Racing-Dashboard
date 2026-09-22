@@ -12,17 +12,34 @@ import Avatar from '@/components/ui/Avatar'
 import EmptyState from '@/components/ui/EmptyState'
 import { createClient } from '@/lib/supabase/client'
 import { addSubsystemMember, setSubsystemMemberLead, removeSubsystemMember } from '@/lib/supabase/queries/subsystems'
+import { getErrorMessage } from '@/lib/errors'
 import type { SubsystemMember } from '@/types/database'
 import type { Profile } from '@/types/user'
 
 interface SubsystemMembersPanelProps {
   subsystemId: string
+  subsystemName: string
   members: SubsystemMember[]
+  // For admin: every approved profile. For a lead-only viewer: only approved, active,
+  // not-yet-on-any-team profiles (migration 0025) — matches exactly what
+  // subsystem_members_insert_own_team allows them to add, so there's never a candidate shown
+  // here that the server would then refuse.
   candidateProfiles: Profile[]
+  // Can add a member to THIS subsystem — true for admin/cto, or the lead of this subsystem.
   canManage: boolean
+  // Can promote/demote a lead, remove an existing member, or open a member's admin detail page —
+  // admin/cto only, unchanged from before. A lead can add but never touch an existing membership.
+  canRemoveOrPromote: boolean
 }
 
-export default function SubsystemMembersPanel({ subsystemId, members, candidateProfiles, canManage }: SubsystemMembersPanelProps) {
+export default function SubsystemMembersPanel({
+  subsystemId,
+  subsystemName,
+  members,
+  candidateProfiles,
+  canManage,
+  canRemoveOrPromote,
+}: SubsystemMembersPanelProps) {
   const router = useRouter()
   const [adding, setAdding] = useState(false)
   const [selected, setSelected] = useState('')
@@ -43,7 +60,7 @@ export default function SubsystemMembersPanel({ subsystemId, members, candidateP
       setAdding(false)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add member.')
+      setError(getErrorMessage(err, 'Could not add member.'))
     } finally {
       setBusy(false)
     }
@@ -57,7 +74,7 @@ export default function SubsystemMembersPanel({ subsystemId, members, candidateP
       await setSubsystemMemberLead(supabase, subsystemId, userId, !isLead)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update lead status.')
+      setError(getErrorMessage(err, 'Could not update lead status.'))
     } finally {
       setBusy(false)
     }
@@ -71,7 +88,7 @@ export default function SubsystemMembersPanel({ subsystemId, members, candidateP
       await removeSubsystemMember(supabase, subsystemId, userId)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not remove member.')
+      setError(getErrorMessage(err, 'Could not remove member.'))
     } finally {
       setBusy(false)
     }
@@ -99,9 +116,9 @@ export default function SubsystemMembersPanel({ subsystemId, members, candidateP
         <ul className="space-y-1.5">
           {members.map((m) => (
             <li key={m.user_id} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs">
-              {/* Only cto/admin can reach the admin user-detail page — a lead viewing their
+              {/* Only cto/admin can reach the admin user-detail page — a lead managing their
                   own subsystem's roster has no route to link to, so their row stays plain text. */}
-              {canManage ? (
+              {canRemoveOrPromote ? (
                 <Link href={`/admin/users/${m.user_id}`} className="flex min-w-0 items-center gap-2 hover:text-accent-blue">
                   <Avatar name={m.profile?.display_name || m.profile?.email} src={m.profile?.avatar_url} size={22} />
                   <span className="truncate">{m.profile?.display_name || m.profile?.email}</span>
@@ -114,7 +131,7 @@ export default function SubsystemMembersPanel({ subsystemId, members, candidateP
               )}
               <div className="flex flex-shrink-0 items-center gap-2">
                 {m.is_lead && <Badge tone="gold">Lead</Badge>}
-                {canManage && (
+                {canRemoveOrPromote && (
                   <>
                     <button
                       type="button"
@@ -137,18 +154,30 @@ export default function SubsystemMembersPanel({ subsystemId, members, candidateP
       )}
 
       {canManage && adding && (
-        <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
-          <Select value={selected} onChange={(e) => setSelected(e.target.value)} className="flex-1">
-            <option value="">Select an approved member…</option>
-            {available.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.display_name || p.email}
-              </option>
-            ))}
-          </Select>
-          <Button size="sm" disabled={!selected || busy} onClick={handleAdd}>
-            Add
-          </Button>
+        <div className="mt-3 space-y-2 border-t border-border pt-3">
+          {available.length === 0 ? (
+            <p className="text-[11px] text-text-muted">No eligible members to add right now.</p>
+          ) : (
+            <>
+              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+                Assigning to <span className="text-text-secondary">{subsystemName}</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <Select value={selected} onChange={(e) => setSelected(e.target.value)} className="flex-1">
+                  <option value="">Select an eligible member…</option>
+                  {available.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.display_name ? `${p.display_name} — ${p.email}` : p.email}
+                      {p.year ? ` (${p.year})` : ''}
+                    </option>
+                  ))}
+                </Select>
+                <Button size="sm" disabled={!selected || busy} onClick={handleAdd}>
+                  {busy ? 'Adding…' : 'Add to Team'}
+                </Button>
+              </div>
+            </>
+          )}
           <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
             Cancel
           </Button>

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Subsystem, SubsystemCategory, SubsystemMember } from '@/types/database'
+import type { Profile } from '@/types/user'
 
 export async function listSubsystems(supabase: SupabaseClient): Promise<Subsystem[]> {
   const { data, error } = await supabase.from('subsystems').select('*').eq('active', true).order('name')
@@ -87,6 +88,21 @@ export async function updateSubsystemCategory(supabase: SupabaseClient, id: stri
   const { data, error } = await supabase.from('subsystem_categories').update(patch).eq('id', id).select().single()
   if (error) throw error
   return data as unknown as SubsystemCategory
+}
+
+// The candidate pool for a team lead's own "add a member" picker (migration 0025): approved,
+// active, plain-member/team_lead profiles with no subsystem membership anywhere yet. The id list
+// comes from a SECURITY DEFINER function (a lead can't otherwise see org-wide membership to
+// compute this); the actual profile data is then read through the normal profiles RLS every
+// approved user already has, so nothing beyond what's already visible is exposed.
+export async function listUnassignedApprovedProfiles(supabase: SupabaseClient): Promise<Profile[]> {
+  const { data: ids, error: idsError } = await supabase.rpc('list_unassigned_approved_profile_ids')
+  if (idsError) throw idsError
+  const idList = (ids ?? []) as string[]
+  if (idList.length === 0) return []
+  const { data, error } = await supabase.from('profiles').select('*').in('id', idList)
+  if (error) throw error
+  return (data ?? []) as Profile[]
 }
 
 export async function addSubsystemMember(supabase: SupabaseClient, subsystemId: string, userId: string, isLead = false) {

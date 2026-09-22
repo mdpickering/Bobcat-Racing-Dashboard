@@ -101,7 +101,7 @@ export default function SubsystemMembersPanel({
           <Users size={13} className="text-accent-blue" />
           <h2 className="text-xs font-bold uppercase tracking-wide text-text-primary">Members ({members.length})</h2>
         </div>
-        {canManage && !adding && available.length > 0 && (
+        {canManage && !adding && (
           <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
           </button>

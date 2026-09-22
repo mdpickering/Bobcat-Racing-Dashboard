@@ -39,6 +39,10 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
 
   const isLeadHere = members.some((m) => m.user_id === profile.id && m.is_lead)
   const canManageCategories = admin || isLeadHere
+  // Self-accept (migration 0024): only an approved member of THIS subsystem sees the Accept
+  // button — accept_task() re-checks the same thing server-side, this only decides display.
+  const isMemberHere = members.some((m) => m.user_id === profile.id)
+  const canAcceptTasks = isMemberHere && profile.approved && profile.active
 
   const [categories, candidateProfiles] = await Promise.all([
     admin ? listAllSubsystemCategories(supabase, params.id).catch(() => []) : listSubsystemCategories(supabase, params.id).catch(() => []),
@@ -70,7 +74,7 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">
           Open Tasks ({openTasks.length})
         </h2>
-        <TaskList tasks={openTasks} />
+        <TaskList tasks={openTasks} canAccept={canAcceptTasks} />
       </div>
     </div>
   )

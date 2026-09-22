@@ -67,7 +67,11 @@ export default async function TasksPage({
 
   let tasks
   try {
+    // /tasks is each user's own board: only tasks they're assigned to (primary or co-owner),
+    // with the existing subsystem/category/priority/status/search filters still applying on top.
+    // Browsing everyone else's work for a subsystem happens on that subsystem's own page instead.
     tasks = await listTasks(supabase, {
+      assignedUserId: profile.id,
       subsystemId: searchParams.subsystem,
       categoryId: searchParams.category,
       priority: searchParams.priority,
@@ -89,9 +93,9 @@ export default async function TasksPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Tasks</h1>
+        <h1 className="text-lg font-bold text-text-primary">My Tasks</h1>
         <p className="mt-0.5 text-xs font-mono text-text-muted">
-          {tasks.length} task{tasks.length === 1 ? '' : 's'} matching your filters
+          {tasks.length} task{tasks.length === 1 ? '' : 's'} assigned to you, matching your filters
         </p>
       </div>
       <TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} activeTab="board" pendingRequestCount={pendingRequestCount} />

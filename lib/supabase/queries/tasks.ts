@@ -15,12 +15,26 @@ export interface TaskFilters {
   priority?: string
   status?: string
   search?: string
-  assignedToMe?: string
+  // Restrict to tasks the given user is assigned to (primary owner or co-owner). Used to make
+  // /tasks a "my tasks" board — every other filter still composes normally on top of this.
+  assignedUserId?: string
 }
 
 export async function listTasks(supabase: SupabaseClient, filters: TaskFilters = {}): Promise<Task[]> {
+  // task_assignees is the authoritative source of who's on a task (tasks.primary_owner_id is
+  // just a denormalized cache of the 'primary' row, kept in sync by a trigger) — so looking up
+  // this user's assigned task ids there covers both primary and co-owner roles in one query.
+  let assignedTaskIds: string[] | null = null
+  if (filters.assignedUserId) {
+    const { data, error } = await supabase.from('task_assignees').select('task_id').eq('user_id', filters.assignedUserId)
+    if (error) throw error
+    assignedTaskIds = (data ?? []).map((r) => r.task_id as string)
+    if (assignedTaskIds.length === 0) return []
+  }
+
   let query = supabase.from('tasks').select(TASK_SELECT).order('deadline', { ascending: true, nullsFirst: false })
 
+  if (assignedTaskIds) query = query.in('id', assignedTaskIds)
   if (filters.subsystemId) query = query.eq('subsystem_id', filters.subsystemId)
   if (filters.categoryId) query = query.eq('category_id', filters.categoryId)
   if (filters.priority) query = query.eq('priority', filters.priority)
@@ -74,6 +88,15 @@ export async function setTaskAssignee(
 
 export async function removeTaskAssignee(supabase: SupabaseClient, taskId: string, userId: string) {
   const { error } = await supabase.from('task_assignees').delete().eq('task_id', taskId).eq('user_id', userId)
+  if (error) throw error
+}
+
+// Self-accept an unassigned task (migration 0024): a thin wrapper around accept_task(), which
+// re-checks server-side that the caller is an approved member of the task's own subsystem and
+// that nobody has already been accepted as primary owner, before inserting the same
+// task_assignees row the existing lead/admin assignment mechanism uses.
+export async function acceptTask(supabase: SupabaseClient, taskId: string): Promise<void> {
+  const { error } = await supabase.rpc('accept_task', { p_task_id: taskId })
   if (error) throw error
 }
 

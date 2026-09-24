@@ -134,6 +134,8 @@ export interface TaskAttachment {
 export type NotificationType =
   | 'task_assignment'
   | 'co_owner_assignment'
+  | 'task_due_soon'
+  | 'task_deadline_changed'
   | 'deadline'
   | 'overdue_task'
   | 'blocked_task'
@@ -156,6 +158,15 @@ export interface AppNotification {
   entity_id: string | null
   read_at: string | null
   created_at: string
+}
+
+// One row of the email-preference catalog (migration 0029), plus the viewer's effective choice.
+export interface EmailPreferenceCategory {
+  key: string
+  label: string
+  description: string
+  default_enabled: boolean
+  enabled: boolean
 }
 
 export type PurchaseStatus =

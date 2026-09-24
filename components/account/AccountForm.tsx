@@ -16,7 +16,7 @@ import type { Profile } from '@/types/user'
 
 const YEAR_OPTIONS = ['', 'Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate']
 
-export default function AccountForm({ profile }: { profile: Profile }) {
+export default function AccountForm({ profile, emailSection }: { profile: Profile; emailSection?: React.ReactNode }) {
   const router = useRouter()
   const { theme, toggleTheme } = useTheme()
   const [displayName, setDisplayName] = useState(profile.display_name ?? '')
@@ -134,6 +134,8 @@ export default function AccountForm({ profile }: { profile: Profile }) {
           </Button>
         </div>
       </Panel>
+
+      {emailSection}
 
       <Panel className="p-5">
         <Button type="button" variant="danger" onClick={handleLogout}>

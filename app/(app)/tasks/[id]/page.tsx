@@ -39,7 +39,14 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <TaskDetailHeader task={task} categories={categories} canManage={canManage} canChangeStatus={isAssignee} />
+      <TaskDetailHeader
+        task={task}
+        categories={categories}
+        canManage={canManage}
+        canChangeStatus={isAssignee}
+        canDelete={canManage}
+        attachmentPaths={attachments.map((a) => a.storage_path)}
+      />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="md:col-span-1">

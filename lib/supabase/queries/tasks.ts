@@ -67,6 +67,26 @@ export async function updateTask(supabase: SupabaseClient, id: string, patch: Re
   return data as unknown as Task
 }
 
+// Uploaded files live in Storage, which the database cannot clean up, so they are removed here
+// first (a lead's delete right on them depends on the task still existing — migration 0030).
+export async function removeTaskAttachmentFiles(supabase: SupabaseClient, storagePaths: string[]): Promise<void> {
+  if (storagePaths.length === 0) return
+  const { error } = await supabase.storage.from('task-attachments').remove(storagePaths)
+  if (error) throw error
+}
+
+// RLS decides who may delete (cto/admin, or the lead of the task's subsystem); a blocked delete is a
+// silent zero-row result, so ask for the deleted row back and treat "nothing deleted" as an error.
+// Assignments, comments and attachment records go with the task; notifications about it are removed
+// by the database (migration 0030).
+export async function deleteTask(supabase: SupabaseClient, id: string): Promise<void> {
+  const { data, error } = await supabase.from('tasks').delete().eq('id', id).select('id')
+  if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error('This task could not be deleted. You may not have permission, or it no longer exists.')
+  }
+}
+
 export async function setTaskAssignee(
   supabase: SupabaseClient,
   taskId: string,

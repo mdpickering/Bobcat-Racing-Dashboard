@@ -3,15 +3,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Pencil, Check, X } from 'lucide-react'
+import { ChevronLeft, Pencil, Check, X, Trash2 } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
 import Badge from '@/components/ui/Badge'
 import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { createClient } from '@/lib/supabase/client'
-import { updateTask } from '@/lib/supabase/queries/tasks'
+import { updateTask, deleteTask, removeTaskAttachmentFiles } from '@/lib/supabase/queries/tasks'
+import { getErrorMessage } from '@/lib/errors'
+import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
 import { deadlineDateKey, formatDeadline, isDeadlineOverdue } from '@/lib/deadline'
 import type { Task, SubsystemCategory } from '@/types/database'
 
@@ -23,10 +26,17 @@ interface TaskDetailHeaderProps {
   categories: SubsystemCategory[]
   canManage: boolean
   canChangeStatus: boolean
+  // cto/admin, or the lead of this task's subsystem — the database enforces the same rule
+  // (can_delete_task, migration 0030); this only decides whether to show the button.
+  canDelete: boolean
+  attachmentPaths: string[]
 }
 
-export default function TaskDetailHeader({ task, categories, canManage, canChangeStatus }: TaskDetailHeaderProps) {
+export default function TaskDetailHeader({ task, categories, canManage, canChangeStatus, canDelete, attachmentPaths }: TaskDetailHeaderProps) {
   const router = useRouter()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [editingDetails, setEditingDetails] = useState(false)
   const [title, setTitle] = useState(task.title)
   const [description, setDescription] = useState(task.description ?? '')
@@ -47,6 +57,23 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
       setError(err instanceof Error ? err.message : 'Could not save changes.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const supabase = createClient()
+      await removeTaskAttachmentFiles(supabase, attachmentPaths)
+      await deleteTask(supabase, task.id)
+      // the database also removes notifications that pointed at this task
+      broadcastNotificationsChanged()
+      router.push('/tasks')
+      router.refresh()
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Could not delete this task.'))
+      setDeleting(false)
     }
   }
 
@@ -149,7 +176,32 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
             <Badge tone="slate">{task.priority}</Badge>
           </div>
         )}
+        {canDelete && (
+          <Button size="sm" variant="danger" className="ml-auto" onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
+            <Trash2 size={12} /> Delete
+          </Button>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete task?"
+        busy={deleting}
+        error={deleteError}
+        description={
+          <>
+            <p>
+              <span className="font-semibold text-text-primary">{task.title}</span> ({task.status}) will be permanently deleted.
+            </p>
+            <p>
+              This also removes its assignments, comments{attachmentPaths.length > 0 ? `, its ${attachmentPaths.length} uploaded file${attachmentPaths.length === 1 ? '' : 's'}` : ''} and any
+              notifications about it. Linked CAD reviews and task requests are kept. This cannot be undone.
+            </p>
+          </>
+        }
+      />
     </Panel>
   )
 }

@@ -31,11 +31,9 @@ async function run(request: Request) {
   const admin = createAdminClient()
   if (!admin) return NextResponse.json({ error: 'Server is missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 503 })
 
+  // With no provider configured nothing is sent (queued emails wait), but the due-soon scan still
+  // runs so the in-app "task due soon" notifications do not depend on email being set up.
   const transport = getEmailTransportFromEnv()
-  if (!transport) {
-    // Nothing is claimed, so queued emails simply wait until a provider is configured.
-    return NextResponse.json({ sent: 0, note: 'No email provider configured (EMAIL_FROM plus RESEND_API_KEY or SMTP_*); emails stay queued.' })
-  }
 
   const result = await processEmailQueue({
     rpc: async (fn, args) => {
@@ -46,7 +44,11 @@ async function run(request: Request) {
     appUrl: process.env.APP_URL || DEFAULT_APP_URL,
   })
 
-  return NextResponse.json({ provider: transport.name, ...result })
+  return NextResponse.json({
+    provider: transport?.name ?? null,
+    ...(transport ? {} : { note: 'No email provider configured (EMAIL_FROM plus RESEND_API_KEY or SMTP_*): emails stay queued and none were sent.' }),
+    ...result,
+  })
 }
 
 export const GET = run

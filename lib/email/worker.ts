@@ -6,7 +6,9 @@ type RpcResult = { data: unknown; error: { message: string } | null }
 export interface WorkerDeps {
   // Calls a database function as the service role (see lib/supabase/admin.ts).
   rpc: (fn: string, args?: Record<string, unknown>) => Promise<RpcResult>
-  transport: EmailTransport
+  // null when no email provider is configured: the due-soon scan still runs (it creates the in-app
+  // notifications), but nothing is claimed or sent, so queued emails simply wait.
+  transport: EmailTransport | null
   appUrl: string
   batchSize?: number
   maxAttempts?: number
@@ -34,6 +36,9 @@ export async function processEmailQueue(deps: WorkerDeps): Promise<WorkerResult>
   if (scan.error) result.problems.push(`due-soon scan failed: ${scan.error.message}`)
   else result.dueSoonCreated = Number(scan.data ?? 0)
 
+  const transport = deps.transport
+  if (!transport) return result
+
   const claim = await deps.rpc('claim_email_batch', { p_limit: batchSize, p_max_attempts: maxAttempts })
   if (claim.error) {
     result.problems.push(`claim failed: ${claim.error.message}`)
@@ -45,7 +50,7 @@ export async function processEmailQueue(deps: WorkerDeps): Promise<WorkerResult>
   for (const job of jobs) {
     try {
       const email = renderEmail(job, deps.appUrl)
-      await deps.transport.send({ to: job.to_email, ...email, idempotencyKey: job.outbox_id })
+      await transport.send({ to: job.to_email, ...email, idempotencyKey: job.outbox_id })
     } catch (err) {
       const failed = await deps.rpc('fail_email', {
         p_outbox_id: job.outbox_id,

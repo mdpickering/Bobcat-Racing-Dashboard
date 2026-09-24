@@ -16,6 +16,20 @@ export function isTeamLead(profile: Pick<Profile, 'role'> | null | undefined): b
   return profile?.role === 'team_lead'
 }
 
+export function isCoo(profile: Pick<Profile, 'role'> | null | undefined): boolean {
+  return profile?.role === 'coo'
+}
+
+/**
+ * Who may manage the shared operations schedule (calendar events, recurring events, milestones,
+ * the master timeline, and task deadlines): the COO, plus cto/admin. Mirrors
+ * public.can_manage_operations() (migration 0028), which is the real enforcement — this only
+ * decides what to show. It grants no user-management, purchasing or CAD authority.
+ */
+export function canManageOperations(profile: Pick<Profile, 'role'> | null | undefined): boolean {
+  return isCoo(profile) || isCtoOrAdmin(profile)
+}
+
 /**
  * Who may approve or decline a task request: cto/admin for any subsystem, or a team lead
  * (profile role 'team_lead') for the subsystems they lead. A plain member never can, even if

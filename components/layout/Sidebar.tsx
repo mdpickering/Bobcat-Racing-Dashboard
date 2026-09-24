@@ -4,8 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronsLeft } from 'lucide-react'
-import { NAV_ITEMS, ADMIN_NAV_ITEMS } from '@/lib/navigation'
-import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import { NAV_ITEMS, ADMIN_NAV_ITEMS, OPERATIONS_NAV_ITEMS } from '@/lib/navigation'
+import { isCtoOrAdmin, canManageOperations } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 
 interface SidebarProps {
@@ -22,6 +22,11 @@ export default function Sidebar({ profile, onNavigate, collapsible = false, coll
   const pathname = usePathname()
   const railMode = collapsible && collapsed
   const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null)
+  // Operations for coo/cto/admin, Administration for cto/admin only.
+  const managementNavItems = [
+    ...(canManageOperations(profile) ? OPERATIONS_NAV_ITEMS : []),
+    ...(isCtoOrAdmin(profile) ? ADMIN_NAV_ITEMS : []),
+  ]
 
   // Fixed-position tooltip: the nav list scrolls (overflow clips absolutely-positioned
   // children), and this also lets the label sit above the page content.
@@ -97,10 +102,10 @@ export default function Sidebar({ profile, onNavigate, collapsible = false, coll
           )
         })}
 
-        {isCtoOrAdmin(profile) && (
+        {managementNavItems.length > 0 && (
           <>
             <div className="my-2 border-t border-border" />
-            {ADMIN_NAV_ITEMS.map((item) => {
+            {managementNavItems.map((item) => {
               const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
               const Icon = item.icon
               return (

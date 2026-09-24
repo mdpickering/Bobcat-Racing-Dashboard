@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { listCalendarEventsInRange, listMilestonesInRange, listTaskDeadlinesInRange, listRecurringEvents } from '@/lib/supabase/queries/calendar'
 import { listSubsystems } from '@/lib/supabase/queries/subsystems'
-import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import { canManageOperations } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 import MonthCalendar from '@/components/calendar/MonthCalendar'
 import RecurringEventsPanel from '@/components/calendar/RecurringEventsPanel'
@@ -38,7 +38,9 @@ export default async function CalendarPage({
     supabase.from('subsystem_members').select('subsystem_id').eq('user_id', profile.id).eq('is_lead', true),
   ])
   const ledSubsystemIds = new Set((leadRows ?? []).map((r) => r.subsystem_id as string))
-  const userIsCtoOrAdmin = isCtoOrAdmin(profile)
+  // The calendar components' "isCtoOrAdmin" prop means "may manage the whole team's schedule",
+  // which now also covers the COO (migration 0028).
+  const userIsCtoOrAdmin = canManageOperations(profile)
   const canManage = userIsCtoOrAdmin || ledSubsystemIds.size > 0
   const subsystemOptions = userIsCtoOrAdmin ? subsystems : subsystems.filter((s) => ledSubsystemIds.has(s.id))
 

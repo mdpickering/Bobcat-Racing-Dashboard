@@ -17,6 +17,8 @@ interface MonthCalendarProps {
   taskDeadlines: Task[]
   canEditSubsystemIds: Set<string>
   isCtoOrAdmin: boolean
+  // Page the month navigation stays on (the Operations view embeds this same calendar).
+  basePath?: string
 }
 
 function localDateKey(iso: string): string {
@@ -26,7 +28,7 @@ function localDateKey(iso: string): string {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-export default function MonthCalendar({ year, month, events, milestones, taskDeadlines, canEditSubsystemIds, isCtoOrAdmin }: MonthCalendarProps) {
+export default function MonthCalendar({ year, month, events, milestones, taskDeadlines, canEditSubsystemIds, isCtoOrAdmin, basePath = '/calendar' }: MonthCalendarProps) {
   const router = useRouter()
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
@@ -67,7 +69,7 @@ export default function MonthCalendar({ year, month, events, milestones, taskDea
     const params = new URLSearchParams()
     params.set('year', String(y))
     params.set('month', String(m + 1))
-    router.push(`/calendar?${params.toString()}`)
+    router.push(`${basePath}?${params.toString()}`)
   }
 
   function goPrev() {

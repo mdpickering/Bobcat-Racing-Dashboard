@@ -66,6 +66,15 @@ export async function updatePurchaseRequest(supabase: SupabaseClient, id: string
   return data as unknown as PurchaseRequest
 }
 
+// Approval is an explicit action, not a status edit (migration 0027): the database refuses any
+// direct change of status to 'Approved' and only accepts it from this RPC, which also checks that
+// the caller is cto/admin and that the request is Submitted or Under Review. reviewed_by /
+// reviewed_at are stamped by the database, never sent from here.
+export async function approvePurchaseRequest(supabase: SupabaseClient, id: string): Promise<void> {
+  const { error } = await supabase.rpc('approve_purchase_request', { p_request_id: id })
+  if (error) throw error
+}
+
 export async function listPurchaseRequestItems(supabase: SupabaseClient, purchaseRequestId: string): Promise<PurchaseRequestItem[]> {
   const { data, error } = await supabase
     .from('purchase_request_items')

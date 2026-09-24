@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Pencil, Check, X, Trash2 } from 'lucide-react'
+import { ChevronLeft, Pencil, Check, X, Trash2, BadgeCheck, FileSpreadsheet } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
+import Modal from '@/components/ui/Modal'
 import Badge from '@/components/ui/Badge'
 import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
@@ -13,7 +14,7 @@ import Button from '@/components/ui/Button'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import PurchaseStatusBadge, { ALL_PURCHASE_STATUSES } from './PurchaseStatusBadge'
 import { createClient } from '@/lib/supabase/client'
-import { updatePurchaseRequest, deletePurchaseRequest } from '@/lib/supabase/queries/purchasing'
+import { updatePurchaseRequest, deletePurchaseRequest, approvePurchaseRequest } from '@/lib/supabase/queries/purchasing'
 import { formatDate } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
 import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
@@ -32,6 +33,9 @@ interface PurchaseRequestDetailHeaderProps {
 export default function PurchaseRequestDetailHeader({ request, canManage, canApprove, canDelete, itemCount }: PurchaseRequestDetailHeaderProps) {
   const router = useRouter()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [approveOpen, setApproveOpen] = useState(false)
+  const [approving, setApproving] = useState(false)
+  const [approveError, setApproveError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
@@ -41,17 +45,20 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // A lead can manage a request but only CTO/Admin can approve or reject it
-  // (enforced as a hard DB error, not a silent revert) — the status options
-  // shown reflect that so a lead never hits a permission error mid-select.
-  // The request's current status is always included even if it's outside
-  // that set (e.g. a lead viewing an already-Approved request) — otherwise
-  // a <select> whose value isn't among its options silently falls back to
-  // displaying the first option, making the dropdown lie about the actual
-  // status.
-  const selectableStatuses = canApprove
-    ? ALL_PURCHASE_STATUSES
-    : ALL_PURCHASE_STATUSES.filter((s) => (s !== 'Approved' && s !== 'Rejected') || s === request.status)
+  // Approval is its own explicit action (the "Approve Purchase" button) — the database rejects a
+  // plain status edit to 'Approved' for everyone, so it is never offered here. Rejecting stays a
+  // status change but only CTO/Admin can do it (a hard DB error otherwise), so a lead never sees
+  // it. The request's current status is always included even if it's outside that set (e.g. a
+  // lead viewing an already-Approved request) — otherwise a <select> whose value isn't among its
+  // options silently falls back to displaying the first option, making the dropdown lie about the
+  // actual status.
+  const selectableStatuses = ALL_PURCHASE_STATUSES.filter((s) => {
+    if (s === request.status) return true
+    if (s === 'Approved') return false
+    if (s === 'Rejected') return canApprove
+    return true
+  })
+  const isApprovable = canApprove && (request.status === 'Submitted' || request.status === 'Under Review')
 
   async function persist(patch: Record<string, unknown>) {
     setSaving(true)
@@ -61,9 +68,25 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
       await updatePurchaseRequest(supabase, request.id, patch)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save changes.')
+      setError(getErrorMessage(err, 'Could not save changes.'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleApprove() {
+    setApproving(true)
+    setApproveError(null)
+    try {
+      const supabase = createClient()
+      await approvePurchaseRequest(supabase, request.id)
+      setApproveOpen(false)
+      broadcastNotificationsChanged()
+      router.refresh()
+    } catch (err) {
+      setApproveError(getErrorMessage(err, 'Could not approve this purchase request.'))
+    } finally {
+      setApproving(false)
     }
   }
 
@@ -155,12 +178,47 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
             <PurchaseStatusBadge status={request.status} />
           )}
         </div>
+        {isApprovable && (
+          <Button size="sm" onClick={() => { setApproveError(null); setApproveOpen(true) }}>
+            <BadgeCheck size={13} /> Approve Purchase
+          </Button>
+        )}
+        {canApprove && request.status === 'Draft' && (
+          <span className="text-[11px] text-text-muted">Submit this request before it can be approved.</span>
+        )}
+        <a
+          href={`/api/purchasing/${request.id}/sheet`}
+          download
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-raised px-2.5 py-1.5 font-mono text-[11px] font-semibold text-text-primary transition-all hover:bg-border/60"
+        >
+          <FileSpreadsheet size={13} /> Download Purchase Sheet
+        </a>
         {canDelete && (
           <Button size="sm" variant="danger" className="ml-auto" onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
             <Trash2 size={12} /> Delete
           </Button>
         )}
       </div>
+
+      <Modal open={approveOpen} onClose={approving ? () => {} : () => setApproveOpen(false)} title="Approve this purchase?" maxWidthClassName="max-w-sm">
+        <div className="space-y-4 text-xs">
+          <div className="space-y-2 text-text-secondary">
+            <p>
+              <span className="font-semibold text-text-primary">{request.title}</span> ({request.status}) will be marked Approved and recorded as approved by you.
+            </p>
+            <p>The requester and the status history will show this approval.</p>
+          </div>
+          {approveError && <p className="text-rose-400">{approveError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" disabled={approving} onClick={() => setApproveOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={approving} onClick={handleApprove}>
+              {approving ? 'Approving…' : 'Approve Purchase'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={confirmOpen}

@@ -45,6 +45,7 @@ export default function UserFilters() {
         <option value="">All roles</option>
         <option value="member">Member</option>
         <option value="team_lead">Team Lead</option>
+        <option value="coo">COO</option>
         <option value="cto">CTO</option>
         <option value="admin">Admin</option>
       </Select>

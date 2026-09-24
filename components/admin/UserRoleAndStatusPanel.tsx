@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { adminSetUserRole, adminSetUserApproved, adminSetUserActive } from '@/lib/supabase/queries/admin'
 import type { Profile, UserRole } from '@/types/user'
 
-const ROLES: UserRole[] = ['member', 'team_lead', 'cto', 'admin']
+const ROLES: UserRole[] = ['member', 'team_lead', 'coo', 'cto', 'admin']
 
 export default function UserRoleAndStatusPanel({ user, isSelf }: { user: Profile; isSelf: boolean }) {
   const router = useRouter()

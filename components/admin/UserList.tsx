@@ -9,6 +9,7 @@ import type { Profile } from '@/types/user'
 const ROLE_TONE: Record<string, 'gold' | 'slate' | 'sky'> = {
   admin: 'gold',
   cto: 'gold',
+  coo: 'gold',
   team_lead: 'sky',
   member: 'slate',
 }

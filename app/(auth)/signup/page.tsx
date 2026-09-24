@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
@@ -10,6 +11,7 @@ const YEAR_OPTIONS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate']
 
 export default function SignupPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [displayName, setDisplayName] = useState('')
   const [year, setYear] = useState(YEAR_OPTIONS[0])
   const [email, setEmail] = useState('')
@@ -23,7 +25,7 @@ export default function SignupPage() {
     setError(null)
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -34,13 +36,22 @@ export default function SignupPage() {
       },
     })
 
-    setLoading(false)
-
     if (error) {
+      setLoading(false)
       setError(error.message)
       return
     }
 
+    // With "Confirm email" off in Supabase the account is confirmed immediately and comes back
+    // signed in, so there is no email to wait for. Only when confirmation is required is there
+    // no session yet, and only then do we tell the user to check their inbox.
+    if (data.session) {
+      router.push('/dashboard')
+      router.refresh()
+      return
+    }
+
+    setLoading(false)
     setSubmitted(true)
   }
 

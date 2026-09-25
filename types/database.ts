@@ -402,3 +402,177 @@ export interface CompetitionSettings {
   created_at: string
   updated_at: string
 }
+
+// ---------------------------------------------------------
+// Sponsorships (migration 0034)
+// ---------------------------------------------------------
+export type SponsorType = 'company' | 'foundation' | 'family_or_individual' | 'other'
+export type SponsorshipStage = 'prospect' | 'contacted' | 'interested' | 'committed' | 'declined' | 'withdrawn'
+export type ContributionKind = 'cash' | 'in_kind'
+export type InKindType = 'discount' | 'components_products' | 'tool' | 'software' | 'service' | 'other'
+export type DatePrecision = 'day' | 'month'
+export type PaymentEntryType = 'payment' | 'refund'
+export type PaymentMethod = 'check' | 'cash' | 'card' | 'wire_ach' | 'university_giving' | 'other' | 'unknown'
+export type PaymentReceivedBy = 'university' | 'team' | 'unknown'
+export type PaymentAvailability = 'held_by_university' | 'available' | 'unknown'
+export type LevelDecisionMethod = 'qualified' | 'exception' | 'custom' | 'historical_unassigned'
+export type LevelReviewFlag =
+  | 'none_recorded'
+  | 'historical_unassigned'
+  | 'custom'
+  | 'exception_recorded'
+  | 'below_minimum'
+  | 'qualifies_higher'
+  | 'ok'
+
+export interface Sponsor {
+  id: string
+  name: string
+  sponsor_type: SponsorType
+  website: string | null
+  notes: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface SponsorContact {
+  id: string
+  sponsor_id: string
+  name: string | null
+  title: string | null
+  email: string | null
+  phone: string | null
+  is_primary: boolean
+  notes: string | null
+  active: boolean
+}
+
+export interface SponsorshipLevelDeliverable {
+  id: string
+  level_id: string
+  title: string
+  sort_order: number
+}
+
+export interface SponsorshipLevel {
+  id: string
+  season: string
+  level_key: string
+  name: string
+  min_amount: number
+  sort_order: number
+  active: boolean
+  deliverables?: SponsorshipLevelDeliverable[]
+}
+
+export interface Sponsorship {
+  id: string
+  sponsor_id: string
+  season: string
+  stage: SponsorshipStage
+  level_id: string | null
+  level_decision_id: string | null
+  custom_terms: string | null
+  responsible_user_id: string | null
+  committed_on: string | null
+  renewal_date: string | null
+  agreement_url: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+// One row of the sponsorship_summary view (all figures are derived in the database).
+export interface SponsorshipSummary {
+  sponsorship_id: string
+  sponsor_id: string
+  sponsor_name: string
+  season: string
+  stage: SponsorshipStage
+  level_id: string | null
+  level_name: string | null
+  cash_committed: number
+  cash_received: number
+  cash_outstanding: number
+  cash_over_received: number
+  cash_available: number
+  cash_held_by_university: number
+  cash_availability_unknown: number
+  cash_refunded: number
+  in_kind_value: number
+  in_kind_received_value: number
+  total_sponsorship_value: number
+}
+
+// One row of the sponsorship_level_review view. It only flags; it never changes a level.
+export interface SponsorshipLevelReview {
+  sponsorship_id: string
+  season: string
+  qualifying_value: number
+  recorded_level_id: string | null
+  recorded_level_name: string | null
+  decision_method: LevelDecisionMethod | null
+  decision_basis_total: number | null
+  suggested_level_id: string | null
+  suggested_level_name: string | null
+  review_flag: LevelReviewFlag
+}
+
+export interface SponsorshipContribution {
+  id: string
+  sponsorship_id: string
+  kind: ContributionKind
+  description: string | null
+  committed_amount: number | null
+  estimated_value: number | null
+  in_kind_type: InKindType | null
+  contributed_on: string | null
+  contributed_on_precision: DatePrecision
+  received_on: string | null
+  received_on_precision: DatePrecision
+  withdrawn: boolean
+  notes: string | null
+  created_at: string
+}
+
+export interface SponsorshipPayment {
+  id: string
+  contribution_id: string
+  entry_type: PaymentEntryType
+  amount: number
+  received_on: string
+  received_on_precision: DatePrecision
+  method: PaymentMethod
+  reference: string | null
+  notes: string | null
+  received_by: PaymentReceivedBy
+  availability: PaymentAvailability
+  available_on: string | null
+  recorded_at: string
+  recorder?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+export interface SponsorshipLevelDecision {
+  id: string
+  sponsorship_id: string
+  level_id: string | null
+  method: LevelDecisionMethod
+  basis_cash: number
+  basis_in_kind: number
+  basis_total: number
+  threshold: number | null
+  reason: string | null
+  decided_at: string
+  level?: Pick<SponsorshipLevel, 'id' | 'name'> | null
+  decider?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+export interface SponsorshipHistoryEntry {
+  id: string
+  sponsorship_id: string
+  kind: 'note' | 'stage_change' | 'level_decision' | 'contribution' | 'payment' | 'availability'
+  body: string | null
+  created_at: string
+  author?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}

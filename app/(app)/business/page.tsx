@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, ShoppingCart, Users } from 'lucide-react'
+import { ArrowRight, Handshake, ShoppingCart, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getBusinessAccess } from '@/lib/supabase/queries/business'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
@@ -10,6 +10,7 @@ import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
 
 const SECTIONS = [
   { href: '/business/team', label: 'Team', description: 'Who is on the Business team, who leads it, and who is the Sponsorship Lead.', icon: Users },
+  { href: '/business/sponsorships', label: 'Sponsorships', description: "Each season's sponsors, contributions, payments and levels, and the history of every sponsor.", icon: Handshake },
   { href: '/purchasing', label: 'Purchasing', description: "The team's purchase orders and the purchase sheet exports.", icon: ShoppingCart },
 ]
 

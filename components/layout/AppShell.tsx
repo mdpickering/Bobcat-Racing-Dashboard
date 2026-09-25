@@ -7,7 +7,7 @@ import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/sidebarPrefer
 import Sidebar from './Sidebar'
 import Header from './Header'
 
-export default function AppShell({ profile, children }: { profile: Profile; children: React.ReactNode }) {
+export default function AppShell({ profile, canViewBusiness = false, children }: { profile: Profile; canViewBusiness?: boolean; children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   // Layout is driven by <html data-sidebar> (set before first paint); this state only
   // mirrors it for aria attributes and the collapsed-rail tooltips.
@@ -26,14 +26,14 @@ export default function AppShell({ profile, children }: { profile: Profile; chil
   return (
     <div className="flex h-screen overflow-hidden bg-bg text-text-primary">
       <div className="hidden md:block">
-        <Sidebar profile={profile} collapsible collapsed={collapsed} onToggleCollapsed={toggleSidebar} />
+        <Sidebar profile={profile} canViewBusiness={canViewBusiness} collapsible collapsed={collapsed} onToggleCollapsed={toggleSidebar} />
       </div>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
           <div className="relative flex h-full">
-            <Sidebar profile={profile} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar profile={profile} canViewBusiness={canViewBusiness} onNavigate={() => setMobileOpen(false)} />
             <button
               type="button"
               onClick={() => setMobileOpen(false)}

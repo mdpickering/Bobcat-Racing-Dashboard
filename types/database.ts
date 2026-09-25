@@ -169,6 +169,17 @@ export interface EmailPreferenceCategory {
   enabled: boolean
 }
 
+// A member of the Business team (migration 0033). is_lead = Business Lead; responsibilities are extra Business
+// duties such as 'sponsorship_lead'.
+export interface BusinessMember {
+  user_id: string
+  is_lead: boolean
+  added_by: string | null
+  added_at: string
+  profile?: Pick<Profile, 'id' | 'display_name' | 'email' | 'avatar_url' | 'role'> | null
+  responsibilities?: { responsibility: string }[]
+}
+
 export type PurchaseStatus =
   | 'Draft'
   | 'Submitted'

@@ -9,6 +9,7 @@ import {
   Ruler,
   ShieldCheck,
   Gauge,
+  Briefcase,
 } from 'lucide-react'
 
 export interface NavItem {
@@ -26,6 +27,10 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/purchasing', label: 'Purchasing', icon: ShoppingCart },
   { href: '/cad', label: 'CAD Review', icon: Ruler },
 ]
+
+// Rendered for Business members, and read-only for the COO and cto/admin — see Sidebar.tsx. The page checks access
+// itself and RLS (migration 0033) is the real boundary.
+export const BUSINESS_NAV_ITEMS: NavItem[] = [{ href: '/business', label: 'Business', icon: Briefcase }]
 
 // Rendered only for coo/cto/admin — see Sidebar.tsx. The page itself also gates on
 // canManageOperations() independently of nav visibility, and RLS is the real boundary

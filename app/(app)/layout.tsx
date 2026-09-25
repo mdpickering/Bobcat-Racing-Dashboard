@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import AppShell from '@/components/layout/AppShell'
+import { getBusinessAccess } from '@/lib/supabase/queries/business'
 import type { Profile } from '@/types/user'
 
 export default async function AppLayout({
@@ -24,5 +25,12 @@ export default async function AppLayout({
   if (!profile?.approved) redirect('/pending-approval')
   if (!profile.active) redirect('/deactivated')
 
-  return <AppShell profile={profile as Profile}>{children}</AppShell>
+  // Business area visibility (the database enforces the real access; this only decides whether to show the link).
+  const business = await getBusinessAccess(supabase, profile as Profile)
+
+  return (
+    <AppShell profile={profile as Profile} canViewBusiness={business.canView}>
+      {children}
+    </AppShell>
+  )
 }

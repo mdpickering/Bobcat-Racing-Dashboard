@@ -4,12 +4,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronsLeft } from 'lucide-react'
-import { NAV_ITEMS, ADMIN_NAV_ITEMS, OPERATIONS_NAV_ITEMS } from '@/lib/navigation'
+import { NAV_ITEMS, ADMIN_NAV_ITEMS, OPERATIONS_NAV_ITEMS, BUSINESS_NAV_ITEMS } from '@/lib/navigation'
 import { isCtoOrAdmin, canManageOperations } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 
 interface SidebarProps {
   profile: Profile
+  // Business members, the COO (read-only) and cto/admin see the Business area (decided on the server).
+  canViewBusiness?: boolean
   onNavigate?: () => void
   // Desktop instance only: turns on the collapse toggle and icon-rail behaviour.
   // The mobile drawer omits these and always renders the full sidebar.
@@ -18,12 +20,13 @@ interface SidebarProps {
   onToggleCollapsed?: () => void
 }
 
-export default function Sidebar({ profile, onNavigate, collapsible = false, collapsed = false, onToggleCollapsed }: SidebarProps) {
+export default function Sidebar({ profile, canViewBusiness = false, onNavigate, collapsible = false, collapsed = false, onToggleCollapsed }: SidebarProps) {
   const pathname = usePathname()
   const railMode = collapsible && collapsed
   const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null)
   // Operations for coo/cto/admin, Administration for cto/admin only.
   const managementNavItems = [
+    ...(canViewBusiness ? BUSINESS_NAV_ITEMS : []),
     ...(canManageOperations(profile) ? OPERATIONS_NAV_ITEMS : []),
     ...(isCtoOrAdmin(profile) ? ADMIN_NAV_ITEMS : []),
   ]

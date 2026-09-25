@@ -37,7 +37,15 @@ export async function getPurchaseRequestById(supabase: SupabaseClient, id: strin
 // (migration 0022) — so a bare insert into purchase_requests no longer succeeds.
 export async function createPurchaseRequest(
   supabase: SupabaseClient,
-  input: { subsystem_id: string; title: string; description?: string | null; vendor?: string | null; product_url: string }
+  input: {
+    subsystem_id: string
+    title: string
+    description?: string | null
+    vendor?: string | null
+    product_url: string
+    part_number?: string | null
+    subassembly?: string | null
+  }
 ): Promise<string> {
   const { data, error } = await supabase.rpc('create_purchase_request', {
     p_subsystem_id: input.subsystem_id,
@@ -45,6 +53,8 @@ export async function createPurchaseRequest(
     p_description: input.description ?? null,
     p_vendor: input.vendor ?? null,
     p_product_url: input.product_url,
+    p_part_number: input.part_number?.trim() || null,
+    p_subassembly: input.subassembly?.trim() || null,
   })
   if (error) throw error
   return data as string
@@ -87,7 +97,16 @@ export async function listPurchaseRequestItems(supabase: SupabaseClient, purchas
 
 export async function addPurchaseRequestItem(
   supabase: SupabaseClient,
-  input: { purchase_request_id: string; description: string; quantity: number; unit_cost?: number | null; link: string; notes?: string | null }
+  input: {
+    purchase_request_id: string
+    description: string
+    quantity: number
+    unit_cost?: number | null
+    link: string
+    notes?: string | null
+    part_number?: string | null
+    subassembly?: string | null
+  }
 ) {
   const { data, error } = await supabase.from('purchase_request_items').insert(input).select().single()
   if (error) throw error

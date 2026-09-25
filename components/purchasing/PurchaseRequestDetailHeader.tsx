@@ -7,17 +7,18 @@ import { ChevronLeft, Pencil, Check, X, Trash2, BadgeCheck, FileSpreadsheet } fr
 import Panel from '@/components/ui/Panel'
 import Modal from '@/components/ui/Modal'
 import Badge from '@/components/ui/Badge'
-import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
-import PurchaseStatusBadge, { ALL_PURCHASE_STATUSES } from './PurchaseStatusBadge'
+import PurchaseStatusBadge from './PurchaseStatusBadge'
 import { createClient } from '@/lib/supabase/client'
 import { updatePurchaseRequest, deletePurchaseRequest, approvePurchaseRequest } from '@/lib/supabase/queries/purchasing'
 import { formatDate } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
 import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
+import { statusActions, type StatusAction } from '@/lib/purchaseWorkflow'
+import { isExportableStatus, purchaseSheetFileName } from '@/lib/purchaseSheet/format'
 import type { PurchaseRequest, PurchaseStatus } from '@/types/database'
 
 interface PurchaseRequestDetailHeaderProps {
@@ -36,6 +37,8 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
   const [approveOpen, setApproveOpen] = useState(false)
   const [approving, setApproving] = useState(false)
   const [approveError, setApproveError] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<StatusAction | null>(null)
+  const [downloading, setDownloading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
@@ -45,20 +48,11 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Approval is its own explicit action (the "Approve Purchase" button) — the database rejects a
-  // plain status edit to 'Approved' for everyone, so it is never offered here. Rejecting stays a
-  // status change but only CTO/Admin can do it (a hard DB error otherwise), so a lead never sees
-  // it. The request's current status is always included even if it's outside that set (e.g. a
-  // lead viewing an already-Approved request) — otherwise a <select> whose value isn't among its
-  // options silently falls back to displaying the first option, making the dropdown lie about the
-  // actual status.
-  const selectableStatuses = ALL_PURCHASE_STATUSES.filter((s) => {
-    if (s === request.status) return true
-    if (s === 'Approved') return false
-    if (s === 'Rejected') return canApprove
-    return true
-  })
-  const isApprovable = canApprove && (request.status === 'Submitted' || request.status === 'Under Review')
+  // Next-step buttons instead of a status dropdown. Approval is its own explicit action (the database
+  // rejects a plain status edit to 'Approved' for everyone) and downloads the purchase sheet as soon as
+  // it succeeds. These only decide what to show; the database still decides who may do what.
+  const actions = statusActions(request.status, { canManage, canApprove })
+  const canDownload = isExportableStatus(request.status)
 
   async function persist(patch: Record<string, unknown>) {
     setSaving(true)
@@ -66,11 +60,41 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
     try {
       const supabase = createClient()
       await updatePurchaseRequest(supabase, request.id, patch)
+      broadcastNotificationsChanged()
       router.refresh()
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save changes.'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Fetches the generated .xlsx and hands it to the browser as a file download.
+  async function downloadSheet() {
+    const res = await fetch(`/api/purchasing/${request.id}/sheet`)
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null
+      throw new Error(body?.error ?? 'Could not generate the purchase sheet.')
+    }
+    const url = URL.createObjectURL(await res.blob())
+    const link = document.createElement('a')
+    link.href = url
+    link.download = purchaseSheetFileName(request.id)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
+
+  async function handleDownloadClick() {
+    setDownloading(true)
+    setError(null)
+    try {
+      await downloadSheet()
+    } catch (err) {
+      setError(getErrorMessage(err, 'Could not download the purchase sheet.'))
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -80,18 +104,41 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
     try {
       const supabase = createClient()
       await approvePurchaseRequest(supabase, request.id)
-      setApproveOpen(false)
-      broadcastNotificationsChanged()
-      router.refresh()
     } catch (err) {
       setApproveError(getErrorMessage(err, 'Could not approve this purchase request.'))
+      setApproving(false)
+      return
+    }
+    // Approved: close the dialog, refresh, and generate the sheet. If only the download fails the
+    // approval still stands, and the Download Purchase Sheet button is right there.
+    setApproveOpen(false)
+    broadcastNotificationsChanged()
+    router.refresh()
+    try {
+      await downloadSheet()
+    } catch (err) {
+      setError(`Approved — but the purchase sheet could not be downloaded (${getErrorMessage(err, 'unknown error')}). Use Download Purchase Sheet to try again.`)
     } finally {
       setApproving(false)
     }
   }
 
-  async function handleStatusChange(status: string) {
-    await persist({ status: status as PurchaseStatus })
+  async function handleAction(action: StatusAction) {
+    if (action.kind === 'approve') {
+      setApproveError(null)
+      setApproveOpen(true)
+    } else if (action.confirm) {
+      setPendingAction(action)
+    } else if (action.to) {
+      await persist({ status: action.to })
+    }
+  }
+
+  async function handleConfirmedAction() {
+    const action = pendingAction
+    if (!action?.to) return
+    await persist({ status: action.to })
+    setPendingAction(null)
   }
 
   async function handleSaveDetails() {
@@ -166,33 +213,24 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <div>
           <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Status</label>
-          {canManage ? (
-            <Select value={request.status} disabled={saving} onChange={(e) => handleStatusChange(e.target.value)} className="w-44">
-              {selectableStatuses.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </Select>
-          ) : (
-            <PurchaseStatusBadge status={request.status} />
-          )}
+          <PurchaseStatusBadge status={request.status} />
         </div>
-        {isApprovable && (
-          <Button size="sm" onClick={() => { setApproveError(null); setApproveOpen(true) }}>
-            <BadgeCheck size={13} /> Approve Purchase
+        {actions.map((action) => (
+          <Button
+            key={action.id}
+            size="sm"
+            variant={action.tone === 'primary' ? 'primary' : action.tone}
+            disabled={saving || approving}
+            onClick={() => handleAction(action)}
+          >
+            {action.kind === 'approve' && <BadgeCheck size={13} />} {action.label}
+          </Button>
+        ))}
+        {canDownload && (
+          <Button size="sm" variant="secondary" disabled={downloading} onClick={handleDownloadClick}>
+            <FileSpreadsheet size={13} /> {downloading ? 'Preparing…' : 'Download Purchase Sheet'}
           </Button>
         )}
-        {canApprove && request.status === 'Draft' && (
-          <span className="text-[11px] text-text-muted">Submit this request before it can be approved.</span>
-        )}
-        <a
-          href={`/api/purchasing/${request.id}/sheet`}
-          download
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-raised px-2.5 py-1.5 font-mono text-[11px] font-semibold text-text-primary transition-all hover:bg-border/60"
-        >
-          <FileSpreadsheet size={13} /> Download Purchase Sheet
-        </a>
         {canDelete && (
           <Button size="sm" variant="danger" className="ml-auto" onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
             <Trash2 size={12} /> Delete
@@ -206,7 +244,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
             <p>
               <span className="font-semibold text-text-primary">{request.title}</span> ({request.status}) will be marked Approved and recorded as approved by you.
             </p>
-            <p>The requester and the status history will show this approval.</p>
+            <p>The purchase sheet (.xlsx) will download automatically once it is approved.</p>
           </div>
           {approveError && <p className="text-rose-400">{approveError}</p>}
           <div className="flex justify-end gap-2">
@@ -214,11 +252,22 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
               Cancel
             </Button>
             <Button type="button" disabled={approving} onClick={handleApprove}>
-              {approving ? 'Approving…' : 'Approve Purchase'}
+              {approving ? 'Approving…' : 'Approve & Download Sheet'}
             </Button>
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={pendingAction !== null}
+        onClose={() => setPendingAction(null)}
+        onConfirm={handleConfirmedAction}
+        title={pendingAction?.confirm?.title ?? ''}
+        confirmLabel={pendingAction?.confirm?.confirmLabel}
+        busyLabel={pendingAction?.confirm?.busyLabel}
+        busy={saving}
+        description={<p>{pendingAction?.confirm?.body}</p>}
+      />
 
       <ConfirmDialog
         open={confirmOpen}

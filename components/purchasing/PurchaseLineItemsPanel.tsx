@@ -32,6 +32,8 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
   const [quantity, setQuantity] = useState('1')
   const [unitCost, setUnitCost] = useState('')
   const [link, setLink] = useState('')
+  const [partNumber, setPartNumber] = useState('')
+  const [subassembly, setSubassembly] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,7 +56,11 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         quantity: Number(quantity) || 1,
         unit_cost: unitCost ? Number(unitCost) : null,
         link: link.trim(),
+        part_number: partNumber.trim() || null,
+        subassembly: subassembly.trim() || null,
       })
+      setPartNumber('')
+      setSubassembly('')
       setDescription('')
       setQuantity('1')
       setUnitCost('')
@@ -78,6 +84,21 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update quantity.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Part # and Subassembly are plain optional text; clearing one stores NULL (the database refuses empty strings).
+  async function handleTextChange(itemId: string, field: 'part_number' | 'subassembly', next: string) {
+    setBusy(true)
+    setError(null)
+    try {
+      const supabase = createClient()
+      await updatePurchaseRequestItem(supabase, itemId, { [field]: next.trim() || null })
+      router.refresh()
+    } catch (err) {
+      setError(getErrorMessage(err, 'Could not save this change.'))
     } finally {
       setBusy(false)
     }
@@ -118,6 +139,8 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
             <thead>
               <tr className="border-b border-border text-left text-[10px] uppercase text-text-muted">
                 <th className="pb-2 font-medium">Description</th>
+                <th className="pb-2 font-medium">Part #</th>
+                <th className="pb-2 font-medium">Subassembly</th>
                 <th className="pb-2 font-medium">Qty</th>
                 <th className="pb-2 font-medium">Unit Cost</th>
                 <th className="pb-2 font-medium">Line Total</th>
@@ -132,6 +155,22 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                     {item.description}
                     {item.notes && <div className="text-[10px] text-text-muted">{item.notes}</div>}
                   </td>
+                  {(['part_number', 'subassembly'] as const).map((field) => (
+                    <td key={field} className="py-2 pr-2 text-text-secondary">
+                      {canManage ? (
+                        <Input
+                          defaultValue={item[field] ?? ''}
+                          maxLength={100}
+                          disabled={busy}
+                          placeholder="—"
+                          onBlur={(e) => e.target.value.trim() !== (item[field] ?? '') && handleTextChange(item.id, field, e.target.value)}
+                          className="w-28"
+                        />
+                      ) : (
+                        item[field] || '—'
+                      )}
+                    </td>
+                  ))}
                   <td className="py-2 pr-2">
                     {canManage ? (
                       <Input
@@ -168,7 +207,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
             {items.length > 0 && (
               <tfoot>
                 <tr className="border-t border-border">
-                  <td colSpan={3} className="pt-2 text-right text-[10px] font-mono uppercase text-text-muted">
+                  <td colSpan={5} className="pt-2 text-right text-[10px] font-mono uppercase text-text-muted">
                     Total
                   </td>
                   <td className="pt-2 font-bold text-text-primary">{formatCurrency(total)}</td>
@@ -183,6 +222,10 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       {canManage && adding && (
         <form onSubmit={handleAdd} noValidate className="mt-3 space-y-2 border-t border-border pt-3 text-xs">
           <Input required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Item description" />
+          <div className="grid grid-cols-2 gap-2">
+            <Input value={partNumber} maxLength={100} onChange={(e) => setPartNumber(e.target.value)} placeholder="Part # (optional)" />
+            <Input value={subassembly} maxLength={100} onChange={(e) => setSubassembly(e.target.value)} placeholder="Subassembly (optional)" />
+          </div>
           <div className="grid grid-cols-3 gap-2">
             <Input type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="Qty" />
             <Input type="number" min={0} step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="Unit cost" />

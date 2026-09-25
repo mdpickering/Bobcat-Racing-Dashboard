@@ -26,6 +26,8 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
   const [description, setDescription] = useState('')
   const [vendor, setVendor] = useState('')
   const [productUrl, setProductUrl] = useState('')
+  const [partNumber, setPartNumber] = useState('')
+  const [subassembly, setSubassembly] = useState('')
   const [urlTouched, setUrlTouched] = useState(false)
   const [subsystemId, setSubsystemId] = useState(defaultSubsystemId ?? subsystems[0]?.id ?? '')
   const [submitting, setSubmitting] = useState(false)
@@ -50,12 +52,16 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
         description: description || null,
         vendor: vendor || null,
         product_url: productUrl.trim(),
+        part_number: partNumber,
+        subassembly,
       })
       onClose()
       setTitle('')
       setDescription('')
       setVendor('')
       setProductUrl('')
+      setPartNumber('')
+      setSubassembly('')
       setUrlTouched(false)
       router.refresh()
       router.push(`/purchasing/${id}`)
@@ -111,7 +117,17 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
           </div>
           <div>
             <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Vendor</label>
-            <Input value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="Optional" />
+            <Input value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="e.g. McMaster (else the link's site)" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Part #</label>
+            <Input value={partNumber} maxLength={100} onChange={(e) => setPartNumber(e.target.value)} placeholder="e.g. 92186A394" />
+          </div>
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Subassembly</label>
+            <Input value={subassembly} maxLength={100} onChange={(e) => setSubassembly(e.target.value)} placeholder="e.g. front A-Arm" />
           </div>
         </div>
         {error && <p className="text-rose-400">{error}</p>}

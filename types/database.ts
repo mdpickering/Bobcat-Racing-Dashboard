@@ -209,6 +209,8 @@ export interface PurchaseRequestItem {
   unit_cost: number | null
   link: string | null
   notes: string | null
+  part_number: string | null
+  subassembly: string | null
   created_at: string
   updated_at: string
   legacy_id: string | null

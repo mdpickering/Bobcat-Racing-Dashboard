@@ -36,8 +36,8 @@ export default async function AdminAuditPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Audit &amp; Activity</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">Administrative history and migration bookkeeping.</p>
+        <h1 className="text-xl font-semibold text-text-primary">Audit &amp; Activity</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">Administrative history and migration bookkeeping.</p>
       </div>
       <AdminNav />
 

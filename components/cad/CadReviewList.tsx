@@ -20,7 +20,7 @@ export default function CadReviewList({ reviews }: { reviews: CadReview[] }) {
             <Link href={`/cad/${review.id}`} className="flex items-center gap-3 px-4 py-3 text-xs transition-colors hover:bg-surface-raised">
               <div className="min-w-0 flex-1">
                 <span className="truncate font-medium text-text-primary">{review.title}</span>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-text-muted">
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-text-muted">
                   <span>{review.subsystem?.name ?? 'Unknown'}</span>
                   <span>· Rev {review.current_revision}</span>
                   {review.task?.title && <span>· {review.task.title}</span>}

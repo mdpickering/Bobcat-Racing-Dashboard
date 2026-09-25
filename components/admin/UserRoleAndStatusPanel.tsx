@@ -73,11 +73,11 @@ export default function UserRoleAndStatusPanel({ user, isSelf }: { user: Profile
   return (
     <Panel className="p-4">
       <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Role &amp; Status</h3>
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       <div className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Role</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Role</label>
           <Select value={user.role} disabled={busy} onChange={(e) => handleRoleChange(e.target.value)} className="w-44">
             {ROLES.map((r) => (
               <option key={r} value={r}>

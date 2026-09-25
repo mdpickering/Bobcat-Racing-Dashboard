@@ -119,7 +119,7 @@ export default function NotificationBell() {
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-text-muted hover:text-accent-blue"
+              className="flex items-center gap-1 text-[11px] font-mono uppercase tracking-wide text-text-muted hover:text-accent-blue"
             >
               <CheckCheck size={12} /> Mark all read
             </button>
@@ -136,14 +136,14 @@ export default function NotificationBell() {
                     <div className="flex items-start justify-between gap-2 px-3 py-2">
                       <button type="button" onClick={() => handleNotificationClick(n)} className="min-w-0 flex-1 text-left">
                         <div className="truncate font-semibold text-text-primary">{n.title}</div>
-                        {n.message && <div className="mt-0.5 line-clamp-2 text-[11px] text-text-secondary">{n.message}</div>}
-                        <div className="mt-1 text-[10px] text-text-muted">{timeAgo(n.created_at)}</div>
+                        {n.message && <div className="mt-0.5 line-clamp-2 text-[12px] text-text-secondary">{n.message}</div>}
+                        <div className="mt-1 text-[11px] text-text-muted">{timeAgo(n.created_at)}</div>
                       </button>
                       {!n.read_at && (
                         <button
                           type="button"
                           onClick={() => handleMarkRead(n.id)}
-                          className="shrink-0 text-[10px] font-mono uppercase text-accent-blue hover:underline"
+                          className="shrink-0 text-[11px] font-mono uppercase text-accent-blue hover:underline"
                         >
                           Read
                         </button>
@@ -158,7 +158,7 @@ export default function NotificationBell() {
             <Link
               href="/notifications"
               onClick={() => setOpen(false)}
-              className="block rounded-lg px-3 py-1.5 text-center text-[10px] font-mono uppercase tracking-wide text-accent-blue hover:bg-surface"
+              className="block rounded-lg px-3 py-1.5 text-center text-[11px] font-mono uppercase tracking-wide text-accent-blue hover:bg-surface"
             >
               View all
             </Link>

@@ -42,7 +42,7 @@ function DeadlineRow({ task }: { task: SchedulingTask }) {
           <Link href={`/tasks/${task.id}`} className="block truncate font-medium text-text-primary hover:text-accent-blue">
             {task.title}
           </Link>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-text-muted">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-text-muted">
             <span>{task.subsystem?.name ?? 'Unknown'}</span>
             <span>· {task.primary_owner ? task.primary_owner.display_name || task.primary_owner.email : 'Unassigned'}</span>
             <span className={overdue ? 'font-semibold text-rose-400' : ''}>
@@ -61,7 +61,7 @@ function DeadlineRow({ task }: { task: SchedulingTask }) {
             value={value}
             disabled={busy}
             onChange={(e) => setValue(e.target.value)}
-            className="rounded-lg border border-border bg-surface px-2 py-1 font-mono text-[11px] text-text-primary outline-none focus:border-accent-blue"
+            className="rounded-lg border border-border bg-surface px-2 py-1 font-mono text-[12px] text-text-primary outline-none focus:border-accent-blue"
           />
           <Button size="sm" disabled={busy || !value || value === current} onClick={() => save(value)}>
             {busy ? 'Saving…' : 'Reschedule'}
@@ -73,7 +73,7 @@ function DeadlineRow({ task }: { task: SchedulingTask }) {
           )}
         </div>
       </div>
-      {error && <p className="mt-1.5 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mt-1.5 text-[12px] text-rose-400">{error}</p>}
     </li>
   )
 }

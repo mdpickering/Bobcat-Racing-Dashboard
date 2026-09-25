@@ -12,6 +12,12 @@
   --text-muted: 100 116 139;
   --accent: 255 199 44;
   --accent-blue: 62 124 177;
+  /* status colours: one meaning each, everywhere (see lib/status.ts) */
+  --status-success: 74 222 128;
+  --status-warning: 251 191 36;
+  --status-danger: 248 113 113;
+  --status-info: 96 165 250;
+  --ws-accent: 122 147 168;
 }
 
 :root[data-theme='light'] {
@@ -24,11 +30,32 @@
   --text-muted: 100 116 139;
   --accent: 191 138 5;
   --accent-blue: 40 96 145;
+  --status-success: 21 128 61;
+  --status-warning: 161 98 7;
+  --status-danger: 185 28 28;
+  --status-info: 29 78 216;
+  --ws-accent: 91 114 133;
+}
+
+/* Workspace accents: navigation marker, workspace indicator, small rules and selected states only. */
+[data-workspace='engineering'] { --ws-accent: 122 147 168; }
+[data-workspace='business'] { --ws-accent: 255 199 44; }
+[data-workspace='operations'] { --ws-accent: 62 124 177; }
+:root[data-theme='light'] [data-workspace='engineering'] { --ws-accent: 91 114 133; }
+:root[data-theme='light'] [data-workspace='business'] { --ws-accent: 191 138 5; }
+:root[data-theme='light'] [data-workspace='operations'] { --ws-accent: 40 96 145; }
+
+/* Visible keyboard focus everywhere; mouse clicks do not draw it. */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent-blue));
+  outline-offset: 2px;
 }
 
 body {
   background-color: rgb(var(--bg));
   color: rgb(var(--text-primary));
+  font-size: 13px;
+  line-height: 1.25rem;
 }
 
 ::selection {
@@ -85,12 +112,21 @@ body {
   html[data-sidebar='collapsed'] .sidebar-collapsible .sidebar-toggle-icon {
     transform: rotate(180deg);
   }
-  /* The tinted active background alone is easy to miss on a bare icon — add a ring. */
+  /* The tinted active background alone is easy to miss on a bare icon — add a ring in the workspace accent. */
   html[data-sidebar='collapsed'] .sidebar-collapsible .sidebar-link[aria-current='page'] {
-    box-shadow: inset 0 0 0 1px rgb(var(--accent-blue) / 0.55);
+    box-shadow: inset 0 0 0 1px rgb(var(--ws-accent) / 0.7);
   }
-  html[data-sidebar='collapsed'] .sidebar-collapsible .sidebar-link--admin[aria-current='page'] {
-    box-shadow: inset 0 0 0 1px rgb(var(--accent) / 0.55);
+  /* Group labels give way to a thin divider in the icon rail. */
+  html[data-sidebar='collapsed'] .sidebar-collapsible .sidebar-group-label {
+    height: 0;
+    padding: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+  html[data-sidebar='collapsed'] .sidebar-collapsible .sidebar-group {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgb(var(--border));
   }
 }
 

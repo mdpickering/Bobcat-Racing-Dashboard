@@ -41,7 +41,7 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href="/admin/users" className="flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+      <Link href="/admin/users" className="flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
         <ChevronLeft size={13} /> Back to users
       </Link>
 
@@ -61,19 +61,19 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
 
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-xs sm:grid-cols-3">
           <div>
-            <div className="font-mono text-[10px] uppercase text-text-muted">Year</div>
+            <div className="font-mono text-[11px] uppercase text-text-muted">Year</div>
             <div className="mt-0.5 text-text-primary">{targetUser.year || '—'}</div>
           </div>
           <div>
-            <div className="font-mono text-[10px] uppercase text-text-muted">Major</div>
+            <div className="font-mono text-[11px] uppercase text-text-muted">Major</div>
             <div className="mt-0.5 text-text-primary">{targetUser.major || '—'}</div>
           </div>
           <div>
-            <div className="font-mono text-[10px] uppercase text-text-muted">Joined</div>
+            <div className="font-mono text-[11px] uppercase text-text-muted">Joined</div>
             <div className="mt-0.5 text-text-primary">{formatDate(targetUser.created_at)}</div>
           </div>
           <div className="col-span-2 sm:col-span-3">
-            <div className="font-mono text-[10px] uppercase text-text-muted">Skills</div>
+            <div className="font-mono text-[11px] uppercase text-text-muted">Skills</div>
             <div className="mt-1 flex flex-wrap gap-1">
               {targetUser.skills && targetUser.skills.length > 0 ? (
                 targetUser.skills.map((s) => (

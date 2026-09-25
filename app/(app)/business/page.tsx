@@ -30,8 +30,8 @@ export default async function BusinessPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Business</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">The business side of the team.</p>
+        <h1 className="text-xl font-semibold text-text-primary">Business</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">The business side of the team.</p>
       </div>
 
       <Panel className="p-4">
@@ -44,7 +44,7 @@ export default async function BusinessPage() {
           {!access.isMember && !isCtoOrAdmin(profile) && <Badge tone="amber">Read-only</Badge>}
         </div>
         {!access.isMember && !isCtoOrAdmin(profile) && (
-          <p className="mt-2 text-[11px] text-text-muted">You can see the Business area. To make changes you need to be added to the Business team.</p>
+          <p className="mt-2 text-[12px] text-text-muted">You can see the Business area. To make changes you need to be added to the Business team.</p>
         )}
       </Panel>
 
@@ -59,7 +59,7 @@ export default async function BusinessPage() {
                 <div className="flex items-center justify-between gap-2 text-sm font-semibold text-text-primary">
                   {label} <ArrowRight size={13} className="text-text-muted" />
                 </div>
-                <p className="mt-1 text-[11px] text-text-muted">{description}</p>
+                <p className="mt-1 text-[12px] text-text-muted">{description}</p>
               </div>
             </Panel>
           </Link>

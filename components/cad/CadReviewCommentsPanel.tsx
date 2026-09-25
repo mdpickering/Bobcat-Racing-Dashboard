@@ -72,8 +72,8 @@ export default function CadReviewCommentsPanel({ cadReviewId, comments, currentU
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-text-primary">{c.user?.display_name || c.user?.email}</span>
-                    <span className="text-[10px] text-text-muted">{timeAgo(c.created_at)}</span>
-                    {c.updated_at !== c.created_at && <span className="text-[10px] text-text-muted">(edited)</span>}
+                    <span className="text-[11px] text-text-muted">{timeAgo(c.created_at)}</span>
+                    {c.updated_at !== c.created_at && <span className="text-[11px] text-text-muted">(edited)</span>}
                   </div>
                   {editingId === c.id ? (
                     <div className="mt-1 space-y-1.5">
@@ -97,7 +97,7 @@ export default function CadReviewCommentsPanel({ cadReviewId, comments, currentU
                         setEditingId(c.id)
                         setEditText(c.comment)
                       }}
-                      className="mt-1 flex items-center gap-1 text-[10px] text-text-muted hover:text-accent-blue"
+                      className="mt-1 flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue"
                     >
                       <Pencil size={10} /> Edit
                     </button>
@@ -111,7 +111,7 @@ export default function CadReviewCommentsPanel({ cadReviewId, comments, currentU
 
       <form onSubmit={handleSubmit} className="space-y-2 border-t border-border pt-3">
         <Textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a review comment…" />
-        {error && <p className="text-[11px] text-rose-400">{error}</p>}
+        {error && <p className="text-[12px] text-rose-400">{error}</p>}
         <div className="flex justify-end">
           <Button size="sm" type="submit" disabled={submitting || !text.trim()}>
             <Send size={12} /> Post

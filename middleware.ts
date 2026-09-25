@@ -39,7 +39,8 @@ export async function middleware(request: NextRequest) {
 
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    // "/" sends people to their workspace (app/page.tsx)
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

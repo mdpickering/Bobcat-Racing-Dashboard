@@ -46,7 +46,7 @@ export default function SignupPage() {
     // signed in, so there is no email to wait for. Only when confirmation is required is there
     // no session yet, and only then do we tell the user to check their inbox.
     if (data.session) {
-      router.push('/dashboard')
+      router.push('/')
       router.refresh()
       return
     }
@@ -81,7 +81,7 @@ export default function SignupPage() {
         <h1 className="text-sm font-bold mb-4">Join Bobcat Racing</h1>
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div>
-            <label className="block mb-1 font-mono uppercase text-[10px] text-slate-400">
+            <label className="block mb-1 font-mono uppercase text-[11px] text-slate-400">
               Name
             </label>
             <input
@@ -92,7 +92,7 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-mono uppercase text-[10px] text-slate-400">
+            <label className="block mb-1 font-mono uppercase text-[11px] text-slate-400">
               Academic Year
             </label>
             <select
@@ -108,7 +108,7 @@ export default function SignupPage() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-mono uppercase text-[10px] text-slate-400">
+            <label className="block mb-1 font-mono uppercase text-[11px] text-slate-400">
               Email
             </label>
             <input
@@ -120,7 +120,7 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-mono uppercase text-[10px] text-slate-400">
+            <label className="block mb-1 font-mono uppercase text-[11px] text-slate-400">
               Password
             </label>
             <input
@@ -137,7 +137,7 @@ export default function SignupPage() {
             {loading ? 'Creating Account…' : 'Create Account'}
           </Button>
         </form>
-        <p className="text-[11px] text-slate-400 mt-4">
+        <p className="text-[12px] text-slate-400 mt-4">
           Already have an account?{' '}
           <Link href="/login" className="text-qu-gold hover:underline">
             Sign in

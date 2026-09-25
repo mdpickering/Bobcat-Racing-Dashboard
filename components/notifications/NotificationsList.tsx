@@ -67,8 +67,8 @@ export default function NotificationsList({ notifications }: { notifications: Ap
                 <div className="min-w-0">
                   {!n.read_at && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-qu-gold align-middle" />}
                   <span className="font-semibold text-text-primary">{n.title}</span>
-                  {n.message && <div className="mt-0.5 text-[11px] text-text-secondary">{n.message}</div>}
-                  <div className="mt-1 text-[10px] text-text-muted">{timeAgo(n.created_at)}</div>
+                  {n.message && <div className="mt-0.5 text-[12px] text-text-secondary">{n.message}</div>}
+                  <div className="mt-1 text-[11px] text-text-muted">{timeAgo(n.created_at)}</div>
                 </div>
               </button>
             </li>

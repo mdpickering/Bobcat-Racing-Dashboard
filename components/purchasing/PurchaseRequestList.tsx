@@ -33,7 +33,7 @@ export default function PurchaseRequestList({ requests }: { requests: PurchaseRe
             <Link href={`/purchasing/${pr.id}`} className="flex items-center gap-3 px-4 py-3 text-xs transition-colors hover:bg-surface-raised">
               <div className="min-w-0 flex-1">
                 <span className="truncate font-medium text-text-primary">{pr.title}</span>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-text-muted">
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-text-muted">
                   <span>{pr.subsystem?.name ?? 'Unknown'}</span>
                   <span>· {summary(pr)}</span>
                   <span>· Requested by {pr.requester?.display_name || pr.requester?.email || 'Unknown'}</span>

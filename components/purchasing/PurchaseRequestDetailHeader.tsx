@@ -163,7 +163,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
 
   return (
     <Panel className="p-5">
-      <Link href="/purchasing" className="mb-3 flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+      <Link href="/purchasing" className="mb-3 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
         <ChevronLeft size={13} /> Back to purchasing
       </Link>
 
@@ -194,7 +194,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
           </div>
           {request.description && <p className="mt-2 whitespace-pre-wrap text-xs text-text-secondary">{request.description}</p>}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px]">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
             <Badge tone="slate">{request.subsystem?.name ?? 'Unknown subsystem'}</Badge>
             {request.vendor && <Badge tone="slate">{request.vendor}</Badge>}
             <span className="text-text-muted">Requested by {request.requester?.display_name || request.requester?.email} · {formatDate(request.created_at)}</span>
@@ -210,7 +210,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Status</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Status</label>
           <PurchaseStatusBadge status={request.status} />
         </div>
         {actions.map((action) => (

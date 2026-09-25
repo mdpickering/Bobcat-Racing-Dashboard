@@ -82,12 +82,12 @@ export default function AccountForm({ profile, emailSection }: { profile: Profil
         <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-text-primary">Profile</h2>
         <form onSubmit={handleSave} className="space-y-3 text-xs">
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Display name</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Display name</label>
             <Input required value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Year</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Year</label>
               <Select value={year} onChange={(e) => setYear(e.target.value)}>
                 {YEAR_OPTIONS.map((y) => (
                   <option key={y} value={y}>
@@ -97,16 +97,16 @@ export default function AccountForm({ profile, emailSection }: { profile: Profil
               </Select>
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Major</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Major</label>
               <Input value={major} onChange={(e) => setMajor(e.target.value)} placeholder="e.g. Mechanical Engineering" />
             </div>
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Skills</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Skills</label>
             <Input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder="Comma-separated, e.g. SolidWorks, Welding, Python" />
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Avatar URL</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Avatar URL</label>
             <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" />
           </div>
 

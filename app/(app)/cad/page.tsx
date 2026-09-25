@@ -43,8 +43,8 @@ export default async function CadPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">CAD Review</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">
+        <h1 className="text-xl font-semibold text-text-primary">CAD Review</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">
           {reviews.length} review{reviews.length === 1 ? '' : 's'} matching your filters
         </p>
       </div>

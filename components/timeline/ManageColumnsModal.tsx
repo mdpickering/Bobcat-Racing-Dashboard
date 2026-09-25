@@ -78,7 +78,7 @@ export default function ManageColumnsModal({ open, onClose, columns }: ManageCol
                 onBlur={(e) => Number(e.target.value) !== col.sort_order && handleUpdate(col.key, { sort_order: Number(e.target.value) })}
                 className="w-16"
               />
-              <label className="flex items-center gap-1 text-[10px] text-text-muted">
+              <label className="flex items-center gap-1 text-[11px] text-text-muted">
                 <input type="checkbox" checked={col.highlight} disabled={busy} onChange={(e) => handleUpdate(col.key, { highlight: e.target.checked })} />
                 Highlight
               </label>
@@ -96,13 +96,13 @@ export default function ManageColumnsModal({ open, onClose, columns }: ManageCol
         </div>
 
         <form onSubmit={handleAdd} className="space-y-2 border-t border-border pt-3">
-          <p className="font-mono text-[10px] uppercase text-text-muted">Add Column</p>
+          <p className="font-mono text-[11px] uppercase text-text-muted">Add Column</p>
           <div className="grid grid-cols-3 gap-2">
             <Input required value={key} onChange={(e) => setKey(e.target.value)} placeholder="Key (e.g. w16)" />
             <Input required value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Label (e.g. W16)" />
             <Input required type="number" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} placeholder="Order" />
           </div>
-          <label className="flex items-center gap-1.5 text-[10px] text-text-muted">
+          <label className="flex items-center gap-1.5 text-[11px] text-text-muted">
             <input type="checkbox" checked={highlight} onChange={(e) => setHighlight(e.target.checked)} /> Highlight this column
           </label>
           <div className="flex justify-end gap-2 pt-1">

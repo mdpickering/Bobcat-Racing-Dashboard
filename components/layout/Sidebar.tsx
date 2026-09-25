@@ -2,34 +2,36 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { ChevronsLeft } from 'lucide-react'
-import { NAV_ITEMS, ADMIN_NAV_ITEMS, OPERATIONS_NAV_ITEMS, BUSINESS_NAV_ITEMS } from '@/lib/navigation'
-import { isCtoOrAdmin, canManageOperations } from '@/lib/permissions/roles'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { ChevronsLeft, ShieldCheck } from 'lucide-react'
+import { ADMIN_LINK, WORKSPACES, isNavItemActive } from '@/lib/workspaces'
+import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import type { WorkspaceId } from '@/lib/workspaceAccess'
 import type { Profile } from '@/types/user'
+import { NAV_ICONS } from './navIcons'
+import WorkspaceSwitcher from './WorkspaceSwitcher'
 
 interface SidebarProps {
   profile: Profile
-  // Business members, the COO (read-only) and cto/admin see the Business area (decided on the server).
-  canViewBusiness?: boolean
+  workspace: WorkspaceId
+  available: WorkspaceId[]
   onNavigate?: () => void
   // Desktop instance only: turns on the collapse toggle and icon-rail behaviour.
   // The mobile drawer omits these and always renders the full sidebar.
   collapsible?: boolean
   collapsed?: boolean
   onToggleCollapsed?: () => void
+  // The desktop sidebar carries the one workspace switcher; on phones it lives in the header, so the drawer omits it.
+  showSwitcher?: boolean
 }
 
-export default function Sidebar({ profile, canViewBusiness = false, onNavigate, collapsible = false, collapsed = false, onToggleCollapsed }: SidebarProps) {
-  const pathname = usePathname()
+export default function Sidebar({ profile, workspace, available, onNavigate, collapsible = false, collapsed = false, onToggleCollapsed, showSwitcher = false }: SidebarProps) {
+  const pathname = usePathname() ?? ''
+  const params = useSearchParams()
   const railMode = collapsible && collapsed
   const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null)
-  // Operations for coo/cto/admin, Administration for cto/admin only.
-  const managementNavItems = [
-    ...(canViewBusiness ? BUSINESS_NAV_ITEMS : []),
-    ...(canManageOperations(profile) ? OPERATIONS_NAV_ITEMS : []),
-    ...(isCtoOrAdmin(profile) ? ADMIN_NAV_ITEMS : []),
-  ]
+  const def = WORKSPACES[workspace]
+  const adminActive = pathname === ADMIN_LINK.href || pathname.startsWith(`${ADMIN_LINK.href}/`)
 
   // Fixed-position tooltip: the nav list scrolls (overflow clips absolutely-positioned
   // children), and this also lets the label sit above the page content.
@@ -48,98 +50,110 @@ export default function Sidebar({ profile, canViewBusiness = false, onNavigate, 
 
   return (
     <aside
-      className={`flex h-full w-64 flex-shrink-0 flex-col overflow-hidden border-r border-border bg-surface ${
-        collapsible ? 'sidebar-collapsible' : ''
-      }`}
+      data-workspace={workspace}
+      className={`flex h-full w-64 flex-shrink-0 flex-col overflow-hidden border-r border-border bg-surface ${collapsible ? 'sidebar-collapsible' : ''}`}
     >
-      <div className="flex h-16 flex-shrink-0 items-center gap-2 overflow-hidden border-b border-border pl-4 pr-5">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-qu-gold font-mono text-sm font-black text-qu-navy">
-          B
-        </div>
-        <div className="sidebar-label leading-tight">
-          <div className="text-sm font-bold tracking-wide text-text-primary">BOBCAT RACING</div>
-          <div className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Engineering Ops</div>
-        </div>
+      <div className="flex h-16 flex-shrink-0 items-center gap-2.5 overflow-hidden border-b border-border pl-4 pr-5">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-qu-gold text-sm font-black text-qu-navy">B</div>
+        <div className="sidebar-label text-sm font-bold tracking-wide text-text-primary">BOBCAT RACING</div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-thin p-3">
+      {showSwitcher ? (
+        <div className="flex-shrink-0 px-3 pt-3">
+          <WorkspaceSwitcher current={workspace} available={available} variant="sidebar" railMode={railMode} />
+        </div>
+      ) : (
+        <div className="flex flex-shrink-0 items-center gap-2 px-6 pt-4 text-xs font-semibold uppercase tracking-wider text-text-primary">
+          <span className="h-2 w-2 rounded-sm bg-ws" aria-hidden="true" />
+          {def.label}
+        </div>
+      )}
+
+      <nav aria-label={`${def.label} navigation`} className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-3 pt-2">
         {collapsible && (
-          <>
-            <button
-              type="button"
-              onClick={() => {
-                hideTip()
-                onToggleCollapsed?.()
-              }}
-              aria-expanded={!collapsed}
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="sidebar-link flex w-full items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-text-muted transition-colors hover:bg-surface-raised hover:text-text-primary"
-              {...tipHandlers('Expand sidebar')}
-            >
-              <ChevronsLeft size={16} className="sidebar-toggle-icon flex-shrink-0" />
-              <span className="sidebar-label">Collapse sidebar</span>
-            </button>
-            <div className="!my-2 border-t border-border" />
-          </>
+          <button
+            type="button"
+            onClick={() => {
+              hideTip()
+              onToggleCollapsed?.()
+            }}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="sidebar-link flex w-full items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium text-text-muted transition-colors hover:bg-surface-raised hover:text-text-primary"
+            {...tipHandlers('Expand sidebar')}
+          >
+            <ChevronsLeft size={16} className="sidebar-toggle-icon flex-shrink-0" aria-hidden="true" />
+            <span className="sidebar-label">Collapse sidebar</span>
+          </button>
         )}
 
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={active ? 'page' : undefined}
-              className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                active
-                  ? 'bg-accent-blue/15 text-text-primary'
-                  : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
-              }`}
-              {...tipHandlers(item.label)}
-            >
-              <Icon size={16} className={`flex-shrink-0 ${active ? 'text-accent-blue' : 'text-text-muted'}`} />
-              <span className="sidebar-label">{item.label}</span>
-            </Link>
-          )
-        })}
-
-        {managementNavItems.length > 0 && (
-          <>
-            <div className="my-2 border-t border-border" />
-            {managementNavItems.map((item) => {
-              const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onNavigate}
-                  aria-current={active ? 'page' : undefined}
-                  className={`sidebar-link sidebar-link--admin flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                    active
-                      ? 'bg-qu-gold/15 text-qu-gold'
-                      : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
-                  }`}
-                  {...tipHandlers(item.label)}
-                >
-                  <Icon size={16} className={`flex-shrink-0 ${active ? 'text-qu-gold' : 'text-text-muted'}`} />
-                  <span className="sidebar-label">{item.label}</span>
-                </Link>
-              )
-            })}
-          </>
-        )}
+        {def.groups.map((group) => (
+          <div key={group.label} className="sidebar-group">
+            <div className="sidebar-group-label px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wider text-text-muted">{group.label}</div>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const Icon = NAV_ICONS[item.icon]
+                if (item.status === 'soon' || !item.href) {
+                  // planned, not built: listed so the structure is visible, but not a link and it has no route
+                  return (
+                    <div
+                      key={item.label}
+                      aria-disabled="true"
+                      tabIndex={-1}
+                      className="sidebar-link flex cursor-default items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium text-text-muted/70"
+                      {...tipHandlers(`${item.label} — coming soon`)}
+                    >
+                      <Icon size={16} className="flex-shrink-0" aria-hidden="true" />
+                      <span className="sidebar-label flex flex-1 items-center justify-between gap-2">
+                        {item.label}
+                        <span className="rounded-full border border-border px-1.5 text-[11px] font-normal text-text-muted">Soon</span>
+                      </span>
+                    </div>
+                  )
+                }
+                const active = isNavItemActive(item, pathname, params)
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={active ? 'page' : undefined}
+                    className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      active
+                        ? 'bg-surface-raised text-text-primary shadow-[inset_2px_0_0_rgb(var(--ws-accent))]'
+                        : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
+                    }`}
+                    {...tipHandlers(item.label)}
+                  >
+                    <Icon size={16} className={`flex-shrink-0 ${active ? 'text-ws' : 'text-text-muted'}`} aria-hidden="true" />
+                    <span className="sidebar-label">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      <div className="sidebar-footer flex-shrink-0 border-t border-border p-4">
-        <div className="text-[10px] font-mono uppercase tracking-widest text-text-muted">Signed in as</div>
-        <div className="mt-1 truncate text-xs font-semibold text-text-primary">
-          {profile.display_name || profile.email}
-        </div>
-        <div className="mt-0.5 text-[10px] font-mono uppercase tracking-wide text-qu-gold">
-          {profile.role.replace('_', ' ')}
+      <div className="flex-shrink-0 border-t border-border p-3">
+        {isCtoOrAdmin(profile) && (
+          <Link
+            href={ADMIN_LINK.href}
+            onClick={onNavigate}
+            aria-current={adminActive ? 'page' : undefined}
+            className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              adminActive ? 'bg-surface-raised text-text-primary shadow-[inset_2px_0_0_rgb(var(--ws-accent))]' : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
+            }`}
+            {...tipHandlers(ADMIN_LINK.label)}
+          >
+            <ShieldCheck size={16} className={`flex-shrink-0 ${adminActive ? 'text-ws' : 'text-text-muted'}`} aria-hidden="true" />
+            <span className="sidebar-label">{ADMIN_LINK.label}</span>
+          </Link>
+        )}
+        <div className="sidebar-footer px-3 pt-2">
+          <div className="text-[11px] uppercase tracking-wider text-text-muted">Signed in as</div>
+          <div className="mt-0.5 truncate text-xs font-semibold text-text-primary">{profile.display_name || profile.email}</div>
+          <div className="text-[11px] uppercase tracking-wide text-text-secondary">{profile.role.replace('_', ' ')}</div>
         </div>
       </div>
 
@@ -147,7 +161,7 @@ export default function Sidebar({ profile, canViewBusiness = false, onNavigate, 
         <div
           role="tooltip"
           style={{ top: tip.top, left: tip.left }}
-          className="pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-surface-raised px-2.5 py-1.5 text-[11px] font-medium text-text-primary shadow-panel"
+          className="pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-text-primary shadow-panel"
         >
           {tip.label}
         </div>

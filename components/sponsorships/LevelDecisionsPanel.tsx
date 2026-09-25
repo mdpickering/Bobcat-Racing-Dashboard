@@ -16,7 +16,7 @@ export default function LevelDecisionsPanel({ decisions, currentDecisionId }: { 
         <Scale size={13} className="text-accent-blue" /> Level decision history
       </h2>
       {decisions.length === 0 ? (
-        <p className="text-[11px] text-text-muted">No level has been decided yet.</p>
+        <p className="text-[12px] text-text-muted">No level has been decided yet.</p>
       ) : (
         <ul className="divide-y divide-border">
           {decisions.map((d) => (
@@ -26,12 +26,12 @@ export default function LevelDecisionsPanel({ decisions, currentDecisionId }: { 
                 <Badge tone={TONE[d.method]}>{DECISION_METHOD_LABEL[d.method]}</Badge>
                 {d.id === currentDecisionId && <Badge tone="gold">Current</Badge>}
               </div>
-              <div className="mt-1 text-[11px] text-text-secondary">
+              <div className="mt-1 text-[12px] text-text-secondary">
                 Basis: {formatMoney(d.basis_cash)} cash + {formatMoney(d.basis_in_kind)} in-kind = <span className="text-text-primary">{formatMoney(d.basis_total)}</span>
                 {d.threshold != null && <> · minimum {formatMoney(d.threshold)}</>}
               </div>
-              {d.reason && <p className="mt-1 whitespace-pre-wrap text-[11px] text-text-secondary">“{d.reason}”</p>}
-              <div className="mt-1 text-[10px] text-text-muted">
+              {d.reason && <p className="mt-1 whitespace-pre-wrap text-[12px] text-text-secondary">“{d.reason}”</p>}
+              <div className="mt-1 text-[11px] text-text-muted">
                 {formatDateTime(d.decided_at)}
                 {d.decider ? ` · ${d.decider.display_name || d.decider.email}` : ' · imported'}
               </div>

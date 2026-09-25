@@ -22,9 +22,9 @@ export default function SeasonTotals({ rows }: { rows: SponsorshipListRow[] }) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       {cards.map((c) => (
         <Panel key={c.label} className="p-3">
-          <div className="font-mono text-[10px] uppercase text-text-muted">{c.label}</div>
+          <div className="font-mono text-[11px] uppercase text-text-muted">{c.label}</div>
           <div className="mt-1 text-base font-bold text-text-primary">{c.value}</div>
-          {c.hint && <div className="mt-0.5 text-[10px] text-text-muted">{c.hint}</div>}
+          {c.hint && <div className="mt-0.5 text-[11px] text-text-muted">{c.hint}</div>}
         </Panel>
       ))}
     </div>

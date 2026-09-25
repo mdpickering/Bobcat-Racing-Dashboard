@@ -4,7 +4,7 @@ import { ThemeProvider, THEME_BLOCKING_SCRIPT } from '@/components/theme/ThemePr
 import { SIDEBAR_BLOCKING_SCRIPT } from '@/lib/sidebarPreference'
 
 export const metadata: Metadata = {
-  title: 'Bobcat Racing — Engineering Operations',
+  title: 'Bobcat Racing',
   description: 'Baja SAE team operations platform',
 }
 

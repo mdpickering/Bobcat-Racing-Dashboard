@@ -45,7 +45,7 @@ function CategoryRow({ category, canManage, onChanged }: { category: SubsystemCa
         <div className="space-y-2">
           <Input value={name} onChange={(e) => setName(e.target.value)} />
           <Textarea rows={2} value={rule} onChange={(e) => setRule(e.target.value)} placeholder="Engineering rule" />
-          {error && <p className="text-[11px] text-rose-400">{error}</p>}
+          {error && <p className="text-[12px] text-rose-400">{error}</p>}
           <div className="flex gap-2">
             <Button size="sm" disabled={busy} onClick={handleSave}>
               <Check size={11} /> Save
@@ -67,7 +67,7 @@ function CategoryRow({ category, canManage, onChanged }: { category: SubsystemCa
             <span className="text-xs font-semibold text-text-primary">{category.name}</span>
             {!category.active && <Badge tone="rose">Archived</Badge>}
           </div>
-          {category.engineering_rule && <p className="mt-0.5 text-[11px] text-text-secondary">{category.engineering_rule}</p>}
+          {category.engineering_rule && <p className="mt-0.5 text-[12px] text-text-secondary">{category.engineering_rule}</p>}
         </div>
         {canManage && (
           <div className="flex flex-shrink-0 gap-2">
@@ -124,13 +124,13 @@ export default function CategoryManagementPanel({ subsystemId, categories, canMa
           <h2 className="text-xs font-bold uppercase tracking-wide text-text-primary">Categories &amp; Engineering Rules</h2>
         </div>
         {canManage && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <Plus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
       </div>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       {categories.length === 0 && !adding ? (
         <EmptyState title="No categories defined yet" />

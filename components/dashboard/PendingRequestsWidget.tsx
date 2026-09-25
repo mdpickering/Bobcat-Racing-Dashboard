@@ -10,7 +10,7 @@ export default function PendingRequestsWidget({ requests }: { requests: TaskRequ
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Pending Task Requests</h3>
         {requests.length > 0 && (
-          <Link href="/tasks?tab=requests" className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <Link href="/tasks?tab=requests" className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             Review
           </Link>
         )}
@@ -22,7 +22,7 @@ export default function PendingRequestsWidget({ requests }: { requests: TaskRequ
           {requests.slice(0, 5).map((r) => (
             <li key={r.id} className="rounded-lg px-2.5 py-2 text-xs hover:bg-surface-raised">
               <div className="truncate font-medium text-text-primary">{r.title}</div>
-              <div className="mt-0.5 truncate text-[10px] text-text-muted">
+              <div className="mt-0.5 truncate text-[11px] text-text-muted">
                 {r.requester?.display_name || r.requester?.email} · {r.subsystem?.name}
               </div>
             </li>

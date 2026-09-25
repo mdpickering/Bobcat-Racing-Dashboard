@@ -98,8 +98,8 @@ export default async function OperationsPage({ searchParams }: { searchParams: {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Operations</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">
+        <h1 className="text-xl font-semibold text-text-primary">Operations</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">
           Scheduling overview: calendar, events, timeline, milestones and task deadlines across every subsystem.
         </p>
       </div>
@@ -124,7 +124,7 @@ export default async function OperationsPage({ searchParams }: { searchParams: {
       <section>
         <SectionHeading>No deadline set ({unscheduled.length})</SectionHeading>
         <TaskDeadlineTable tasks={unscheduled.slice(0, 15)} emptyTitle="Every open task has a deadline" />
-        {unscheduled.length > 15 && <p className="mt-1.5 text-[11px] text-text-muted">Showing 15 of {unscheduled.length}.</p>}
+        {unscheduled.length > 15 && <p className="mt-1.5 text-[12px] text-text-muted">Showing 15 of {unscheduled.length}.</p>}
       </section>
 
       <section>
@@ -132,7 +132,7 @@ export default async function OperationsPage({ searchParams }: { searchParams: {
         <Panel className="overflow-x-auto p-0">
           <table className="w-full min-w-[560px] text-xs">
             <thead>
-              <tr className="border-b border-border text-left text-[10px] font-mono uppercase text-text-muted">
+              <tr className="border-b border-border text-left text-[11px] font-mono uppercase text-text-muted">
                 <th className="p-3 font-medium">Subsystem</th>
                 <th className="p-3 text-right font-medium">Open</th>
                 <th className="p-3 text-right font-medium">Overdue</th>
@@ -202,7 +202,7 @@ export default async function OperationsPage({ searchParams }: { searchParams: {
                 {upcomingEvents.map((e) => (
                   <li key={e.id} className="px-4 py-2.5 text-xs">
                     <div className="font-medium text-text-primary">{e.title}</div>
-                    <div className="mt-0.5 text-[10px] text-text-muted">
+                    <div className="mt-0.5 text-[11px] text-text-muted">
                       {new Date(e.start_time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} · {e.subsystem?.name ?? 'Team-wide'}
                     </div>
                   </li>
@@ -221,7 +221,7 @@ export default async function OperationsPage({ searchParams }: { searchParams: {
                 {upcomingMilestones.map((m) => (
                   <li key={m.id} className="px-4 py-2.5 text-xs">
                     <div className="font-medium text-text-primary">{m.name}</div>
-                    <div className="mt-0.5 text-[10px] text-text-muted">
+                    <div className="mt-0.5 text-[11px] text-text-muted">
                       {formatDate(`${m.date.slice(0, 10)}T12:00:00`)} · {m.subsystem?.name ?? 'Team-wide'}
                     </div>
                   </li>

@@ -17,8 +17,8 @@ export default function SubsystemsPageClient({ subsystems, canCreate }: { subsys
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg font-bold text-text-primary">Subsystems</h1>
-          <p className="mt-0.5 text-xs font-mono text-text-muted">The engineering groups that make up the car.</p>
+          <h1 className="text-xl font-semibold text-text-primary">Subsystems</h1>
+          <p className="mt-0.5 text-xs text-text-secondary">The engineering groups that make up the car.</p>
         </div>
         {canCreate && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -39,7 +39,7 @@ export default function SubsystemsPageClient({ subsystems, canCreate }: { subsys
                     <h2 className="truncate text-sm font-bold text-text-primary">{s.name}</h2>
                     {!s.active && <Badge tone="rose">Archived</Badge>}
                   </div>
-                  {s.description && <p className="mt-1 line-clamp-2 text-[11px] text-text-secondary">{s.description}</p>}
+                  {s.description && <p className="mt-1 line-clamp-2 text-[12px] text-text-secondary">{s.description}</p>}
                 </div>
                 <ChevronRight size={16} className="flex-shrink-0 text-text-muted" />
               </Panel>

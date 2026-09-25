@@ -43,7 +43,7 @@ export default function MigrationExceptionsPanel({ exceptions }: { exceptions: M
 
   return (
     <div className="space-y-2">
-      {error && <p className="text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="text-[12px] text-rose-400">{error}</p>}
       {exceptions.map((e) => (
         <Panel key={e.id} className="p-3">
           <div className="flex items-start justify-between gap-3 text-xs">
@@ -52,8 +52,8 @@ export default function MigrationExceptionsPanel({ exceptions }: { exceptions: M
                 <span className="font-medium text-text-primary">{e.entity_type}</span>
                 <Badge tone={STATUS_TONE[e.resolution_status]}>{e.resolution_status}</Badge>
               </div>
-              {e.raw_value && <div className="mt-0.5 truncate text-[11px] text-text-secondary">{e.raw_value}</div>}
-              <div className="mt-1 text-[10px] text-text-muted">{formatDateTime(e.created_at)}</div>
+              {e.raw_value && <div className="mt-0.5 truncate text-[12px] text-text-secondary">{e.raw_value}</div>}
+              <div className="mt-1 text-[11px] text-text-muted">{formatDateTime(e.created_at)}</div>
             </div>
             {e.resolution_status === 'unresolved' && (
               <div className="flex flex-shrink-0 gap-2">

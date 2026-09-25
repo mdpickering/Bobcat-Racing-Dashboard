@@ -38,15 +38,15 @@ export default function CreateSubsystemModal({ open, onClose }: { open: boolean;
     <Modal open={open} onClose={onClose} title="New Subsystem">
       <form onSubmit={handleSubmit} className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Id (permanent, lowercase-dash)</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Id (permanent, lowercase-dash)</label>
           <Input required value={id} onChange={(e) => setId(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))} placeholder="e.g. brakes" />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Name</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Name</label>
           <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Brakes" />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Description</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Description</label>
           <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional details" />
         </div>
         {error && <p className="text-rose-400">{error}</p>}

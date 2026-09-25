@@ -84,16 +84,16 @@ export default function TaskAttachmentsPanel({ taskId, attachments }: { taskId: 
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="flex items-center gap-1 text-[10px] font-mono uppercase text-accent-blue hover:underline disabled:opacity-50"
+          className="flex items-center gap-1 text-[11px] font-mono uppercase text-accent-blue hover:underline disabled:opacity-50"
         >
           <Upload size={11} /> {uploading ? 'Uploading…' : 'Add file'}
         </button>
         <input ref={fileInputRef} type="file" accept={ACCEPTED_ATTACHMENT_TYPES.join(',')} className="hidden" onChange={handleFileSelected} />
       </div>
 
-      <p className="mb-2 text-[10px] text-text-muted">Images and documents up to 10 MB, PDFs up to 20 MB. For large CAD files, use an external link instead.</p>
+      <p className="mb-2 text-[11px] text-text-muted">Images and documents up to 10 MB, PDFs up to 20 MB. For large CAD files, use an external link instead.</p>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       {attachments.length === 0 ? (
         <EmptyState icon={Paperclip} title="No attachments yet" />
@@ -104,7 +104,7 @@ export default function TaskAttachmentsPanel({ taskId, attachments }: { taskId: 
               <FileText size={14} className="flex-shrink-0 text-text-muted" />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium text-text-primary">{a.file_name}</div>
-                <div className="text-[10px] text-text-muted">
+                <div className="text-[11px] text-text-muted">
                   {formatBytes(a.file_size)} · {a.uploader?.display_name || a.uploader?.email} · {timeAgo(a.created_at)}
                 </div>
               </div>

@@ -1,4 +1,18 @@
-type BadgeTone = 'emerald' | 'gold' | 'rose' | 'sky' | 'slate' | 'amber'
+import { STATUS_TONE_CLASSES, type StatusTone } from '@/lib/status'
+
+// The original tone names are still accepted so existing pages keep working; they now resolve to the shared status
+// tones (lib/status.ts) so the same meaning has the same colour in every workspace and both themes.
+type LegacyTone = 'emerald' | 'gold' | 'rose' | 'sky' | 'slate' | 'amber'
+type BadgeTone = StatusTone | LegacyTone
+
+const LEGACY: Record<LegacyTone, StatusTone> = {
+  emerald: 'success',
+  amber: 'warning',
+  rose: 'danger',
+  sky: 'info',
+  slate: 'neutral',
+  gold: 'brand',
+}
 
 interface BadgeProps {
   tone?: BadgeTone
@@ -6,19 +20,11 @@ interface BadgeProps {
   className?: string
 }
 
-const TONE_CLASSES: Record<BadgeTone, string> = {
-  emerald: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-  gold: 'bg-qu-gold/15 text-qu-gold border-qu-gold/30',
-  rose: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
-  sky: 'bg-sky-500/15 text-sky-400 border-sky-500/30',
-  amber: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-  slate: 'bg-text-secondary/10 text-text-secondary border-border',
-}
-
-export default function Badge({ tone = 'slate', children, className = '' }: BadgeProps) {
+export default function Badge({ tone = 'neutral', children, className = '' }: BadgeProps) {
+  const resolved: StatusTone = tone in LEGACY ? LEGACY[tone as LegacyTone] : (tone as StatusTone)
   return (
     <span
-      className={`inline-block whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wide border ${TONE_CLASSES[tone]} ${className}`}
+      className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${STATUS_TONE_CLASSES[resolved]} ${className}`}
     >
       {children}
     </span>

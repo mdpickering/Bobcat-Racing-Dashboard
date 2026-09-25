@@ -92,7 +92,7 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
             <UserPlus size={13} className="text-accent-blue" /> Add a member
           </h2>
           {candidates.length === 0 ? (
-            <p className="text-[11px] text-text-muted">Everyone with an approved account is already on the Business team.</p>
+            <p className="text-[12px] text-text-muted">Everyone with an approved account is already on the Business team.</p>
           ) : (
             <div className="flex items-center gap-2">
               <Select value={selected} onChange={(e) => setSelected(e.target.value)} className="flex-1" aria-label="Person to add">
@@ -109,7 +109,7 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
               </Button>
             </div>
           )}
-          {!canManageLeads && <p className="mt-2 text-[11px] text-text-muted">New members join as regular Business members. An admin or the CTO makes someone a Business Lead.</p>}
+          {!canManageLeads && <p className="mt-2 text-[12px] text-text-muted">New members join as regular Business members. An admin or the CTO makes someone a Business Lead.</p>}
         </Panel>
       )}
 
@@ -134,9 +134,9 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
                   <div className="min-w-0">
                     <div className="truncate text-xs font-medium text-text-primary">
                       {nameOf(m.profile)}
-                      {m.user_id === currentUserId && <span className="ml-1.5 text-[10px] text-text-muted">(you)</span>}
+                      {m.user_id === currentUserId && <span className="ml-1.5 text-[11px] text-text-muted">(you)</span>}
                     </div>
-                    {m.profile?.display_name && <div className="truncate text-[10px] text-text-muted">{m.profile.email}</div>}
+                    {m.profile?.display_name && <div className="truncate text-[11px] text-text-muted">{m.profile.email}</div>}
                   </div>
                 </div>
 
@@ -187,7 +187,7 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
           </ul>
         )}
 
-        {!canManageTeam && members.length > 0 && <p className="mt-3 text-[11px] text-text-muted">You can see the Business team. Only the Business Lead (or an admin) changes it.</p>}
+        {!canManageTeam && members.length > 0 && <p className="mt-3 text-[12px] text-text-muted">You can see the Business team. Only the Business Lead (or an admin) changes it.</p>}
       </Panel>
 
       <ConfirmDialog

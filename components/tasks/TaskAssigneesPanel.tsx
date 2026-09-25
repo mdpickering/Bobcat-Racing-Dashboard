@@ -86,13 +86,13 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Owners</h3>
         {canManage && !adding && available.length > 0 && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
       </div>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       <div className="space-y-2">
         {primary ? (
@@ -100,7 +100,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
             <Avatar name={primary.profile?.display_name || primary.profile?.email} src={primary.profile?.avatar_url} size={26} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-xs font-medium text-text-primary">{primary.profile?.display_name || primary.profile?.email}</div>
-              <div className="flex items-center gap-1 text-[10px] text-qu-gold">
+              <div className="flex items-center gap-1 text-[11px] text-qu-gold">
                 <Star size={9} /> Primary owner
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
             )}
           </div>
         ) : (
-          <p className="text-[11px] text-text-muted">No primary owner assigned.</p>
+          <p className="text-[12px] text-text-muted">No primary owner assigned.</p>
         )}
 
         {coOwners.map((a) => (
@@ -119,7 +119,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
             <Avatar name={a.profile?.display_name || a.profile?.email} src={a.profile?.avatar_url} size={26} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-xs font-medium text-text-primary">{a.profile?.display_name || a.profile?.email}</div>
-              <div className="text-[10px] text-text-muted">Co-owner</div>
+              <div className="text-[11px] text-text-muted">Co-owner</div>
             </div>
             {canManage && (
               <div className="flex items-center gap-2">

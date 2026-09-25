@@ -25,8 +25,8 @@ export default async function SearchPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Search</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">
+        <h1 className="text-xl font-semibold text-text-primary">Search</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">
           {query ? `Results for "${query}"` : 'Search tasks, subsystems, people, purchasing, and CAD reviews.'}
         </p>
       </div>

@@ -43,11 +43,11 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       <Panel className="p-5">
-        <Link href="/business/sponsorships" className="mb-3 flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+        <Link href="/business/sponsorships" className="mb-3 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
           <ChevronLeft size={13} /> Back to sponsorships
         </Link>
         <h1 className="text-base font-bold text-text-primary">{sponsor.name}</h1>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-text-muted">
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-text-muted">
           <span>{SPONSOR_TYPE_LABEL[sponsor.sponsor_type]}</span>
           {!sponsor.active && <Badge tone="slate">Archived</Badge>}
           {sponsor.website && (
@@ -60,15 +60,15 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
         {seasons.length > 0 && (
           <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4 text-xs">
             <div>
-              <div className="font-mono text-[10px] uppercase text-text-muted">Seasons</div>
+              <div className="font-mono text-[11px] uppercase text-text-muted">Seasons</div>
               <div className="mt-1 text-base font-bold text-text-primary">{seasons.length}</div>
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase text-text-muted">Cash committed, all seasons</div>
+              <div className="font-mono text-[11px] uppercase text-text-muted">Cash committed, all seasons</div>
               <div className="mt-1 text-base font-bold text-text-primary">{formatMoney(lifetimeCash)}</div>
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase text-text-muted">In-kind, all seasons</div>
+              <div className="font-mono text-[11px] uppercase text-text-muted">In-kind, all seasons</div>
               <div className="mt-1 text-base font-bold text-text-primary">{formatMoney(lifetimeInKind)}</div>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
 
       {seasons.length === 0 ? (
         <Panel className="p-4">
-          <p className="text-[11px] text-text-muted">This sponsor has no sponsorships yet.</p>
+          <p className="text-[12px] text-text-muted">This sponsor has no sponsorships yet.</p>
         </Panel>
       ) : (
         seasons.map(({ sponsorship, summary, review, contributions }) => (
@@ -92,7 +92,7 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
                 <ReviewBadge flag={review?.review_flag} quietWhenOk />
               </div>
             </div>
-            <div className="mt-2 text-[11px] text-text-secondary">
+            <div className="mt-2 text-[12px] text-text-secondary">
               Cash {formatMoney(summary.cash_committed)} committed · {formatMoney(summary.cash_received)} received
               {summary.cash_outstanding > 0 && <span className="text-amber-400"> · {formatMoney(summary.cash_outstanding)} outstanding</span>}
               {' '}· In-kind {formatMoney(summary.in_kind_value)}
@@ -106,12 +106,12 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
                       <span className="ml-2 text-text-secondary">{c.kind === 'cash' ? 'Cash' : `In-kind${c.in_kind_type ? ` · ${IN_KIND_TYPE_LABEL[c.in_kind_type]}` : ''}`}</span>
                       {c.withdrawn && <span className="ml-2 text-rose-400">withdrawn</span>}
                     </span>
-                    <span className="text-[10px] text-text-muted">{formatContributionDate(c.contributed_on, c.contributed_on_precision)}</span>
+                    <span className="text-[11px] text-text-muted">{formatContributionDate(c.contributed_on, c.contributed_on_precision)}</span>
                   </li>
                 ))}
               </ul>
             )}
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
               {sponsorship.agreement_url && (
                 <a href={sponsorship.agreement_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent-blue hover:underline">
                   Agreement <ExternalLink size={10} />

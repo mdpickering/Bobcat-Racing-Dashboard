@@ -32,12 +32,12 @@ function ContributionRow({ c, canManage, onToggle, busy }: { c: SponsorshipContr
           {c.kind === 'in_kind' && c.in_kind_type && <Badge tone="sky">{IN_KIND_TYPE_LABEL[c.in_kind_type]}</Badge>}
           {c.withdrawn && <Badge tone="rose">Withdrawn</Badge>}
         </div>
-        <div className="mt-0.5 text-[10px] text-text-muted">
+        <div className="mt-0.5 text-[11px] text-text-muted">
           {c.description ? `${c.description} · ` : ''}
           {c.kind === 'cash' ? 'Committed' : 'Contributed'} {formatContributionDate(c.contributed_on, c.contributed_on_precision)}
           {c.kind === 'in_kind' && c.received_on ? ` · Received ${formatContributionDate(c.received_on, c.received_on_precision)}` : ''}
         </div>
-        {c.notes && <div className="mt-0.5 text-[10px] text-text-muted">{c.notes}</div>}
+        {c.notes && <div className="mt-0.5 text-[11px] text-text-muted">{c.notes}</div>}
       </div>
       {canManage && (
         <Button size="sm" variant="ghost" disabled={busy} onClick={() => onToggle(c)}>
@@ -127,16 +127,16 @@ export default function ContributionsPanel({ sponsorshipId, contributions, canMa
       {error && !open && <p className="mb-2 text-xs text-rose-400">{error}</p>}
 
       {contributions.length === 0 ? (
-        <p className="text-[11px] text-text-muted">No contributions recorded yet.</p>
+        <p className="text-[12px] text-text-muted">No contributions recorded yet.</p>
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
-            <div className="mb-1.5 font-mono text-[10px] uppercase text-text-muted">Cash</div>
-            {cash.length === 0 ? <p className="text-[11px] text-text-muted">None</p> : <ul className="divide-y divide-border">{cash.map((c) => <ContributionRow key={c.id} c={c} canManage={canManage} onToggle={handleToggle} busy={toggling} />)}</ul>}
+            <div className="mb-1.5 font-mono text-[11px] uppercase text-text-muted">Cash</div>
+            {cash.length === 0 ? <p className="text-[12px] text-text-muted">None</p> : <ul className="divide-y divide-border">{cash.map((c) => <ContributionRow key={c.id} c={c} canManage={canManage} onToggle={handleToggle} busy={toggling} />)}</ul>}
           </div>
           <div>
-            <div className="mb-1.5 font-mono text-[10px] uppercase text-text-muted">In-kind (estimated value)</div>
-            {inKind.length === 0 ? <p className="text-[11px] text-text-muted">None</p> : <ul className="divide-y divide-border">{inKind.map((c) => <ContributionRow key={c.id} c={c} canManage={canManage} onToggle={handleToggle} busy={toggling} />)}</ul>}
+            <div className="mb-1.5 font-mono text-[11px] uppercase text-text-muted">In-kind (estimated value)</div>
+            {inKind.length === 0 ? <p className="text-[12px] text-text-muted">None</p> : <ul className="divide-y divide-border">{inKind.map((c) => <ContributionRow key={c.id} c={c} canManage={canManage} onToggle={handleToggle} busy={toggling} />)}</ul>}
           </div>
         </div>
       )}
@@ -145,20 +145,20 @@ export default function ContributionsPanel({ sponsorshipId, contributions, canMa
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Kind</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Kind</label>
               <Select value={kind} onChange={(e) => setKind(e.target.value as ContributionKind)} disabled={busy}>
                 <option value="cash">Cash</option>
                 <option value="in_kind">In-kind</option>
               </Select>
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">{kind === 'cash' ? 'Committed amount ($)' : 'Estimated value ($)'}</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">{kind === 'cash' ? 'Committed amount ($)' : 'Estimated value ($)'}</label>
               <Input type="number" min="0.01" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} disabled={busy} autoFocus />
             </div>
           </div>
           {kind === 'in_kind' && (
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">In-kind type</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">In-kind type</label>
               <Select value={inKindType} onChange={(e) => setInKindType(e.target.value as InKindType)} disabled={busy}>
                 {(Object.keys(IN_KIND_TYPE_LABEL) as InKindType[]).map((t) => (
                   <option key={t} value={t}>
@@ -169,26 +169,26 @@ export default function ContributionsPanel({ sponsorshipId, contributions, canMa
             </div>
           )}
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Description (optional)</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Description (optional)</label>
             <Input value={description} onChange={(e) => setDescription(e.target.value)} disabled={busy} placeholder={kind === 'cash' ? 'e.g. Season gift' : 'e.g. 10% metal discount'} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">{kind === 'cash' ? 'Committed on' : 'Contributed on'}</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">{kind === 'cash' ? 'Committed on' : 'Contributed on'}</label>
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={busy} />
             </div>
             {kind === 'in_kind' && (
               <div>
-                <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Received on</label>
+                <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Received on</label>
                 <Input type="date" value={received} onChange={(e) => setReceived(e.target.value)} disabled={busy} />
               </div>
             )}
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Notes (optional)</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Notes (optional)</label>
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} disabled={busy} />
           </div>
-          {kind === 'cash' && <p className="text-[11px] text-text-muted">Cash received is recorded separately, as payments, once the money arrives.</p>}
+          {kind === 'cash' && <p className="text-[12px] text-text-muted">Cash received is recorded separately, as payments, once the money arrives.</p>}
           {error && <p className="text-rose-400">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>

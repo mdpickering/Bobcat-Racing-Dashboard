@@ -102,13 +102,13 @@ export default function SubsystemMembersPanel({
           <h2 className="text-xs font-bold uppercase tracking-wide text-text-primary">Members ({members.length})</h2>
         </div>
         {canManage && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
       </div>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       {members.length === 0 ? (
         <EmptyState title="No members yet" />
@@ -156,10 +156,10 @@ export default function SubsystemMembersPanel({
       {canManage && adding && (
         <div className="mt-3 space-y-2 border-t border-border pt-3">
           {available.length === 0 ? (
-            <p className="text-[11px] text-text-muted">No eligible members to add right now.</p>
+            <p className="text-[12px] text-text-muted">No eligible members to add right now.</p>
           ) : (
             <>
-              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+              <p className="text-[11px] font-mono uppercase tracking-wide text-text-muted">
                 Assigning to <span className="text-text-secondary">{subsystemName}</span>
               </p>
               <div className="flex items-center gap-2">

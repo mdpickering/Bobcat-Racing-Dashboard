@@ -36,10 +36,10 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">
+        <h1 className="text-xl font-semibold text-text-primary">
           Welcome back, {p.display_name || p.email?.split('@')[0]}
         </h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">
+        <p className="mt-0.5 text-xs text-text-secondary">
           {admin ? 'Full operational overview' : lead ? 'Your tasks and subsystem overview' : "Here's what's on your plate"}
         </p>
       </div>

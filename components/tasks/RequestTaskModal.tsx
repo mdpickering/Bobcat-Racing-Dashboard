@@ -57,7 +57,7 @@ export default function RequestTaskModal({ open, onClose, subsystems }: { open: 
       ) : (
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Subsystem</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Subsystem</label>
             <Select value={subsystemId} onChange={(e) => setSubsystemId(e.target.value)}>
               {subsystems.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -67,11 +67,11 @@ export default function RequestTaskModal({ open, onClose, subsystems }: { open: 
             </Select>
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">What needs to get done?</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">What needs to get done?</label>
             <Input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Design a new mounting bracket" />
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Why / details</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Why / details</label>
             <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional context for the reviewer" />
           </div>
           {error && <p className="text-rose-400">{error}</p>}

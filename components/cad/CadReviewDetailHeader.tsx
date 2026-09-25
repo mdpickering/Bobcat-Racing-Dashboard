@@ -113,7 +113,7 @@ export default function CadReviewDetailHeader({
 
   return (
     <Panel className="p-5">
-      <Link href="/cad" className="mb-3 flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+      <Link href="/cad" className="mb-3 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
         <ChevronLeft size={13} /> Back to CAD review
       </Link>
 
@@ -144,7 +144,7 @@ export default function CadReviewDetailHeader({
           </div>
           {review.description && <p className="mt-2 whitespace-pre-wrap text-xs text-text-secondary">{review.description}</p>}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px]">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
             <Badge tone="slate">{review.subsystem?.name ?? 'Unknown subsystem'}</Badge>
             <Badge tone="slate">Rev {review.current_revision}</Badge>
             {review.task?.title && <Badge tone="slate">{review.task.title}</Badge>}
@@ -163,7 +163,7 @@ export default function CadReviewDetailHeader({
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Status</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Status</label>
           {canEditStatus ? (
             <Select value={review.status} disabled={saving} onChange={(e) => handleStatusChange(e.target.value)} className="w-52">
               {statusOptions.map((s) => (

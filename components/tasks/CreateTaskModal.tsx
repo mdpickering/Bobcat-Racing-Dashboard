@@ -60,16 +60,16 @@ export default function CreateTaskModal({ open, onClose, subsystems, categories,
     <Modal open={open} onClose={onClose} title="New Task">
       <form onSubmit={handleSubmit} className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Title</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Title</label>
           <Input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Machine rear upright" />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Description</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Description</label>
           <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional details" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Subsystem</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Subsystem</label>
             <Select value={subsystemId} onChange={(e) => { setSubsystemId(e.target.value); setCategoryId('') }}>
               {subsystems.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -79,7 +79,7 @@ export default function CreateTaskModal({ open, onClose, subsystems, categories,
             </Select>
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Category</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Category</label>
             <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
               <option value="">None</option>
               {filteredCategories.map((c) => (
@@ -92,7 +92,7 @@ export default function CreateTaskModal({ open, onClose, subsystems, categories,
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Priority</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Priority</label>
             <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
               {['Critical', 'High', 'Medium', 'Low'].map((p) => (
                 <option key={p} value={p}>
@@ -102,7 +102,7 @@ export default function CreateTaskModal({ open, onClose, subsystems, categories,
             </Select>
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Deadline</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Deadline</label>
             <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
           </div>
         </div>

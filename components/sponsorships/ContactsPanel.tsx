@@ -69,7 +69,7 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
       {error && !open && <p className="mb-2 text-xs text-rose-400">{error}</p>}
 
       {contacts.length === 0 ? (
-        <p className="text-[11px] text-text-muted">No contacts recorded.</p>
+        <p className="text-[12px] text-text-muted">No contacts recorded.</p>
       ) : (
         <ul className="divide-y divide-border">
           {contacts.map((c) => (
@@ -80,8 +80,8 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
                   {c.is_primary && <Badge tone="gold">Primary</Badge>}
                   {!c.active && <Badge tone="slate">Inactive</Badge>}
                 </div>
-                {c.title && <div className="text-[10px] text-text-muted">{c.title}</div>}
-                <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] text-text-secondary">
+                {c.title && <div className="text-[11px] text-text-muted">{c.title}</div>}
+                <div className="mt-0.5 flex flex-wrap gap-x-3 text-[12px] text-text-secondary">
                   {c.email && (
                     <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-accent-blue">
                       <Mail size={11} /> {c.email}
@@ -114,21 +114,21 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
         <form onSubmit={handleAdd} className="space-y-3 text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Name</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Name</label>
               <Input value={form.name} onChange={(e) => set('name', e.target.value)} disabled={busy} autoFocus />
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Title</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Title</label>
               <Input value={form.title} onChange={(e) => set('title', e.target.value)} disabled={busy} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Email</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Email</label>
               <Input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} disabled={busy} />
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Phone</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Phone</label>
               <Input value={form.phone} onChange={(e) => set('phone', e.target.value)} disabled={busy} />
             </div>
           </div>

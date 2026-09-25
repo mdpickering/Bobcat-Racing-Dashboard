@@ -19,7 +19,7 @@ export default function TaskListWidget({ title, tasks, emptyMessage, viewAllHref
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">{title}</h3>
         {viewAllHref && tasks.length > 0 && (
-          <Link href={viewAllHref} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <Link href={viewAllHref} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             View all
           </Link>
         )}
@@ -36,7 +36,7 @@ export default function TaskListWidget({ title, tasks, emptyMessage, viewAllHref
               >
                 <div className="min-w-0">
                   <div className="truncate font-medium text-text-primary">{task.title}</div>
-                  <div className="mt-0.5 truncate text-[10px] text-text-muted">
+                  <div className="mt-0.5 truncate text-[11px] text-text-muted">
                     {task.subsystem?.name ?? 'Unknown subsystem'}
                     {task.deadline ? ` · Due ${formatDeadline(task.deadline)}` : ''}
                   </div>

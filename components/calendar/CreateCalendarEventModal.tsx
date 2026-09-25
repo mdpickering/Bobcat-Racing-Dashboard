@@ -64,25 +64,25 @@ export default function CreateCalendarEventModal({ open, onClose, subsystemOptio
     <Modal open={open} onClose={onClose} title="New Calendar Event">
       <form onSubmit={handleSubmit} className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Title</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Title</label>
           <Input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Team meeting" />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Description</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Description</label>
           <Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional details" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Starts</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Starts</label>
             <Input required type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Ends</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Ends</label>
             <Input required type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </div>
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Subsystem</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Subsystem</label>
           <Select value={subsystemId} onChange={(e) => setSubsystemId(e.target.value)}>
             {isCtoOrAdmin && <option value="">Team-wide</option>}
             {subsystemOptions.map((s) => (

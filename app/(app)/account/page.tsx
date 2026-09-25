@@ -27,8 +27,8 @@ export default async function AccountPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Account</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">Your profile, preferences, and session.</p>
+        <h1 className="text-xl font-semibold text-text-primary">Account</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">Your profile, preferences, and session.</p>
       </div>
       <AccountForm
         profile={profile as Profile}

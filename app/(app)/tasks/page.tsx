@@ -56,8 +56,8 @@ export default async function TasksPage({
     return (
       <div className="space-y-5">
         <div>
-          <h1 className="text-lg font-bold text-text-primary">Tasks</h1>
-          <p className="mt-0.5 text-xs font-mono text-text-muted">Requests submitted by the team, awaiting review.</p>
+          <h1 className="text-xl font-semibold text-text-primary">Tasks</h1>
+          <p className="mt-0.5 text-xs text-text-secondary">Requests submitted by the team, awaiting review.</p>
         </div>
         <TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} activeTab="requests" pendingRequestCount={pendingCount} />
         <TaskRequestsList requests={requests} canReviewAll={admin} reviewableSubsystemIds={reviewableSubsystemIds} />
@@ -93,8 +93,8 @@ export default async function TasksPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">My Tasks</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">
+        <h1 className="text-xl font-semibold text-text-primary">My Tasks</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">
           {tasks.length} task{tasks.length === 1 ? '' : 's'} assigned to you, matching your filters
         </p>
       </div>

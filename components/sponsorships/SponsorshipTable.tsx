@@ -41,7 +41,7 @@ export default function SponsorshipTable({ rows, levels, filtered }: Sponsorship
     <Panel className="overflow-x-auto scrollbar-thin">
       <table className="w-full min-w-[860px] text-left text-xs">
         <thead>
-          <tr className="border-b border-border font-mono text-[10px] uppercase text-text-muted">
+          <tr className="border-b border-border font-mono text-[11px] uppercase text-text-muted">
             <th className="px-4 py-2.5 font-medium">Sponsor</th>
             <th className="px-2 py-2.5 font-medium">Stage</th>
             <th className="px-2 py-2.5 font-medium">Level</th>
@@ -71,7 +71,7 @@ export default function SponsorshipTable({ rows, levels, filtered }: Sponsorship
               <td className="px-2 py-2.5 text-right tabular-nums text-text-primary">{formatMoney(row.cash_received)}</td>
               <td className={`px-2 py-2.5 text-right tabular-nums ${row.cash_outstanding > 0 ? 'text-amber-400' : 'text-text-muted'}`}>{formatMoney(row.cash_outstanding)}</td>
               <td className="px-2 py-2.5 text-right tabular-nums text-text-primary">{formatMoney(row.in_kind_value)}</td>
-              <td className="px-2 py-2.5 text-[11px]">{deliverablesCell(row, levels)}</td>
+              <td className="px-2 py-2.5 text-[12px]">{deliverablesCell(row, levels)}</td>
               <td className="px-4 py-2.5">
                 <ReviewBadge flag={row.review?.review_flag} />
               </td>

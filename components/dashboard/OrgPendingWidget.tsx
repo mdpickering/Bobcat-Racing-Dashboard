@@ -23,7 +23,7 @@ export default function OrgPendingWidget({ counts }: { counts: NonNullable<Dashb
               <item.icon size={14} className="text-accent-blue" />
               <div className="min-w-0">
                 <div className="font-bold text-text-primary">{item.value}</div>
-                <div className="truncate text-[10px] text-text-muted">{item.label}</div>
+                <div className="truncate text-[11px] text-text-muted">{item.label}</div>
               </div>
             </>
           )

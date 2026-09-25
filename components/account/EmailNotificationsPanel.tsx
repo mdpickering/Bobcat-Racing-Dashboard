@@ -73,11 +73,11 @@ export default function EmailNotificationsPanel({ categories, email, loadError }
                   <div id={`email-pref-${c.key}`} className="text-xs font-semibold text-text-primary">
                     {c.label}
                   </div>
-                  <div className="mt-0.5 text-[11px] text-text-muted">{c.description}</div>
-                  {state.status === 'error' && <div className="mt-1 text-[11px] text-rose-400">{state.message}</div>}
+                  <div className="mt-0.5 text-[12px] text-text-muted">{c.description}</div>
+                  {state.status === 'error' && <div className="mt-1 text-[12px] text-rose-400">{state.message}</div>}
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-2.5">
-                  <span className="flex w-16 items-center justify-end gap-1 text-[10px] font-mono text-text-muted" aria-live="polite">
+                  <span className="flex w-16 items-center justify-end gap-1 text-[11px] font-mono text-text-muted" aria-live="polite">
                     {state.status === 'saving' && (
                       <>
                         <Loader2 size={11} className="animate-spin" /> Saving

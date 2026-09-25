@@ -221,10 +221,10 @@ export default function SearchAutocomplete({ className = '', autoFocus, onDone, 
           aria-label="Search suggestions"
           className="absolute inset-x-0 top-full z-40 mt-1.5 max-h-[min(26rem,70vh)] overflow-y-auto scrollbar-thin rounded-xl border border-border bg-surface-raised p-1.5 shadow-panel"
         >
-          {status === 'loading' && flat.length === 0 && <div className="px-3 py-2.5 text-[11px] text-text-muted">Searching…</div>}
-          {status === 'error' && <div className="px-3 py-2.5 text-[11px] text-rose-400">Couldn&apos;t load suggestions. Press Enter to search.</div>}
+          {status === 'loading' && flat.length === 0 && <div className="px-3 py-2.5 text-[12px] text-text-muted">Searching…</div>}
+          {status === 'error' && <div className="px-3 py-2.5 text-[12px] text-rose-400">Couldn&apos;t load suggestions. Press Enter to search.</div>}
           {status === 'done' && flat.length === 0 && (
-            <div className="px-3 py-2.5 text-[11px] text-text-muted">
+            <div className="px-3 py-2.5 text-[12px] text-text-muted">
               No matches for &ldquo;{trimmed}&rdquo;
             </div>
           )}
@@ -233,7 +233,7 @@ export default function SearchAutocomplete({ className = '', autoFocus, onDone, 
             const Icon = group.icon
             return (
               <div key={group.type} role="presentation">
-                <div role="presentation" className="px-2.5 pb-1 pt-2 text-[10px] font-mono uppercase tracking-wide text-text-muted">
+                <div role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-mono uppercase tracking-wide text-text-muted">
                   {group.label}
                 </div>
                 {group.items.map((r) => {
@@ -255,7 +255,7 @@ export default function SearchAutocomplete({ className = '', autoFocus, onDone, 
                         <div className="truncate font-medium text-text-primary">
                           <Highlight text={r.title} query={trimmed} />
                         </div>
-                        {r.subtitle && <div className="truncate text-[10px] text-text-muted">{r.subtitle}</div>}
+                        {r.subtitle && <div className="truncate text-[11px] text-text-muted">{r.subtitle}</div>}
                       </div>
                     </div>
                   )
@@ -271,7 +271,7 @@ export default function SearchAutocomplete({ className = '', autoFocus, onDone, 
             onMouseDown={(e) => e.preventDefault()}
             onMouseEnter={() => setActive(footerIndex)}
             onClick={goToFullSearch}
-            className={`mt-1 flex cursor-pointer items-center gap-2 rounded-lg border-t border-border px-2.5 py-2 text-[11px] text-text-secondary ${
+            className={`mt-1 flex cursor-pointer items-center gap-2 rounded-lg border-t border-border px-2.5 py-2 text-[12px] text-text-secondary ${
               active === footerIndex ? 'bg-accent-blue/15 text-text-primary' : ''
             }`}
           >

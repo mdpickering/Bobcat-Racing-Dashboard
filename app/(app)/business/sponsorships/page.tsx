@@ -83,13 +83,13 @@ export default async function SponsorshipsPage({ searchParams }: { searchParams:
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/business" className="mb-2 flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+        <Link href="/business" className="mb-2 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
           <ChevronLeft size={13} /> Back to Business
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-lg font-bold text-text-primary">Sponsorships</h1>
-            <p className="mt-0.5 text-xs font-mono text-text-muted">
+            <h1 className="text-xl font-semibold text-text-primary">Sponsorships</h1>
+            <p className="mt-0.5 text-xs text-text-secondary">
               {seasonLabel(selected)}
               {eventName ? ` · ${eventName}` : ''} · {rows.length} sponsorship{rows.length === 1 ? '' : 's'}
             </p>

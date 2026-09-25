@@ -78,13 +78,13 @@ export default function RecurringEventsPanel({ recurringEvents, canManage, subsy
           <Repeat size={12} /> Weekly Schedule
         </h3>
         {canManage && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <Plus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
       </div>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       {canManage && adding && (
         <form onSubmit={handleAdd} className="mb-3 space-y-2 rounded-lg border border-border p-3 text-xs">
@@ -128,7 +128,7 @@ export default function RecurringEventsPanel({ recurringEvents, canManage, subsy
               <li key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-1.5 text-xs">
                 <div className="min-w-0">
                   <span className="font-medium text-text-primary">{r.title}</span>
-                  <div className="text-[10px] text-text-muted">
+                  <div className="text-[11px] text-text-muted">
                     {WEEKDAY_NAMES[r.day_of_week]}
                     {r.time_label ? ` · ${r.time_label}` : ''}
                     {r.subsystem?.name ? ` · ${r.subsystem.name}` : ' · Team-wide'}

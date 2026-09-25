@@ -94,7 +94,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
 
   return (
     <Panel className="p-5">
-      <Link href="/tasks" className="mb-3 flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+      <Link href="/tasks" className="mb-3 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
         <ChevronLeft size={13} /> Back to tasks
       </Link>
 
@@ -143,7 +143,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
           </div>
           {task.description && <p className="mt-2 whitespace-pre-wrap text-xs text-text-secondary">{task.description}</p>}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px]">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
             <Badge tone="slate">{task.subsystem?.name ?? 'Unknown subsystem'}</Badge>
             {task.category?.name && <Badge tone="slate">{task.category.name}</Badge>}
             {task.deadline && (
@@ -157,7 +157,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Status</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Status</label>
           {canManage || canChangeStatus ? (
             <Select value={task.status} disabled={saving} onChange={(e) => handleStatusChange(e.target.value)} className="w-36">
               {STATUSES.map((s) => (
@@ -172,7 +172,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
         </div>
         {!editingDetails && (
           <div>
-            <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Priority</label>
+            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Priority</label>
             <Badge tone="slate">{task.priority}</Badge>
           </div>
         )}

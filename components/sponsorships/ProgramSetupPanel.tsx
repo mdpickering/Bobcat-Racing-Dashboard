@@ -47,7 +47,7 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
     return (
       <Panel className="p-4">
         <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-text-primary">{seasonLabel(season)} is a past season</h2>
-        <p className="text-[11px] text-text-muted">
+        <p className="text-[12px] text-text-muted">
           Past seasons have no sponsorship levels. Records for this season stay “historical — no level” until someone deliberately assigns one; no level is ever invented.
         </p>
       </Panel>
@@ -59,20 +59,20 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
       <h2 className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
         <ListChecks size={13} className="text-accent-blue" /> No sponsorship program for {seasonLabel(season)} yet
       </h2>
-      <p className="text-[11px] text-text-muted">The program is the season’s levels (with their minimum amounts) and the standard deliverables each level receives. Sponsorships are given a level from it.</p>
+      <p className="text-[12px] text-text-muted">The program is the season’s levels (with their minimum amounts) and the standard deliverables each level receives. Sponsorships are given a level from it.</p>
       {canManage ? (
         <Button size="sm" className="mt-3" onClick={() => { setError(null); setOpen(true) }}>
           Set up {seasonShort(season)} program
         </Button>
       ) : (
-        <p className="mt-3 text-[11px] text-text-muted">The Sponsorship Lead, the Business Lead or an admin sets this up.</p>
+        <p className="mt-3 text-[12px] text-text-muted">The Sponsorship Lead, the Business Lead or an admin sets this up.</p>
       )}
 
       <Modal open={open} onClose={busy ? () => {} : () => setOpen(false)} title={`Set up the ${seasonShort(season)} program`} maxWidthClassName="max-w-xl">
         <div className="space-y-4 text-xs">
           {copyableSeasons.length > 0 && (
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Start from</label>
+              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Start from</label>
               <Select value={source} onChange={(e) => setSource(e.target.value)} disabled={busy}>
                 <option value="flyer">The 2026–27 flyer levels (standard)</option>
                 {copyableSeasons.map((s) => (
@@ -92,9 +92,9 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
                   <div key={level.key} className="rounded-lg border border-border p-3">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="font-semibold text-text-primary">{level.name}</span>
-                      <span className="font-mono text-[11px] text-text-secondary">{formatMoney(level.minAmount)}+</span>
+                      <span className="font-mono text-[12px] text-text-secondary">{formatMoney(level.minAmount)}+</span>
                     </div>
-                    <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[11px] text-text-secondary">
+                    <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[12px] text-text-secondary">
                       {level.deliverables.map((d) => (
                         <li key={d}>{d}</li>
                       ))}
@@ -109,7 +109,7 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
             </p>
           )}
 
-          <p className="text-[11px] text-text-muted">This can be done once per season. No sponsors or amounts are created.</p>
+          <p className="text-[12px] text-text-muted">This can be done once per season. No sponsors or amounts are created.</p>
           {error && <p className="text-rose-400">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>

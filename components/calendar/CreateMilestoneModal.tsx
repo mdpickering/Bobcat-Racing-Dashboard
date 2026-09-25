@@ -47,19 +47,19 @@ export default function CreateMilestoneModal({ open, onClose, subsystemOptions, 
     <Modal open={open} onClose={onClose} title="New Milestone">
       <form onSubmit={handleSubmit} className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Name</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Name</label>
           <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Design freeze" />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Date</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Date</label>
           <Input required type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Description</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Description</label>
           <Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional details" />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase text-text-muted">Subsystem</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Subsystem</label>
           <Select value={subsystemId} onChange={(e) => setSubsystemId(e.target.value)}>
             {isCtoOrAdmin && <option value="">Team-wide</option>}
             {subsystemOptions.map((s) => (

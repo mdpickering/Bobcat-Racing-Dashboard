@@ -59,8 +59,8 @@ export default async function CalendarPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Calendar</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">Team events, recurring meetings, milestones, and task deadlines.</p>
+        <h1 className="text-xl font-semibold text-text-primary">Calendar</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">Team events, recurring meetings, milestones, and task deadlines.</p>
       </div>
       <CalendarToolbar canManage={canManage} subsystemOptions={subsystemOptions} isCtoOrAdmin={userIsCtoOrAdmin} />
 

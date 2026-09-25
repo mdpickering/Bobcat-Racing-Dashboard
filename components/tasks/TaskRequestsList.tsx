@@ -60,12 +60,12 @@ export default function TaskRequestsList({ requests, canReviewAll, reviewableSub
                 <h3 className="text-xs font-bold text-text-primary">{r.title}</h3>
                 <Badge tone={STATUS_TONE[r.status]}>{r.status}</Badge>
               </div>
-              <p className="mt-1 text-[10px] text-text-muted">
+              <p className="mt-1 text-[11px] text-text-muted">
                 {r.requester?.display_name || r.requester?.email} · {r.subsystem?.name} · {formatDate(r.created_at)}
               </p>
-              {r.description && <p className="mt-2 text-[11px] text-text-secondary">{r.description}</p>}
+              {r.description && <p className="mt-2 text-[12px] text-text-secondary">{r.description}</p>}
               {r.status === 'approved' && r.converted_task_id && (
-                <Link href={`/tasks/${r.converted_task_id}`} className="mt-2 inline-block text-[11px] text-accent-blue hover:underline">
+                <Link href={`/tasks/${r.converted_task_id}`} className="mt-2 inline-block text-[12px] text-accent-blue hover:underline">
                   View task →
                 </Link>
               )}

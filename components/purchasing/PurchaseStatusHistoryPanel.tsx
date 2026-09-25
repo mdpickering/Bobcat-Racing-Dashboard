@@ -25,7 +25,7 @@ export default function PurchaseStatusHistoryPanel({ history }: { history: Purch
                     <span className="font-medium">Created as {h.to_status}</span>
                   )}
                 </p>
-                <p className="text-[10px] text-text-muted">
+                <p className="text-[11px] text-text-muted">
                   {h.changed_by_profile?.display_name || h.changed_by_profile?.email} · {formatDateTime(h.changed_at)}
                 </p>
               </div>

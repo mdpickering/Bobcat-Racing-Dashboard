@@ -42,8 +42,8 @@ export default async function AdminApplicationsPage({
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Membership Applications</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">
+        <h1 className="text-xl font-semibold text-text-primary">Membership Applications</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">
           {applications.length} application{applications.length === 1 ? '' : 's'}
         </p>
       </div>

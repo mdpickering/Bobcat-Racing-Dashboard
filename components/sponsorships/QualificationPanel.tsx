@@ -49,51 +49,51 @@ export default function QualificationPanel({ sponsorshipId, summary, review, lev
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <LevelBadge name={summary.level_name} />
-        {currentDecision && <span className="text-[11px] text-text-muted">{DECISION_METHOD_LABEL[currentDecision.method]}</span>}
+        {currentDecision && <span className="text-[12px] text-text-muted">{DECISION_METHOD_LABEL[currentDecision.method]}</span>}
         <ReviewBadge flag={flag} quietWhenOk />
       </div>
-      {flag && flag !== 'ok' && <p className="mb-3 text-[11px] text-text-muted">{REVIEW_FLAG_LABEL[flag].help}</p>}
+      {flag && flag !== 'ok' && <p className="mb-3 text-[12px] text-text-muted">{REVIEW_FLAG_LABEL[flag].help}</p>}
       {flag === 'qualifies_higher' && review?.suggested_level_name && (
-        <p className="mb-3 text-[11px] text-amber-400">
+        <p className="mb-3 text-[12px] text-amber-400">
           The current qualifying value of {formatMoney(review.qualifying_value)} reaches {review.suggested_level_name}.
         </p>
       )}
       {customTerms && (
-        <div className="mb-3 rounded-lg border border-border p-3 text-[11px]">
-          <div className="font-mono text-[10px] uppercase text-text-muted">Custom terms</div>
+        <div className="mb-3 rounded-lg border border-border p-3 text-[12px]">
+          <div className="font-mono text-[11px] uppercase text-text-muted">Custom terms</div>
           <p className="mt-1 whitespace-pre-wrap text-text-secondary">{customTerms}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-5 text-xs md:grid-cols-2">
         <div className="space-y-1.5">
-          <div className="font-mono text-[10px] uppercase text-text-muted">Qualifying value</div>
+          <div className="font-mono text-[11px] uppercase text-text-muted">Qualifying value</div>
           <Row label="Cash committed" value={formatMoney(summary.cash_committed)} />
           <Row label="+ In-kind (estimated)" value={formatMoney(summary.in_kind_value)} />
           <Row label="Total sponsorship value" value={formatMoney(summary.total_sponsorship_value)} strong />
           {currentLevel && (
             <>
               <Row label={`${currentLevel.name} minimum`} value={formatMoney(currentLevel.min_amount)} muted />
-              <div className={`text-[11px] ${q.qualifies ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <div className={`text-[12px] ${q.qualifies ? 'text-emerald-400' : 'text-amber-400'}`}>
                 {q.qualifies ? 'Currently meets this minimum.' : `Currently ${formatMoney(q.shortfall)} below this minimum.`}
               </div>
             </>
           )}
           {currentDecision && (
-            <div className="pt-1 text-[11px] text-text-muted">
+            <div className="pt-1 text-[12px] text-text-muted">
               Basis when the level was set: {formatMoney(currentDecision.basis_cash)} cash + {formatMoney(currentDecision.basis_in_kind)} in-kind = {formatMoney(currentDecision.basis_total)}.
             </div>
           )}
         </div>
 
         <div className="space-y-1.5">
-          <div className="font-mono text-[10px] uppercase text-text-muted">Cash position</div>
+          <div className="font-mono text-[11px] uppercase text-text-muted">Cash position</div>
           <Row label="Committed" value={formatMoney(summary.cash_committed)} />
           <Row label="Received" value={formatMoney(summary.cash_received)} />
           <Row label="Outstanding" value={formatMoney(summary.cash_outstanding)} strong />
           {summary.cash_over_received > 0 && <Row label="Received over committed" value={formatMoney(summary.cash_over_received)} muted />}
           {summary.cash_refunded > 0 && <Row label="Refunded (already deducted)" value={formatMoney(summary.cash_refunded)} muted />}
-          <div className="pt-1 font-mono text-[10px] uppercase text-text-muted">Where the received cash is</div>
+          <div className="pt-1 font-mono text-[11px] uppercase text-text-muted">Where the received cash is</div>
           <Row label="Available to the team" value={formatMoney(summary.cash_available)} muted />
           <Row label="Held by the university" value={formatMoney(summary.cash_held_by_university)} muted />
           <Row label="Availability unknown" value={formatMoney(summary.cash_availability_unknown)} muted />

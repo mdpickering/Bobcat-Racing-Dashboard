@@ -57,13 +57,13 @@ export default function CadReviewVersionsPanel({ cadReviewId, versions, canAddVe
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Revision History</h3>
         {canAddVersion && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <Plus size={11} className="mr-0.5 inline" /> New revision
           </button>
         )}
       </div>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       {canAddVersion && adding && (
         <form onSubmit={handleAdd} className="mb-3 space-y-2 rounded-lg border border-border p-3 text-xs">
@@ -89,12 +89,12 @@ export default function CadReviewVersionsPanel({ cadReviewId, versions, canAddVe
             <li key={v.id} className="rounded-lg border border-border p-2.5 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-text-primary">Rev {v.revision_number}</span>
-                <span className="text-[10px] text-text-muted">
+                <span className="text-[11px] text-text-muted">
                   {v.submitter?.display_name || v.submitter?.email} · {formatDateTime(v.created_at)}
                 </span>
               </div>
               {v.notes && <p className="mt-1 whitespace-pre-wrap text-text-secondary">{v.notes}</p>}
-              <div className="mt-1.5 flex flex-wrap gap-3 text-[10px]">
+              <div className="mt-1.5 flex flex-wrap gap-3 text-[11px]">
                 {v.external_cad_link && (
                   <a href={v.external_cad_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-accent-blue hover:underline">
                     <ExternalLink size={10} /> CAD file

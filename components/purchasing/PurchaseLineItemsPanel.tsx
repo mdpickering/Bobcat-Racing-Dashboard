@@ -154,13 +154,13 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Line Items</h3>
         {canManage && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <Plus size={11} className="mr-0.5 inline" /> Add item
           </button>
         )}
       </div>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       {items.length === 0 && !adding ? (
         <EmptyState icon={Package} title="No line items yet" description="Add parts, quantities, vendors and product links to this order." />
@@ -168,7 +168,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-border text-left text-[10px] uppercase text-text-muted">
+              <tr className="border-b border-border text-left text-[11px] uppercase text-text-muted">
                 <th className="pb-2 font-medium">Description</th>
                 <th className="pb-2 font-medium">Vendor</th>
                 <th className="pb-2 font-medium">Part #</th>
@@ -186,7 +186,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                 <tr key={item.id}>
                   <td className="py-2 pr-2 text-text-primary">
                     {item.description}
-                    {item.notes && <div className="text-[10px] text-text-muted">{item.notes}</div>}
+                    {item.notes && <div className="text-[11px] text-text-muted">{item.notes}</div>}
                   </td>
                   {(['vendor', 'part_number', 'subassembly'] as const).map((field) => (
                     <td key={field} className="py-2 pr-2 text-text-secondary">
@@ -261,7 +261,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
             {items.length > 0 && (
               <tfoot>
                 <tr className="border-t border-border">
-                  <td colSpan={7} className="pt-2 text-right text-[10px] font-mono uppercase text-text-muted">
+                  <td colSpan={7} className="pt-2 text-right text-[11px] font-mono uppercase text-text-muted">
                     Total
                   </td>
                   <td className="pt-2 font-bold text-text-primary">{formatCurrency(total)}</td>
@@ -275,7 +275,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
 
       {byVendor.size > 1 && (
         <div className="mt-3 border-t border-border pt-3">
-          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wide text-text-muted">By vendor</p>
+          <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-text-muted">By vendor</p>
           <ul className="space-y-1 text-xs">
             {Array.from(byVendor.entries()).map(([name, v]) => (
               <li key={name} className="flex items-center justify-between gap-3">
@@ -321,7 +321,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
               className={showLinkError ? 'border-rose-500/60 focus:border-rose-400' : ''}
             />
           </div>
-          {showLinkError && <p className="text-[11px] text-rose-400">{linkError}</p>}
+          {showLinkError && <p className="text-[12px] text-rose-400">{linkError}</p>}
           <div className="flex gap-2">
             <Button size="sm" type="submit" disabled={busy || !description || linkError !== null}>
               Add

@@ -8,6 +8,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // 13px is the minimum body size (was 12px); title/section sizes come from the standard scale
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.25rem' }],
+      },
       colors: {
         qu: {
           obsidian: '#040811',
@@ -25,6 +29,13 @@ const config: Config = {
         'text-secondary': 'rgb(var(--text-secondary) / <alpha-value>)',
         'text-muted': 'rgb(var(--text-muted) / <alpha-value>)',
         accent: 'rgb(var(--accent) / <alpha-value>)',
+        // status meaning is defined once, in globals.css, for both themes
+        'status-success': 'rgb(var(--status-success) / <alpha-value>)',
+        'status-warning': 'rgb(var(--status-warning) / <alpha-value>)',
+        'status-danger': 'rgb(var(--status-danger) / <alpha-value>)',
+        'status-info': 'rgb(var(--status-info) / <alpha-value>)',
+        // set per workspace on the shell root (data-workspace)
+        ws: 'rgb(var(--ws-accent) / <alpha-value>)',
         'accent-blue': 'rgb(var(--accent-blue) / <alpha-value>)',
       },
       boxShadow: {

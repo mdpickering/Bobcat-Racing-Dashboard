@@ -81,13 +81,13 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Subsystem Memberships</h3>
         {!adding && available.length > 0 && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
       </div>
 
-      {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
 
       {memberships.length === 0 && !adding ? (
         <EmptyState icon={Boxes} title="Not a member of any subsystem" />
@@ -126,7 +126,7 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
               </option>
             ))}
           </Select>
-          <label className="flex items-center gap-1.5 text-[10px] text-text-muted">
+          <label className="flex items-center gap-1.5 text-[11px] text-text-muted">
             <input type="checkbox" checked={asLead} onChange={(e) => setAsLead(e.target.checked)} /> As lead
           </label>
           <Button size="sm" disabled={!selected || busy} onClick={handleAdd}>

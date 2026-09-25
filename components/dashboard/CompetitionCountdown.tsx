@@ -14,7 +14,7 @@ export default function CompetitionCountdown({ competition }: { competition: Com
     return (
       <Panel className="p-4">
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">Competition</h3>
-        <p className="text-[11px] text-text-muted">No competition season configured yet.</p>
+        <p className="text-[12px] text-text-muted">No competition season configured yet.</p>
       </Panel>
     )
   }
@@ -32,7 +32,7 @@ export default function CompetitionCountdown({ competition }: { competition: Com
       {days !== null && (
         <div className="mb-3">
           <div className="text-2xl font-black leading-none text-qu-gold">{days >= 0 ? days : 0}</div>
-          <div className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+          <div className="text-[11px] font-mono uppercase tracking-wide text-text-muted">
             {days >= 0 ? 'days remaining' : 'competition has passed'}
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function CompetitionCountdown({ competition }: { competition: Com
           const value = competition[m.key] as string | null
           if (!value) return null
           return (
-            <div key={m.key} className="flex items-center justify-between text-[11px]">
+            <div key={m.key} className="flex items-center justify-between text-[12px]">
               <span className="text-text-secondary">{m.label}</span>
               <span className="font-mono text-text-primary">{formatDate(value)}</span>
             </div>

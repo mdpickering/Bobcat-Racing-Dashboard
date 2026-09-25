@@ -29,7 +29,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push('/')
     router.refresh()
   }
 
@@ -39,7 +39,7 @@ export default function LoginPage() {
         <h1 className="text-sm font-bold mb-4">Bobcat Racing — Sign In</h1>
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div>
-            <label className="block mb-1 font-mono uppercase text-[10px] text-slate-400">
+            <label className="block mb-1 font-mono uppercase text-[11px] text-slate-400">
               Email
             </label>
             <input
@@ -51,7 +51,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-mono uppercase text-[10px] text-slate-400">
+            <label className="block mb-1 font-mono uppercase text-[11px] text-slate-400">
               Password
             </label>
             <input
@@ -67,7 +67,7 @@ export default function LoginPage() {
             {loading ? 'Signing In…' : 'Sign In'}
           </Button>
         </form>
-        <p className="text-[11px] text-slate-400 mt-4">
+        <p className="text-[12px] text-slate-400 mt-4">
           Need an account?{' '}
           <Link href="/signup" className="text-qu-gold hover:underline">
             Join the team

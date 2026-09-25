@@ -20,7 +20,7 @@ interface CreatePurchaseRequestModalProps {
   defaultSubsystemId?: string
 }
 
-const LABEL = 'mb-1 block font-mono text-[10px] uppercase text-text-muted'
+const LABEL = 'mb-1 block font-mono text-[11px] uppercase text-text-muted'
 
 // A purchase request is a TEAM's order. It starts with its first item; the rest of the order (more items,
 // each from any vendor) is added on the request's page.
@@ -110,7 +110,7 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
         </div>
 
         <div className="border-t border-border pt-3">
-          <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-text-muted">First item — add more items, from any vendor, on the next page</p>
+          <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-muted">First item — add more items, from any vendor, on the next page</p>
           <div className="space-y-3">
             <div>
               <label className={LABEL}>Item</label>
@@ -140,7 +140,7 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
                 />
               </div>
             </div>
-            <p id="purchase-product-url-help" className={`-mt-1 text-[11px] ${showUrlError ? 'text-rose-400' : 'text-text-muted'}`}>
+            <p id="purchase-product-url-help" className={`-mt-1 text-[12px] ${showUrlError ? 'text-rose-400' : 'text-text-muted'}`}>
               {showUrlError ? urlError : 'The link to the exact item is required.'}
             </p>
             <div className="grid grid-cols-2 gap-3">

@@ -63,7 +63,7 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <Link href="/subsystems" className="flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+      <Link href="/subsystems" className="flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
         <ChevronLeft size={13} /> Back to subsystems
       </Link>
 

@@ -108,7 +108,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
         {error && <p className="text-rose-400">{error}</p>}
 
         <div>
-          <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-mono uppercase text-text-muted">
+          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-mono uppercase text-text-muted">
             <Clock size={11} /> Events
           </h4>
           {events.length === 0 ? (
@@ -155,7 +155,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                             </div>
                           )}
                         </div>
-                        <p className="mt-0.5 text-[10px] text-text-muted">
+                        <p className="mt-0.5 text-[11px] text-text-muted">
                           {formatDateTime(ev.start_time)} – {formatDateTime(ev.end_time)}
                           {ev.subsystem?.name ? ` · ${ev.subsystem.name}` : ' · Team-wide'}
                         </p>
@@ -170,7 +170,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
         </div>
 
         <div>
-          <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-mono uppercase text-text-muted">
+          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-mono uppercase text-text-muted">
             <Flag size={11} /> Milestones
           </h4>
           {milestones.length === 0 ? (
@@ -217,7 +217,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                             </div>
                           )}
                         </div>
-                        <p className="mt-0.5 text-[10px] text-text-muted">{formatDate(m.date)}{m.subsystem?.name ? ` · ${m.subsystem.name}` : ' · Team-wide'}</p>
+                        <p className="mt-0.5 text-[11px] text-text-muted">{formatDate(m.date)}{m.subsystem?.name ? ` · ${m.subsystem.name}` : ' · Team-wide'}</p>
                         {m.description && <p className="mt-1 whitespace-pre-wrap text-text-secondary">{m.description}</p>}
                       </>
                     )}
@@ -229,7 +229,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
         </div>
 
         <div>
-          <h4 className="mb-2 flex items-center gap-1.5 text-[10px] font-mono uppercase text-text-muted">
+          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-mono uppercase text-text-muted">
             <ListChecks size={11} /> Task Deadlines
           </h4>
           {taskDeadlines.length === 0 ? (

@@ -18,7 +18,7 @@ export default function AdminStatCard({ label, value, icon: Icon, href, tone = '
       </div>
       <div className="min-w-0">
         <div className="text-lg font-bold leading-none text-text-primary">{value}</div>
-        <div className="mt-1 truncate text-[10px] font-mono uppercase tracking-wide text-text-muted">{label}</div>
+        <div className="mt-1 truncate text-[11px] font-mono uppercase tracking-wide text-text-muted">{label}</div>
       </div>
     </Panel>
   )

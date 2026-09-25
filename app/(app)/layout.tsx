@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import AppShell from '@/components/layout/AppShell'
-import { getBusinessAccess } from '@/lib/supabase/queries/business'
+import { getWorkspaceContext } from '@/lib/supabase/queries/workspaces'
+import { WORKSPACE_COOKIE } from '@/lib/workspaceAccess'
 import type { Profile } from '@/types/user'
 
 export default async function AppLayout({
@@ -25,11 +27,12 @@ export default async function AppLayout({
   if (!profile?.approved) redirect('/pending-approval')
   if (!profile.active) redirect('/deactivated')
 
-  // Business area visibility (the database enforces the real access; this only decides whether to show the link).
-  const business = await getBusinessAccess(supabase, profile as Profile)
+  // Which workspaces to offer. This is navigation only: every page still checks its own access and Row Level
+  // Security is the real boundary, so nothing here grants or removes access to any data.
+  const workspaces = await getWorkspaceContext(supabase, profile as Profile, cookies().get(WORKSPACE_COOKIE)?.value)
 
   return (
-    <AppShell profile={profile as Profile} canViewBusiness={business.canView}>
+    <AppShell profile={profile as Profile} available={workspaces.available} startWorkspace={workspaces.start}>
       {children}
     </AppShell>
   )

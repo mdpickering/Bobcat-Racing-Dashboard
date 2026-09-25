@@ -36,7 +36,7 @@ export default function TaskList({ tasks, canAccept = false }: TaskListProps) {
                   <div className="flex items-center gap-2">
                     <span className="truncate font-medium text-text-primary">{task.title}</span>
                   </div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-text-muted">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-text-muted">
                     <span>{task.subsystem?.name ?? 'Unknown'}</span>
                     {task.category?.name && <span>· {task.category.name}</span>}
                     {task.deadline && (

@@ -42,7 +42,7 @@ export default function AcceptTaskButton({ taskId }: { taskId: string }) {
       >
         {busy ? 'Accepting…' : 'Accept'}
       </Button>
-      {error && <span className="max-w-[10rem] text-right text-[10px] text-rose-400">{error}</span>}
+      {error && <span className="max-w-[10rem] text-right text-[11px] text-rose-400">{error}</span>}
     </div>
   )
 }

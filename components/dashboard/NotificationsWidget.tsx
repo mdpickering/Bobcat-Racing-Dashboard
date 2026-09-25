@@ -12,7 +12,7 @@ export default function NotificationsWidget({ notifications }: { notifications: 
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Recent Notifications</h3>
         {notifications.length > 0 && (
-          <Link href="/notifications" className="text-[10px] font-mono uppercase text-accent-blue hover:underline">
+          <Link href="/notifications" className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             View all
           </Link>
         )}
@@ -28,7 +28,7 @@ export default function NotificationsWidget({ notifications }: { notifications: 
                 className={`block rounded-lg px-2.5 py-2 text-xs transition-colors hover:bg-surface-raised ${n.read_at ? 'opacity-60' : 'bg-accent-blue/5'}`}
               >
                 <div className="truncate font-medium text-text-primary">{n.title}</div>
-                <div className="mt-0.5 text-[10px] text-text-muted">{timeAgo(n.created_at)}</div>
+                <div className="mt-0.5 text-[11px] text-text-muted">{timeAgo(n.created_at)}</div>
               </Link>
             </li>
           ))}

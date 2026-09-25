@@ -28,8 +28,8 @@ export default async function AdminCompetitionPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-bold text-text-primary">Competition Settings</h1>
-        <p className="mt-0.5 text-xs font-mono text-text-muted">Dates that drive the dashboard countdown and season timeline.</p>
+        <h1 className="text-xl font-semibold text-text-primary">Competition Settings</h1>
+        <p className="mt-0.5 text-xs text-text-secondary">Dates that drive the dashboard countdown and season timeline.</p>
       </div>
       <AdminNav />
       <CompetitionSettingsForm seasons={seasons} />

@@ -40,7 +40,14 @@ export default async function PurchaseRequestDetailPage({ params }: { params: { 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <PurchaseRequestDetailHeader request={request} canManage={canManage} canApprove={canApprove} canDelete={canDelete} itemCount={items.length} />
-      <PurchaseLineItemsPanel purchaseRequestId={request.id} items={items} canManage={canManage} />
+      <PurchaseLineItemsPanel
+        purchaseRequestId={request.id}
+        items={items}
+        canManage={canManage}
+        requestVendor={request.vendor}
+        members={subsystemMembers}
+        requesterName={request.requester?.display_name || request.requester?.email || ''}
+      />
       <PurchaseStatusHistoryPanel history={history} />
     </div>
   )

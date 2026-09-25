@@ -44,7 +44,6 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(request.title)
   const [description, setDescription] = useState(request.description ?? '')
-  const [vendor, setVendor] = useState(request.vendor ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -79,7 +78,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
     const url = URL.createObjectURL(await res.blob())
     const link = document.createElement('a')
     link.href = url
-    link.download = purchaseSheetFileName(request.id)
+    link.download = purchaseSheetFileName(request)
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -142,7 +141,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
   }
 
   async function handleSaveDetails() {
-    await persist({ title, description: description || null, vendor: vendor || null })
+    await persist({ title, description: description || null })
     setEditing(false)
   }
 
@@ -174,7 +173,6 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
         <div className="space-y-3">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} className="text-sm font-bold" />
           <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
-          <Input value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="Vendor" />
           <div className="flex gap-2">
             <Button size="sm" disabled={saving} onClick={handleSaveDetails}>
               <Check size={12} /> Save

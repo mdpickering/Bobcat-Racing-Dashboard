@@ -8,7 +8,8 @@ const PURCHASE_REQUEST_SELECT = `
   *,
   subsystem:subsystems(id, name),
   requester:profiles!purchase_requests_requested_by_fkey(id, display_name, email),
-  reviewer:profiles!purchase_requests_reviewed_by_fkey(id, display_name, email)
+  reviewer:profiles!purchase_requests_reviewed_by_fkey(id, display_name, email),
+  items:purchase_request_items(id, vendor, quantity, unit_cost)
 `
 
 export interface PurchaseRequestFilters {
@@ -45,6 +46,11 @@ export async function createPurchaseRequest(
     product_url: string
     part_number?: string | null
     subassembly?: string | null
+    item_description?: string | null
+    item_vendor?: string | null
+    quantity?: number
+    unit_cost?: number | null
+    responsible_user_id?: string | null
   }
 ): Promise<string> {
   const { data, error } = await supabase.rpc('create_purchase_request', {
@@ -55,6 +61,11 @@ export async function createPurchaseRequest(
     p_product_url: input.product_url,
     p_part_number: input.part_number?.trim() || null,
     p_subassembly: input.subassembly?.trim() || null,
+    p_item_description: input.item_description?.trim() || null,
+    p_item_vendor: input.item_vendor?.trim() || null,
+    p_quantity: input.quantity ?? 1,
+    p_unit_cost: input.unit_cost ?? null,
+    p_responsible_user_id: input.responsible_user_id || null,
   })
   if (error) throw error
   return data as string
@@ -88,7 +99,7 @@ export async function approvePurchaseRequest(supabase: SupabaseClient, id: strin
 export async function listPurchaseRequestItems(supabase: SupabaseClient, purchaseRequestId: string): Promise<PurchaseRequestItem[]> {
   const { data, error } = await supabase
     .from('purchase_request_items')
-    .select('*')
+    .select('*, responsible:profiles!purchase_request_items_responsible_user_id_fkey(id, display_name, email)')
     .eq('purchase_request_id', purchaseRequestId)
     .order('created_at', { ascending: true })
   if (error) throw error
@@ -106,6 +117,8 @@ export async function addPurchaseRequestItem(
     notes?: string | null
     part_number?: string | null
     subassembly?: string | null
+    vendor?: string | null
+    responsible_user_id?: string | null
   }
 ) {
   const { data, error } = await supabase.from('purchase_request_items').insert(input).select().single()

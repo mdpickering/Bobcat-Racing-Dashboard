@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs'
 import { PURCHASE_TEMPLATE_BASE64 } from './templateData'
-import { CELL_PADDING, displayUrl, excelDate, fitWidth, initials, textUnits, vendorName, wrappedLineCount } from './format'
+import { CELL_PADDING, displayUrl, excelDate, fitWidth, groupByVendor, initials, textUnits, vendorName, wrappedLineCount } from './format'
 import type { PurchaseRequest, PurchaseRequestItem } from '@/types/database'
 
 export { EXPORTABLE_STATUSES, isExportableStatus, purchaseSheetFileName } from './format'
@@ -63,7 +63,7 @@ function rowFor(request: PurchaseRequest, item: PurchaseRequestItem): RowValues 
     qty: item.quantity,
     url: item.link?.trim() || null,
     cells: [
-      vendorName(request.vendor, item.link),
+      vendorName(item.vendor, request.vendor, item.link),
       item.description,
       item.part_number ?? '',
       unit,
@@ -72,7 +72,8 @@ function rowFor(request: PurchaseRequest, item: PurchaseRequestItem): RowValues 
       item.link ? displayUrl(item.link) : '',
       item.subassembly?.trim() || request.subsystem?.name || '',
       item.notes ?? '',
-      initials(request.requester?.display_name, request.requester?.email),
+      // the member responsible for this item, else whoever placed the request
+      item.responsible ? initials(item.responsible.display_name, item.responsible.email) : initials(request.requester?.display_name, request.requester?.email),
       excelDate(request.created_at),
     ],
   }
@@ -89,7 +90,11 @@ export async function buildPurchaseSheet(request: PurchaseRequest, items: Purcha
   const headerStyle = JSON.parse(JSON.stringify(ws.getCell('A1').style)) as Partial<ExcelJS.Style>
   const currencyFormat = ws.getRow(2).getCell(6).numFmt
 
-  const rows = items.map((item) => rowFor(request, item))
+  // one team's order, possibly from several vendors: rows are grouped by vendor
+  const rows = groupByVendor(
+    items.map((item) => rowFor(request, item)),
+    (row) => String(row.cells[0])
+  )
 
   // header row
   COLUMNS.forEach((col, i) => {

@@ -8,13 +8,37 @@ export function isExportableStatus(status: string): boolean {
   return (EXPORTABLE_STATUSES as readonly string[]).includes(status)
 }
 
-export function purchaseSheetFileName(requestId: string): string {
-  return `Purchase_Request_${requestId}.xlsx`
+// "Purchase_Front_Suspension_Steering_2026-09-25_3f2b6c1e.xlsx": the team, the date, and the start of the id
+// so two orders from the same team on the same day never collide.
+export function purchaseSheetFileName(request: { id: string; created_at: string; subsystem?: { name: string } | null }): string {
+  const team = (request.subsystem?.name ?? 'Team')
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40)
+  return `Purchase_${team || 'Team'}_${easternDateKey(request.created_at)}_${request.id.slice(0, 8)}.xlsx`
 }
 
-/** The vendor as entered on the request; if it was left blank, the store's domain from the item's link. */
-export function vendorName(requestVendor: string | null | undefined, link: string | null | undefined): string {
-  const typed = requestVendor?.trim()
+/**
+ * Puts each vendor's rows together, keeping vendors in the order they first appear and each vendor's rows in
+ * the order they were entered, so a sheet reads "all the McMaster items, then Amazon, ..." for placing orders.
+ */
+export function groupByVendor<T>(rows: T[], vendorOf: (row: T) => string): T[] {
+  const groups = new Map<string, T[]>()
+  for (const row of rows) {
+    const key = vendorOf(row).trim().toLowerCase()
+    const group = groups.get(key)
+    if (group) group.push(row)
+    else groups.set(key, [row])
+  }
+  return Array.from(groups.values()).flat()
+}
+
+/**
+ * The vendor for one line item: the item's own vendor, else the request's default vendor, else the
+ * store's domain from the item's link.
+ */
+export function vendorName(itemVendor: string | null | undefined, requestVendor: string | null | undefined, link: string | null | undefined): string {
+  const typed = itemVendor?.trim() || requestVendor?.trim()
   if (typed) return typed
   if (!link) return ''
   try {

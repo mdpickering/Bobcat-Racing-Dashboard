@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${purchaseSheetFileName(purchaseRequest.id)}"`,
+        'Content-Disposition': `attachment; filename="${purchaseSheetFileName(purchaseRequest)}"`,
         'Cache-Control': 'no-store',
       },
     })

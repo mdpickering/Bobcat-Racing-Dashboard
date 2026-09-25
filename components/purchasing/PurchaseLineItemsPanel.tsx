@@ -2,22 +2,29 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Link as LinkIcon } from 'lucide-react'
+import { Plus, Trash2, Link as LinkIcon, Package } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
 import Input from '@/components/ui/Input'
+import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
-import { Package } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { addPurchaseRequestItem, updatePurchaseRequestItem, deletePurchaseRequestItem } from '@/lib/supabase/queries/purchasing'
 import { validateProductUrl } from '@/lib/validation'
 import { getErrorMessage } from '@/lib/errors'
-import type { PurchaseRequestItem } from '@/types/database'
+import { vendorName } from '@/lib/purchaseSheet/format'
+import type { PurchaseRequestItem, SubsystemMember } from '@/types/database'
 
 interface PurchaseLineItemsPanelProps {
   purchaseRequestId: string
   items: PurchaseRequestItem[]
   canManage: boolean
+  // The order's default vendor (older requests may carry one) and the team's members, for choosing who
+  // is responsible for an item. An item with no vendor of its own or no responsible member falls back
+  // to these, and to the person who placed the request.
+  requestVendor: string | null
+  members: SubsystemMember[]
+  requesterName: string
 }
 
 function formatCurrency(value: number | null): string {
@@ -25,10 +32,14 @@ function formatCurrency(value: number | null): string {
   return value.toLocaleString(undefined, { style: 'currency', currency: 'USD' })
 }
 
-export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canManage }: PurchaseLineItemsPanelProps) {
+const nameOf = (p: { display_name: string | null; email: string | null } | null | undefined) => p?.display_name || p?.email || ''
+
+export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canManage, requestVendor, members, requesterName }: PurchaseLineItemsPanelProps) {
   const router = useRouter()
   const [adding, setAdding] = useState(false)
   const [description, setDescription] = useState('')
+  const [vendor, setVendor] = useState('')
+  const [responsibleId, setResponsibleId] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [unitCost, setUnitCost] = useState('')
   const [link, setLink] = useState('')
@@ -37,7 +48,28 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const lineTotal = (item: PurchaseRequestItem) => (item.unit_cost !== null ? item.unit_cost * item.quantity : null)
   const total = items.reduce((sum, item) => sum + (item.unit_cost ?? 0) * item.quantity, 0)
+  const vendorOf = (item: PurchaseRequestItem) => vendorName(item.vendor, requestVendor, item.link)
+
+  // one team order can buy from several vendors: show what each vendor's part of the order comes to
+  const byVendor = new Map<string, { items: number; total: number }>()
+  for (const item of items) {
+    const key = vendorOf(item) || 'No vendor'
+    const entry = byVendor.get(key) ?? { items: 0, total: 0 }
+    entry.items += 1
+    entry.total += (item.unit_cost ?? 0) * item.quantity
+    byVendor.set(key, entry)
+  }
+
+  // members you can hand an item to; keep a current assignee who is no longer on the roster selectable
+  const memberOptions = members
+    .filter((m) => m.profile)
+    .map((m) => ({ id: m.user_id, name: nameOf(m.profile) }))
+  const withCurrent = (current: PurchaseRequestItem) =>
+    current.responsible_user_id && !memberOptions.some((o) => o.id === current.responsible_user_id)
+      ? [...memberOptions, { id: current.responsible_user_id, name: nameOf(current.responsible) || 'Former member' }]
+      : memberOptions
 
   // Every line item needs a product link (also enforced by the database, migration 0022).
   const linkError = validateProductUrl(link)
@@ -58,9 +90,13 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         link: link.trim(),
         part_number: partNumber.trim() || null,
         subassembly: subassembly.trim() || null,
+        vendor: vendor.trim() || null,
+        responsible_user_id: responsibleId || null,
       })
       setPartNumber('')
       setSubassembly('')
+      setVendor('')
+      setResponsibleId('')
       setDescription('')
       setQuantity('1')
       setUnitCost('')
@@ -74,34 +110,29 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
     }
   }
 
-  async function handleQuantityChange(itemId: string, next: string) {
-    const value = Number(next)
-    if (!Number.isFinite(value) || value <= 0) return
+  async function update(itemId: string, patch: Record<string, unknown>, failure: string) {
     setBusy(true)
+    setError(null)
     try {
       const supabase = createClient()
-      await updatePurchaseRequestItem(supabase, itemId, { quantity: value })
+      await updatePurchaseRequestItem(supabase, itemId, patch)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update quantity.')
+      setError(getErrorMessage(err, failure))
     } finally {
       setBusy(false)
     }
   }
 
-  // Part # and Subassembly are plain optional text; clearing one stores NULL (the database refuses empty strings).
-  async function handleTextChange(itemId: string, field: 'part_number' | 'subassembly', next: string) {
-    setBusy(true)
-    setError(null)
-    try {
-      const supabase = createClient()
-      await updatePurchaseRequestItem(supabase, itemId, { [field]: next.trim() || null })
-      router.refresh()
-    } catch (err) {
-      setError(getErrorMessage(err, 'Could not save this change.'))
-    } finally {
-      setBusy(false)
-    }
+  async function handleQuantityChange(itemId: string, next: string) {
+    const value = Number(next)
+    if (!Number.isFinite(value) || value <= 0) return
+    await update(itemId, { quantity: value }, 'Could not update quantity.')
+  }
+
+  // Vendor, Part # and Subassembly are plain optional text; clearing one stores NULL (the database refuses empty strings).
+  async function handleTextChange(itemId: string, field: 'vendor' | 'part_number' | 'subassembly', next: string) {
+    await update(itemId, { [field]: next.trim() || null }, 'Could not save this change.')
   }
 
   async function handleRemove(itemId: string) {
@@ -132,15 +163,17 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       {error && <p className="mb-2 text-[11px] text-rose-400">{error}</p>}
 
       {items.length === 0 && !adding ? (
-        <EmptyState icon={Package} title="No line items yet" description="Add parts, quantities, and product links to this request." />
+        <EmptyState icon={Package} title="No line items yet" description="Add parts, quantities, vendors and product links to this order." />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-left text-[10px] uppercase text-text-muted">
                 <th className="pb-2 font-medium">Description</th>
+                <th className="pb-2 font-medium">Vendor</th>
                 <th className="pb-2 font-medium">Part #</th>
                 <th className="pb-2 font-medium">Subassembly</th>
+                <th className="pb-2 font-medium">Responsible</th>
                 <th className="pb-2 font-medium">Qty</th>
                 <th className="pb-2 font-medium">Unit Cost</th>
                 <th className="pb-2 font-medium">Line Total</th>
@@ -155,22 +188,43 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                     {item.description}
                     {item.notes && <div className="text-[10px] text-text-muted">{item.notes}</div>}
                   </td>
-                  {(['part_number', 'subassembly'] as const).map((field) => (
+                  {(['vendor', 'part_number', 'subassembly'] as const).map((field) => (
                     <td key={field} className="py-2 pr-2 text-text-secondary">
                       {canManage ? (
                         <Input
                           defaultValue={item[field] ?? ''}
                           maxLength={100}
                           disabled={busy}
-                          placeholder="—"
+                          placeholder={field === 'vendor' ? vendorOf(item) || '—' : '—'}
                           onBlur={(e) => e.target.value.trim() !== (item[field] ?? '') && handleTextChange(item.id, field, e.target.value)}
                           className="w-28"
                         />
+                      ) : field === 'vendor' ? (
+                        vendorOf(item) || '—'
                       ) : (
                         item[field] || '—'
                       )}
                     </td>
                   ))}
+                  <td className="py-2 pr-2 text-text-secondary">
+                    {canManage ? (
+                      <Select
+                        defaultValue={item.responsible_user_id ?? ''}
+                        disabled={busy}
+                        onChange={(e) => update(item.id, { responsible_user_id: e.target.value || null }, 'Could not change the responsible member.')}
+                        className="w-36"
+                      >
+                        <option value="">{requesterName ? `${requesterName} (requester)` : 'Requester'}</option>
+                        {withCurrent(item).map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : (
+                      nameOf(item.responsible) || requesterName || '—'
+                    )}
+                  </td>
                   <td className="py-2 pr-2">
                     {canManage ? (
                       <Input
@@ -186,7 +240,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                     )}
                   </td>
                   <td className="py-2 pr-2 text-text-secondary">{formatCurrency(item.unit_cost)}</td>
-                  <td className="py-2 pr-2 font-medium text-text-primary">{formatCurrency(item.unit_cost !== null ? item.unit_cost * item.quantity : null)}</td>
+                  <td className="py-2 pr-2 font-medium text-text-primary">{formatCurrency(lineTotal(item))}</td>
                   <td className="py-2 pr-2">
                     {item.link && (
                       <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-accent-blue hover:underline">
@@ -207,7 +261,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
             {items.length > 0 && (
               <tfoot>
                 <tr className="border-t border-border">
-                  <td colSpan={5} className="pt-2 text-right text-[10px] font-mono uppercase text-text-muted">
+                  <td colSpan={7} className="pt-2 text-right text-[10px] font-mono uppercase text-text-muted">
                     Total
                   </td>
                   <td className="pt-2 font-bold text-text-primary">{formatCurrency(total)}</td>
@@ -219,9 +273,36 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         </div>
       )}
 
+      {byVendor.size > 1 && (
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wide text-text-muted">By vendor</p>
+          <ul className="space-y-1 text-xs">
+            {Array.from(byVendor.entries()).map(([name, v]) => (
+              <li key={name} className="flex items-center justify-between gap-3">
+                <span className="text-text-primary">
+                  {name} <span className="text-text-muted">· {v.items} item{v.items === 1 ? '' : 's'}</span>
+                </span>
+                <span className="text-text-secondary">{formatCurrency(v.total)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {canManage && adding && (
         <form onSubmit={handleAdd} noValidate className="mt-3 space-y-2 border-t border-border pt-3 text-xs">
           <Input required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Item description" />
+          <div className="grid grid-cols-2 gap-2">
+            <Input value={vendor} maxLength={100} onChange={(e) => setVendor(e.target.value)} placeholder={requestVendor ? `Vendor (default ${requestVendor})` : "Vendor (else the link's site)"} />
+            <Select value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)} aria-label="Member responsible">
+              <option value="">{requesterName ? `Responsible: ${requesterName} (requester)` : 'Responsible: requester'}</option>
+              {memberOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  Responsible: {o.name}
+                </option>
+              ))}
+            </Select>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <Input value={partNumber} maxLength={100} onChange={(e) => setPartNumber(e.target.value)} placeholder="Part # (optional)" />
             <Input value={subassembly} maxLength={100} onChange={(e) => setSubassembly(e.target.value)} placeholder="Subassembly (optional)" />

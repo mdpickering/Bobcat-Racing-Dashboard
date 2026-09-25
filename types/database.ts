@@ -211,6 +211,11 @@ export interface PurchaseRequestItem {
   notes: string | null
   part_number: string | null
   subassembly: string | null
+  // the store this item is bought from, and the member responsible for it (both optional; the
+  // request's vendor and the requester are the fallbacks)
+  vendor: string | null
+  responsible_user_id: string | null
+  responsible?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
   created_at: string
   updated_at: string
   legacy_id: string | null

@@ -84,7 +84,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Owners</h3>
+        <h3 className="text-sm font-semibold text-text-primary">Owners</h3>
         {canManage && !adding && available.length > 0 && (
           <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
@@ -92,7 +92,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
         )}
       </div>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       <div className="space-y-2">
         {primary ? (
@@ -105,7 +105,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
               </div>
             </div>
             {canManage && (
-              <button type="button" disabled={busy} onClick={() => handleRemove(primary.user_id)} className="text-text-muted hover:text-rose-400">
+              <button type="button" disabled={busy} onClick={() => handleRemove(primary.user_id)} className="text-text-muted hover:text-status-danger">
                 <X size={13} />
               </button>
             )}
@@ -126,7 +126,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
                 <button type="button" disabled={busy} onClick={() => handleSetPrimary(a.user_id)} title="Make primary" className="text-text-muted hover:text-qu-gold">
                   <Star size={13} />
                 </button>
-                <button type="button" disabled={busy} onClick={() => handleRemove(a.user_id)} className="text-text-muted hover:text-rose-400">
+                <button type="button" disabled={busy} onClick={() => handleRemove(a.user_id)} className="text-text-muted hover:text-status-danger">
                   <X size={13} />
                 </button>
               </div>

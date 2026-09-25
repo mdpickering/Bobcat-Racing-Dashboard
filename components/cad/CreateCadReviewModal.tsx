@@ -93,7 +93,7 @@ export default function CreateCadReviewModal({ open, onClose, subsystems, defaul
             </Select>
           </div>
         </div>
-        {error && <p className="text-rose-400">{error}</p>}
+        {error && <p className="text-status-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel

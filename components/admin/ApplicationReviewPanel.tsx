@@ -42,9 +42,9 @@ export default function ApplicationReviewPanel({ application, currentUserId }: {
 
   return (
     <Panel className="p-4">
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
       {!application.linked_profile_id && (
-        <p className="mb-2 text-[12px] text-amber-400">
+        <p className="mb-2 text-[12px] text-status-warning">
           This application has no linked profile — approving it will update the review record but cannot approve a profile.
         </p>
       )}

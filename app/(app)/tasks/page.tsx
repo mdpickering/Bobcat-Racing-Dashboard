@@ -9,6 +9,8 @@ import TaskList from '@/components/tasks/TaskList'
 import TasksToolbar from '@/components/tasks/TasksToolbar'
 import TaskRequestsList from '@/components/tasks/TaskRequestsList'
 import ErrorState from '@/components/ui/ErrorState'
+import PageHeader from '@/components/ui/PageHeader'
+import Tabs from '@/components/ui/Tabs'
 
 export default async function TasksPage({
   searchParams,
@@ -54,12 +56,20 @@ export default async function TasksPage({
     }
     const pendingCount = requests.filter((r) => r.status === 'pending').length
     return (
-      <div className="space-y-5">
-        <div>
-          <h1 className="text-xl font-semibold text-text-primary">Tasks</h1>
-          <p className="mt-0.5 text-xs text-text-secondary">Requests submitted by the team, awaiting review.</p>
-        </div>
-        <TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} activeTab="requests" pendingRequestCount={pendingCount} />
+      <div className="mx-auto max-w-5xl">
+        <PageHeader
+          title="Task requests"
+          description="Requests submitted by the team, awaiting review."
+          actions={<TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} />}
+        >
+          <Tabs
+            label="Task views"
+            tabs={[
+              { label: 'My tasks', href: '/tasks', active: false },
+              { label: 'Requests', href: '/tasks?tab=requests', active: true, count: pendingCount > 0 ? pendingCount : undefined },
+            ]}
+          />
+        </PageHeader>
         <TaskRequestsList requests={requests} canReviewAll={admin} reviewableSubsystemIds={reviewableSubsystemIds} />
       </div>
     )
@@ -90,17 +100,31 @@ export default async function TasksPage({
     // non-fatal — the badge just shows 0
   }
 
+  const filtered = Boolean(searchParams.subsystem || searchParams.category || searchParams.priority || searchParams.status || searchParams.search)
+
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">My Tasks</h1>
-        <p className="mt-0.5 text-xs text-text-secondary">
-          {tasks.length} task{tasks.length === 1 ? '' : 's'} assigned to you, matching your filters
-        </p>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="My tasks"
+        description={`${tasks.length} task${tasks.length === 1 ? '' : 's'} assigned to you${filtered ? ', matching your filters' : ''}. Everyone's work is on each subsystem's page.`}
+        actions={<TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} />}
+      >
+        <Tabs
+          label="Task views"
+          tabs={[
+            { label: 'My tasks', href: '/tasks', active: true },
+            { label: 'Requests', href: '/tasks?tab=requests', active: false, count: pendingRequestCount > 0 ? pendingRequestCount : undefined },
+          ]}
+        />
+      </PageHeader>
+      <div className="mb-4">
+        <TaskFilters subsystems={subsystems} categories={categories} />
       </div>
-      <TasksToolbar canCreate={canCreate} subsystems={subsystems} createSubsystems={createSubsystems} categories={categories} activeTab="board" pendingRequestCount={pendingRequestCount} />
-      <TaskFilters subsystems={subsystems} categories={categories} />
-      <TaskList tasks={tasks} />
+      <TaskList
+        tasks={tasks}
+        emptyTitle={filtered ? 'No tasks match these filters' : 'No tasks assigned to you'}
+        emptyDescription={filtered ? 'Try adjusting or clearing your filters.' : 'Tasks you own or co-own appear here.'}
+      />
     </div>
   )
 }

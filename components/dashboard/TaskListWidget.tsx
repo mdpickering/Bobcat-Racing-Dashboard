@@ -1,55 +1,60 @@
 import Link from 'next/link'
-import Panel from '@/components/ui/Panel'
-import EmptyState from '@/components/ui/EmptyState'
 import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges'
-import { formatDeadline } from '@/lib/deadline'
+import { formatDeadline, isDeadlineOverdue } from '@/lib/deadline'
 import type { Task } from '@/types/database'
-import { ClipboardList } from 'lucide-react'
 
-interface TaskListWidgetProps {
+interface TaskGroupProps {
   title: string
   tasks: Task[]
-  emptyMessage: string
   viewAllHref?: string
+  // how many rows to show before "View all"
+  limit?: number
 }
 
-export default function TaskListWidget({ title, tasks, emptyMessage, viewAllHref }: TaskListWidgetProps) {
+// One urgency group of the dashboard's "needs attention" list: a heading with a count, then compact rows.
+// Groups with nothing in them are not rendered by the page, so there are no empty boxes.
+export default function TaskGroup({ title, tasks, viewAllHref, limit = 5 }: TaskGroupProps) {
+  const shown = tasks.slice(0, limit)
   return (
-    <Panel className="flex flex-col p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">{title}</h3>
-        {viewAllHref && tasks.length > 0 && (
-          <Link href={viewAllHref} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
-            View all
+    <section aria-label={title}>
+      <div className="mb-1.5 flex items-baseline justify-between gap-2">
+        <h3 className="text-sm font-semibold text-text-primary">
+          {title} <span className="ml-1 text-xs font-normal text-text-muted">{tasks.length}</span>
+        </h3>
+        {viewAllHref && tasks.length > shown.length && (
+          <Link href={viewAllHref} className="text-xs text-accent-blue hover:underline">
+            View all {tasks.length}
           </Link>
         )}
       </div>
-      {tasks.length === 0 ? (
-        <EmptyState icon={ClipboardList} title={emptyMessage} />
-      ) : (
-        <ul className="space-y-1.5">
-          {tasks.slice(0, 6).map((task) => (
+      <ul className="divide-y divide-border rounded-lg border border-border">
+        {shown.map((task) => {
+          const overdue = isDeadlineOverdue(task.deadline, task.status)
+          return (
             <li key={task.id}>
-              <Link
-                href={`/tasks/${task.id}`}
-                className="flex items-center justify-between gap-2 rounded-lg border border-transparent px-2.5 py-2 text-xs transition-colors hover:border-border hover:bg-surface-raised"
-              >
+              <Link href={`/tasks/${task.id}`} className="flex items-center justify-between gap-3 px-3 py-2 text-xs transition-colors hover:bg-surface-raised">
                 <div className="min-w-0">
                   <div className="truncate font-medium text-text-primary">{task.title}</div>
-                  <div className="mt-0.5 truncate text-[11px] text-text-muted">
+                  <div className="mt-0.5 truncate text-xs text-text-muted">
                     {task.subsystem?.name ?? 'Unknown subsystem'}
-                    {task.deadline ? ` · Due ${formatDeadline(task.deadline)}` : ''}
+                    {task.deadline && (
+                      <span className={overdue ? 'font-medium text-status-danger' : ''}>
+                        {' · '}
+                        {overdue ? 'Overdue, was due ' : 'Due '}
+                        {formatDeadline(task.deadline)}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="flex flex-shrink-0 items-center gap-1.5">
+                <div className="hidden flex-shrink-0 items-center gap-1.5 sm:flex">
                   <PriorityBadge priority={task.priority} />
                   <StatusBadge status={task.status} />
                 </div>
               </Link>
             </li>
-          ))}
-        </ul>
-      )}
-    </Panel>
+          )
+        })}
+      </ul>
+    </section>
   )
 }

@@ -23,7 +23,7 @@ import TaskDeadlineTable from '@/components/operations/TaskDeadlineTable'
 const DAY_MS = 24 * 60 * 60 * 1000
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">{children}</h2>
+  return <h2 className="mb-2 text-sm font-semibold text-text-primary">{children}</h2>
 }
 
 export default async function OperationsPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
@@ -150,7 +150,7 @@ export default async function OperationsPage({ searchParams }: { searchParams: {
                     </Link>
                   </td>
                   <td className="p-3 text-right text-text-secondary">{o.open}</td>
-                  <td className={`p-3 text-right ${o.overdue > 0 ? 'font-semibold text-rose-400' : 'text-text-secondary'}`}>{o.overdue}</td>
+                  <td className={`p-3 text-right ${o.overdue > 0 ? 'font-semibold text-status-danger' : 'text-text-secondary'}`}>{o.overdue}</td>
                   <td className="p-3 text-right text-text-secondary">{o.dueSoon}</td>
                   <td className="p-3 text-right text-text-secondary">{o.unscheduled}</td>
                   <td className="p-3 text-text-secondary">{o.next ? formatDeadline(o.next) : '—'}</td>

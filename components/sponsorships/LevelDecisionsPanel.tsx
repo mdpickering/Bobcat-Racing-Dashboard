@@ -12,7 +12,7 @@ const TONE = { qualified: 'emerald', exception: 'sky', custom: 'slate', historic
 export default function LevelDecisionsPanel({ decisions, currentDecisionId }: { decisions: SponsorshipLevelDecision[]; currentDecisionId: string | null }) {
   return (
     <Panel className="p-4">
-      <h2 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+      <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-text-primary">
         <Scale size={13} className="text-accent-blue" /> Level decision history
       </h2>
       {decisions.length === 0 ? (

@@ -79,7 +79,7 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Subsystem Memberships</h3>
+        <h3 className="text-sm font-semibold text-text-primary">Subsystem Memberships</h3>
         {!adding && available.length > 0 && (
           <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
@@ -87,7 +87,7 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
         )}
       </div>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       {memberships.length === 0 && !adding ? (
         <EmptyState icon={Boxes} title="Not a member of any subsystem" />
@@ -107,7 +107,7 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
                 >
                   <Star size={13} />
                 </button>
-                <button type="button" disabled={busy} onClick={() => handleRemove(m.subsystem_id)} className="text-text-muted hover:text-rose-400">
+                <button type="button" disabled={busy} onClick={() => handleRemove(m.subsystem_id)} className="text-text-muted hover:text-status-danger">
                   <X size={13} />
                 </button>
               </div>

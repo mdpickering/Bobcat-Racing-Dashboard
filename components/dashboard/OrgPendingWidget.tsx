@@ -1,46 +1,34 @@
 import Link from 'next/link'
-import Panel from '@/components/ui/Panel'
 import type { DashboardData } from '@/lib/supabase/queries/dashboard'
-import { ClipboardList, ShoppingCart, UserCheck, AlertOctagon } from 'lucide-react'
 
+// The admin/CTO queue: what is waiting on someone across the whole organization. Only items with a page link out.
 export default function OrgPendingWidget({ counts }: { counts: NonNullable<DashboardData['orgPendingCounts']> }) {
-  // Only link to routes that exist yet — the rest are shown as plain
-  // counts until their pages are built in a later chunk.
-  const items: { label: string; value: number; href?: string; icon: typeof ClipboardList }[] = [
-    { label: 'Task requests', value: counts.taskRequests, href: '/tasks?tab=requests', icon: ClipboardList },
-    { label: 'Purchase approvals', value: counts.purchaseRequests, icon: ShoppingCart },
-    { label: 'Member applications', value: counts.memberApplications, icon: UserCheck },
-    { label: 'Migration exceptions', value: counts.migrationExceptions, icon: AlertOctagon },
+  const items: { label: string; value: number; href?: string }[] = [
+    { label: 'Task requests', value: counts.taskRequests, href: '/tasks?tab=requests' },
+    { label: 'Purchase approvals', value: counts.purchaseRequests, href: '/purchasing' },
+    { label: 'Member applications', value: counts.memberApplications, href: '/admin/applications' },
+    { label: 'Migration exceptions', value: counts.migrationExceptions },
   ]
-
   return (
-    <Panel className="p-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Operational Queue</h3>
-      <ul className="grid grid-cols-2 gap-2">
-        {items.map((item) => {
-          const inner = (
+    <section aria-label="Organization queue">
+      <h3 className="mb-1.5 text-sm font-semibold text-text-primary">Waiting on you</h3>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-border p-3 sm:grid-cols-4">
+        {items.map((i) => {
+          const body = (
             <>
-              <item.icon size={14} className="text-accent-blue" />
-              <div className="min-w-0">
-                <div className="font-bold text-text-primary">{item.value}</div>
-                <div className="truncate text-[11px] text-text-muted">{item.label}</div>
-              </div>
+              <dd className={`text-xl font-semibold tabular-nums ${i.value > 0 ? 'text-status-warning' : 'text-text-primary'}`}>{i.value}</dd>
+              <dt className="text-xs text-text-muted">{i.label}</dt>
             </>
           )
-          const className = 'flex items-center gap-2 rounded-lg border border-border px-2.5 py-2 text-xs transition-colors'
-          return (
-            <li key={item.label}>
-              {item.href ? (
-                <Link href={item.href} className={`${className} hover:bg-surface-raised`}>
-                  {inner}
-                </Link>
-              ) : (
-                <div className={className}>{inner}</div>
-              )}
-            </li>
+          return i.href ? (
+            <Link key={i.label} href={i.href} className="block rounded-md transition-colors hover:text-accent-blue">
+              {body}
+            </Link>
+          ) : (
+            <div key={i.label}>{body}</div>
           )
         })}
-      </ul>
-    </Panel>
+      </dl>
+    </section>
   )
 }

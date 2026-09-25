@@ -132,7 +132,7 @@ export default function SignupPage() {
               className="w-full bg-black/40 border border-white/15 rounded-lg p-2 text-slate-100 outline-none"
             />
           </div>
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'Creating Account…' : 'Create Account'}
           </Button>

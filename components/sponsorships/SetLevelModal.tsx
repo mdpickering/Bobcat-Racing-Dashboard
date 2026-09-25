@@ -99,8 +99,8 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
         </div>
 
         {level && (
-          <div className={`flex items-start gap-2 rounded-lg border p-3 ${q.qualifies ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
-            {q.qualifies ? <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0 text-emerald-400" /> : <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-amber-400" />}
+          <div className={`flex items-start gap-2 rounded-lg border p-3 ${q.qualifies ? 'border-status-success/30 bg-status-success/5' : 'border-status-warning/30 bg-status-warning/5'}`}>
+            {q.qualifies ? <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0 text-status-success" /> : <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-status-warning" />}
             <div className="space-y-0.5 text-text-secondary">
               <div>
                 <span className="font-semibold text-text-primary">{level.name}</span> minimum: {formatMoney(q.minimum)}
@@ -109,7 +109,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
                 <div>Qualifies — {formatMoney(q.total - (q.minimum ?? 0))} above the minimum.</div>
               ) : (
                 <div>
-                  Does <span className="font-semibold text-amber-400">not</span> qualify — {formatMoney(q.shortfall)} below the minimum. It can still be recorded as an exception with a written reason.
+                  Does <span className="font-semibold text-status-warning">not</span> qualify — {formatMoney(q.shortfall)} below the minimum. It can still be recorded as an exception with a written reason.
                 </div>
               )}
             </div>
@@ -137,7 +137,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
 
         <p className="text-[12px] text-text-muted">This adds a permanent entry to the level history. A level is never changed automatically when contributions change; you will only see a review flag.</p>
         {unchanged && choice && <p className="text-[12px] text-text-muted">This level is already recorded. Choose a different one to change it.</p>}
-        {error && <p className="text-rose-400">{error}</p>}
+        {error && <p className="text-status-danger">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>
             Cancel

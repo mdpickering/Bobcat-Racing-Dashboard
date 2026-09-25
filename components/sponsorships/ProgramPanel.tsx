@@ -8,7 +8,7 @@ export default function ProgramPanel({ season, levels }: { season: string; level
   return (
     <Panel className="p-4">
       <details>
-        <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+        <summary className="flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-text-primary">
           <ListChecks size={13} className="text-accent-blue" /> {seasonLabel(season)} program — {levels.length} levels and their deliverables
         </summary>
         <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">

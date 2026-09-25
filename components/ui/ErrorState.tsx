@@ -2,9 +2,9 @@ import { AlertTriangle } from 'lucide-react'
 
 export default function ErrorState({ message = 'Something went wrong loading this data.' }: { message?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/5 px-6 py-10 text-center">
-      <AlertTriangle size={20} className="text-rose-400" />
-      <p className="text-xs font-semibold text-rose-300">{message}</p>
+    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-status-danger/30 bg-status-danger/5 px-6 py-10 text-center">
+      <AlertTriangle size={20} className="text-status-danger" />
+      <p className="text-xs font-semibold text-status-danger">{message}</p>
     </div>
   )
 }

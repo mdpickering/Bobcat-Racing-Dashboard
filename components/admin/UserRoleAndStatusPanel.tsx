@@ -72,8 +72,8 @@ export default function UserRoleAndStatusPanel({ user, isSelf }: { user: Profile
 
   return (
     <Panel className="p-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Role &amp; Status</h3>
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      <h3 className="mb-3 text-sm font-semibold text-text-primary">Role &amp; Status</h3>
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       <div className="space-y-3 text-xs">
         <div>

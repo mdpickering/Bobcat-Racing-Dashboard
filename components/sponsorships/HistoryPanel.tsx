@@ -48,14 +48,14 @@ export default function HistoryPanel({ sponsorshipId, history, canManage }: { sp
 
   return (
     <Panel className="p-4">
-      <h2 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+      <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-text-primary">
         <History size={13} className="text-accent-blue" /> Sponsorship history
       </h2>
       {canManage && (
         <form onSubmit={handleAdd} className="mb-4 space-y-2">
           <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a note (call, email, agreement…)" disabled={busy} />
           <div className="flex items-center justify-between gap-2">
-            {error ? <p className="text-xs text-rose-400">{error}</p> : <span className="text-[11px] text-text-muted">Notes are permanent.</span>}
+            {error ? <p className="text-xs text-status-danger">{error}</p> : <span className="text-[11px] text-text-muted">Notes are permanent.</span>}
             <Button size="sm" type="submit" disabled={busy || !note.trim()}>
               {busy ? 'Adding…' : 'Add note'}
             </Button>

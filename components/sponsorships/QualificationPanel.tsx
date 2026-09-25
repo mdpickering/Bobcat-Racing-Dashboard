@@ -37,7 +37,7 @@ export default function QualificationPanel({ sponsorshipId, summary, review, lev
   return (
     <Panel className="p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
           <Award size={13} className="text-accent-blue" /> Level and value
         </h2>
         {canManage && (
@@ -54,7 +54,7 @@ export default function QualificationPanel({ sponsorshipId, summary, review, lev
       </div>
       {flag && flag !== 'ok' && <p className="mb-3 text-[12px] text-text-muted">{REVIEW_FLAG_LABEL[flag].help}</p>}
       {flag === 'qualifies_higher' && review?.suggested_level_name && (
-        <p className="mb-3 text-[12px] text-amber-400">
+        <p className="mb-3 text-[12px] text-status-warning">
           The current qualifying value of {formatMoney(review.qualifying_value)} reaches {review.suggested_level_name}.
         </p>
       )}
@@ -74,7 +74,7 @@ export default function QualificationPanel({ sponsorshipId, summary, review, lev
           {currentLevel && (
             <>
               <Row label={`${currentLevel.name} minimum`} value={formatMoney(currentLevel.min_amount)} muted />
-              <div className={`text-[12px] ${q.qualifies ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <div className={`text-[12px] ${q.qualifies ? 'text-status-success' : 'text-status-warning'}`}>
                 {q.qualifies ? 'Currently meets this minimum.' : `Currently ${formatMoney(q.shortfall)} below this minimum.`}
               </div>
             </>

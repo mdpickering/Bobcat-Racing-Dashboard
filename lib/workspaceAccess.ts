@@ -65,6 +65,7 @@ const ROUTE_WORKSPACES: { prefix: string; workspaces: WorkspaceId[] }[] = [
   { prefix: '/tasks', workspaces: ['engineering'] },
   { prefix: '/subsystems', workspaces: ['engineering'] },
   { prefix: '/cad', workspaces: ['engineering'] },
+  { prefix: '/milestones', workspaces: ['engineering'] },
   { prefix: '/business', workspaces: ['business'] },
   { prefix: '/operations', workspaces: ['operations'] },
   // Purchasing is one system used from both sides: engineering creates and works requests, business manages,

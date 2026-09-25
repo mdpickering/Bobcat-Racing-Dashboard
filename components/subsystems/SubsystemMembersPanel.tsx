@@ -99,7 +99,7 @@ export default function SubsystemMembersPanel({
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <Users size={13} className="text-accent-blue" />
-          <h2 className="text-xs font-bold uppercase tracking-wide text-text-primary">Members ({members.length})</h2>
+          <h2 className="text-sm font-semibold text-text-primary">Members ({members.length})</h2>
         </div>
         {canManage && !adding && (
           <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
@@ -108,7 +108,7 @@ export default function SubsystemMembersPanel({
         )}
       </div>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       {members.length === 0 ? (
         <EmptyState title="No members yet" />
@@ -142,7 +142,7 @@ export default function SubsystemMembersPanel({
                     >
                       <Star size={13} />
                     </button>
-                    <button type="button" disabled={busy} onClick={() => handleRemove(m.user_id)} className="text-text-muted hover:text-rose-400">
+                    <button type="button" disabled={busy} onClick={() => handleRemove(m.user_id)} className="text-text-muted hover:text-status-danger">
                       <X size={13} />
                     </button>
                   </>

@@ -16,7 +16,7 @@ const TYPE_LABEL: Record<RecentActivityItem['type'], string> = {
 export default function RecentActivityPanel({ items }: { items: RecentActivityItem[] }) {
   return (
     <Panel className="p-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Recent Activity</h3>
+      <h3 className="mb-3 text-sm font-semibold text-text-primary">Recent Activity</h3>
       {items.length === 0 ? (
         <EmptyState icon={Activity} title="Nothing recent" description="New requests, applications, and reviews will show up here." />
       ) : (

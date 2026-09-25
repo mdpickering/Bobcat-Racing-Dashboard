@@ -6,6 +6,7 @@ import type { Profile } from '@/types/user'
 import TimelineGrid from '@/components/timeline/TimelineGrid'
 import TimelineToolbar from '@/components/timeline/TimelineToolbar'
 import ErrorState from '@/components/ui/ErrorState'
+import PageHeader from '@/components/ui/PageHeader'
 
 export default async function TimelinePage() {
   const supabase = createClient()
@@ -36,12 +37,12 @@ export default async function TimelinePage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">Master Timeline</h1>
-        <p className="mt-0.5 text-xs text-text-secondary">Shared build timeline with per-subsystem milestone cells.</p>
-      </div>
-      <TimelineToolbar isCtoOrAdmin={userIsCtoOrAdmin} allColumns={allColumns} />
+    <div>
+      <PageHeader
+        title="Master timeline"
+        description="Shared build timeline with per-subsystem milestone cells."
+        actions={<TimelineToolbar isCtoOrAdmin={userIsCtoOrAdmin} allColumns={allColumns} />}
+      />
       <TimelineGrid columns={activeColumns} subsystems={subsystems} milestones={milestones} canEditSubsystemIds={ledSubsystemIds} isCtoOrAdmin={userIsCtoOrAdmin} />
     </div>
   )

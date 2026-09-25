@@ -22,7 +22,7 @@ export default function DeliverablesPanel({ level, tracked = false }: { level: S
 
   return (
     <Panel className="p-4">
-      <h2 className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+      <h2 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-text-primary">
         <ClipboardCheck size={13} className="text-accent-blue" /> Deliverables
       </h2>
       {!level ? (

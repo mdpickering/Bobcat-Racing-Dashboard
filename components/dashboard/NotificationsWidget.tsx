@@ -1,39 +1,31 @@
 import Link from 'next/link'
-import Panel from '@/components/ui/Panel'
-import EmptyState from '@/components/ui/EmptyState'
 import { timeAgo } from '@/lib/format'
 import { notificationHref } from '@/lib/notificationLinks'
 import type { AppNotification } from '@/types/database'
-import { BellRing } from 'lucide-react'
 
 export default function NotificationsWidget({ notifications }: { notifications: AppNotification[] }) {
+  if (notifications.length === 0) return <p className="text-xs text-text-muted">Nothing new.</p>
   return (
-    <Panel className="p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Recent Notifications</h3>
-        {notifications.length > 0 && (
-          <Link href="/notifications" className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
-            View all
+    <ul className="-mx-2 space-y-0.5">
+      {notifications.slice(0, 5).map((n) => (
+        <li key={n.id}>
+          <Link href={notificationHref(n)} className="flex items-start gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-surface-raised">
+            <span aria-hidden="true" className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${n.read_at ? 'bg-transparent' : 'bg-status-info'}`} />
+            <span className="min-w-0">
+              <span className={`block truncate ${n.read_at ? 'text-text-secondary' : 'font-medium text-text-primary'}`}>
+                {!n.read_at && <span className="sr-only">Unread: </span>}
+                {n.title}
+              </span>
+              <span className="block text-text-muted">{timeAgo(n.created_at)}</span>
+            </span>
           </Link>
-        )}
-      </div>
-      {notifications.length === 0 ? (
-        <EmptyState icon={BellRing} title="Nothing new" description="Notifications will show up here." />
-      ) : (
-        <ul className="space-y-1.5">
-          {notifications.slice(0, 5).map((n) => (
-            <li key={n.id}>
-              <Link
-                href={notificationHref(n)}
-                className={`block rounded-lg px-2.5 py-2 text-xs transition-colors hover:bg-surface-raised ${n.read_at ? 'opacity-60' : 'bg-accent-blue/5'}`}
-              >
-                <div className="truncate font-medium text-text-primary">{n.title}</div>
-                <div className="mt-0.5 text-[11px] text-text-muted">{timeAgo(n.created_at)}</div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Panel>
+        </li>
+      ))}
+      <li className="px-2 pt-1">
+        <Link href="/notifications" className="text-xs text-accent-blue hover:underline">
+          All notifications
+        </Link>
+      </li>
+    </ul>
   )
 }

@@ -46,7 +46,7 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
   if (historical) {
     return (
       <Panel className="p-4">
-        <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-text-primary">{seasonLabel(season)} is a past season</h2>
+        <h2 className="mb-1 text-sm font-semibold text-text-primary">{seasonLabel(season)} is a past season</h2>
         <p className="text-[12px] text-text-muted">
           Past seasons have no sponsorship levels. Records for this season stay “historical — no level” until someone deliberately assigns one; no level is ever invented.
         </p>
@@ -56,7 +56,7 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
 
   return (
     <Panel className="p-4">
-      <h2 className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+      <h2 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-text-primary">
         <ListChecks size={13} className="text-accent-blue" /> No sponsorship program for {seasonLabel(season)} yet
       </h2>
       <p className="text-[12px] text-text-muted">The program is the season’s levels (with their minimum amounts) and the standard deliverables each level receives. Sponsorships are given a level from it.</p>
@@ -110,7 +110,7 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
           )}
 
           <p className="text-[12px] text-text-muted">This can be done once per season. No sponsors or amounts are created.</p>
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>
               Cancel

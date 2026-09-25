@@ -7,6 +7,7 @@ import MonthCalendar from '@/components/calendar/MonthCalendar'
 import RecurringEventsPanel from '@/components/calendar/RecurringEventsPanel'
 import CalendarToolbar from '@/components/calendar/CalendarToolbar'
 import ErrorState from '@/components/ui/ErrorState'
+import PageHeader from '@/components/ui/PageHeader'
 
 export default async function CalendarPage({
   searchParams,
@@ -57,13 +58,12 @@ export default async function CalendarPage({
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">Calendar</h1>
-        <p className="mt-0.5 text-xs text-text-secondary">Team events, recurring meetings, milestones, and task deadlines.</p>
-      </div>
-      <CalendarToolbar canManage={canManage} subsystemOptions={subsystemOptions} isCtoOrAdmin={userIsCtoOrAdmin} />
-
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="Calendar"
+        description="Team events, recurring meetings, milestones, and task deadlines."
+        actions={<CalendarToolbar canManage={canManage} subsystemOptions={subsystemOptions} isCtoOrAdmin={userIsCtoOrAdmin} />}
+      />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <MonthCalendar

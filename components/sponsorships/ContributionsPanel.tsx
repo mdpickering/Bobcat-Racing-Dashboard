@@ -115,7 +115,7 @@ export default function ContributionsPanel({ sponsorshipId, contributions, canMa
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
           <Coins size={13} className="text-accent-blue" /> Contributions
         </h2>
         {canManage && (
@@ -124,7 +124,7 @@ export default function ContributionsPanel({ sponsorshipId, contributions, canMa
           </Button>
         )}
       </div>
-      {error && !open && <p className="mb-2 text-xs text-rose-400">{error}</p>}
+      {error && !open && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 
       {contributions.length === 0 ? (
         <p className="text-[12px] text-text-muted">No contributions recorded yet.</p>
@@ -189,7 +189,7 @@ export default function ContributionsPanel({ sponsorshipId, contributions, canMa
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} disabled={busy} />
           </div>
           {kind === 'cash' && <p className="text-[12px] text-text-muted">Cash received is recorded separately, as payments, once the money arrives.</p>}
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>
               Cancel

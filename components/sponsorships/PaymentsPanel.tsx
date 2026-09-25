@@ -104,7 +104,7 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
           <Landmark size={13} className="text-accent-blue" /> Payment ledger
         </h2>
         {canManage && (
@@ -119,7 +119,7 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
           </Button>
         )}
       </div>
-      {error && !open && <p className="mb-2 text-xs text-rose-400">{error}</p>}
+      {error && !open && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 
       {payments.length === 0 ? (
         <p className="text-[12px] text-text-muted">No payments recorded yet.</p>
@@ -145,7 +145,7 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
                     <div className="text-[11px] text-text-muted">{nameOf(p.recorder) ? `by ${nameOf(p.recorder)}` : 'imported'}</div>
                   </td>
                   <td className="px-2 py-2 align-top">{p.entry_type === 'refund' ? <Badge tone="rose">Refund</Badge> : <Badge tone="emerald">Payment</Badge>}</td>
-                  <td className={`px-2 py-2 text-right align-top tabular-nums ${p.entry_type === 'refund' ? 'text-rose-400' : 'text-text-primary'}`}>
+                  <td className={`px-2 py-2 text-right align-top tabular-nums ${p.entry_type === 'refund' ? 'text-status-danger' : 'text-text-primary'}`}>
                     {p.entry_type === 'refund' ? '−' : ''}
                     {formatMoney(p.amount)}
                   </td>
@@ -263,7 +263,7 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} disabled={busy} />
           </div>
           <p className="text-[12px] text-text-muted">This entry cannot be edited or deleted afterwards.</p>
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>
               Cancel

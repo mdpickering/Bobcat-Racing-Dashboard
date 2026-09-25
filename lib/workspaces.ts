@@ -67,8 +67,8 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         label: 'Workspace',
         items: [
           { label: 'Dashboard', icon: 'dashboard', status: 'available', href: '/dashboard' },
-          // becomes "My Tasks" (the personal work view) when that page is built
-          { label: 'Tasks', icon: 'tasks', status: 'available', href: '/tasks', activeWhen: isTasksBoard },
+          // /tasks has always been each person's own board (only tasks they own or co-own)
+          { label: 'My Tasks', icon: 'tasks', status: 'available', href: '/tasks', activeWhen: isTasksBoard },
           { label: 'Calendar', icon: 'calendar', status: 'available', href: '/calendar' },
         ],
       },
@@ -85,7 +85,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         label: 'Planning',
         items: [
           { label: 'Timeline', icon: 'timeline', status: 'available', href: '/timeline' },
-          { label: 'Milestones', icon: 'milestones', status: 'soon' },
+          { label: 'Milestones', icon: 'milestones', status: 'available', href: '/milestones' },
         ],
       },
     ],

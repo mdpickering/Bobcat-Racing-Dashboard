@@ -57,7 +57,7 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
           <UserRound size={13} className="text-accent-blue" /> Contacts
         </h2>
         {canManage && (
@@ -66,7 +66,7 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
           </Button>
         )}
       </div>
-      {error && !open && <p className="mb-2 text-xs text-rose-400">{error}</p>}
+      {error && !open && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 
       {contacts.length === 0 ? (
         <p className="text-[12px] text-text-muted">No contacts recorded.</p>
@@ -100,7 +100,7 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
                   title="Remove this contact"
                   disabled={busy}
                   onClick={() => run(() => removeSponsorContact(createClient(), c.id), 'Could not remove this contact.')}
-                  className="flex-shrink-0 text-text-muted hover:text-rose-400"
+                  className="flex-shrink-0 text-text-muted hover:text-status-danger"
                 >
                   <X size={14} />
                 </button>
@@ -135,7 +135,7 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
           <label className="flex items-center gap-2 text-text-secondary">
             <input type="checkbox" checked={form.is_primary} onChange={(e) => set('is_primary', e.target.checked)} disabled={busy} /> Primary contact
           </label>
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>
               Cancel

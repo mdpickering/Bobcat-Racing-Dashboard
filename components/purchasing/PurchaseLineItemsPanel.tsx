@@ -152,7 +152,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Line Items</h3>
+        <h3 className="text-sm font-semibold text-text-primary">Line Items</h3>
         {canManage && !adding && (
           <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <Plus size={11} className="mr-0.5 inline" /> Add item
@@ -160,7 +160,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         )}
       </div>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       {items.length === 0 && !adding ? (
         <EmptyState icon={Package} title="No line items yet" description="Add parts, quantities, vendors and product links to this order." />
@@ -250,7 +250,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                   </td>
                   {canManage && (
                     <td className="py-2 text-right">
-                      <button type="button" disabled={busy} onClick={() => handleRemove(item.id)} className="text-text-muted hover:text-rose-400">
+                      <button type="button" disabled={busy} onClick={() => handleRemove(item.id)} className="text-text-muted hover:text-status-danger">
                         <Trash2 size={13} />
                       </button>
                     </td>
@@ -318,10 +318,10 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
               aria-required="true"
               aria-invalid={showLinkError}
               placeholder="Product link (required)"
-              className={showLinkError ? 'border-rose-500/60 focus:border-rose-400' : ''}
+              className={showLinkError ? 'border-status-danger/60 focus:border-status-danger' : ''}
             />
           </div>
-          {showLinkError && <p className="text-[12px] text-rose-400">{linkError}</p>}
+          {showLinkError && <p className="text-[12px] text-status-danger">{linkError}</p>}
           <div className="flex gap-2">
             <Button size="sm" type="submit" disabled={busy || !description || linkError !== null}>
               Add

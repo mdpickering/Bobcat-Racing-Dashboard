@@ -134,7 +134,7 @@ export default function SponsorshipHeader({ sponsorship, eventName, businessMemb
           <div className="mt-1 text-xs text-text-primary">{s.renewal_date ? formatContributionDate(s.renewal_date) : <span className="text-text-muted">—</span>}</div>
         </div>
       </div>
-      {error && !editing && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+      {error && !editing && <p className="mt-2 text-xs text-status-danger">{error}</p>}
       {canManage && s.stage !== 'committed' && <p className="mt-2 text-[11px] text-text-muted">A sponsorship can be marked Committed once it has an active contribution and a level decision.</p>}
 
       <div className="mt-4 grid grid-cols-1 gap-4 text-xs md:grid-cols-2">
@@ -185,7 +185,7 @@ export default function SponsorshipHeader({ sponsorship, eventName, businessMemb
             <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Notes (optional)</label>
             <Textarea rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} disabled={busy} />
           </div>
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setEditing(false)}>
               Cancel

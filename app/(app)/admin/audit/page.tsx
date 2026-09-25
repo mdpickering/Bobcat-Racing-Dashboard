@@ -42,12 +42,12 @@ export default async function AdminAuditPage() {
       <AdminNav />
 
       <div>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">Migration Exceptions</h2>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Migration Exceptions</h2>
         <MigrationExceptionsPanel exceptions={migrationExceptions} />
       </div>
 
       <div>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">Migration Log</h2>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Migration Log</h2>
         {migrationLog.length === 0 ? (
           <EmptyState icon={FileClock} title="No migration log entries" description="Populated once a future production data migration runs." />
         ) : (
@@ -65,7 +65,7 @@ export default async function AdminAuditPage() {
       </div>
 
       <div>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">Audit Log</h2>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Audit Log</h2>
         {auditLogs.length === 0 ? (
           <EmptyState icon={History} title="No audit log entries yet" description="Administrative actions will be recorded here in a future phase." />
         ) : (

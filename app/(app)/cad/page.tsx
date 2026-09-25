@@ -7,6 +7,7 @@ import CadFilters from '@/components/cad/CadFilters'
 import CadReviewList from '@/components/cad/CadReviewList'
 import CadToolbar from '@/components/cad/CadToolbar'
 import ErrorState from '@/components/ui/ErrorState'
+import PageHeader from '@/components/ui/PageHeader'
 
 export default async function CadPage({
   searchParams,
@@ -40,17 +41,19 @@ export default async function CadPage({
     return <ErrorState message="Could not load CAD reviews." />
   }
 
+  const filtered = Boolean(searchParams.subsystem || searchParams.status)
+
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">CAD Review</h1>
-        <p className="mt-0.5 text-xs text-text-secondary">
-          {reviews.length} review{reviews.length === 1 ? '' : 's'} matching your filters
-        </p>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="CAD review"
+        description={`${reviews.length} review${reviews.length === 1 ? '' : 's'}${filtered ? ' matching your filters' : ''}. Designs submitted for the team to check before manufacturing.`}
+        actions={<CadToolbar subsystems={createSubsystemOptions} />}
+      />
+      <div className="mb-4">
+        <CadFilters subsystems={subsystems} />
       </div>
-      <CadToolbar subsystems={createSubsystemOptions} />
-      <CadFilters subsystems={subsystems} />
-      <CadReviewList reviews={reviews} />
+      <CadReviewList reviews={reviews} filtered={filtered} />
     </div>
   )
 }

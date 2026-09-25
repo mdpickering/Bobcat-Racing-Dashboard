@@ -46,7 +46,7 @@ export default function SubsystemEditPanel({ subsystem, leads }: { subsystem: Su
 
   return (
     <Panel className="p-5">
-      {error && <p className="mb-2 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 
       {editing ? (
         <div className="space-y-3">
@@ -72,7 +72,7 @@ export default function SubsystemEditPanel({ subsystem, leads }: { subsystem: Su
               <button type="button" onClick={() => setEditing(true)} className="text-text-muted hover:text-accent-blue">
                 <Pencil size={14} />
               </button>
-              <button type="button" disabled={busy} onClick={handleArchiveToggle} className="text-text-muted hover:text-rose-400" title={subsystem.active ? 'Archive' : 'Restore'}>
+              <button type="button" disabled={busy} onClick={handleArchiveToggle} className="text-text-muted hover:text-status-danger" title={subsystem.active ? 'Archive' : 'Restore'}>
                 {subsystem.active ? <Archive size={14} /> : <RotateCcw size={14} />}
               </button>
             </div>

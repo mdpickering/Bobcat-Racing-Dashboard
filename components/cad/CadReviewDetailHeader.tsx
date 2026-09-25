@@ -117,7 +117,7 @@ export default function CadReviewDetailHeader({
         <ChevronLeft size={13} /> Back to CAD review
       </Link>
 
-      {error && <p className="mb-2 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 
       {editing ? (
         <div className="space-y-3">

@@ -94,7 +94,7 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
             </div>
             <div className="mt-2 text-[12px] text-text-secondary">
               Cash {formatMoney(summary.cash_committed)} committed · {formatMoney(summary.cash_received)} received
-              {summary.cash_outstanding > 0 && <span className="text-amber-400"> · {formatMoney(summary.cash_outstanding)} outstanding</span>}
+              {summary.cash_outstanding > 0 && <span className="text-status-warning"> · {formatMoney(summary.cash_outstanding)} outstanding</span>}
               {' '}· In-kind {formatMoney(summary.in_kind_value)}
             </div>
             {contributions.length > 0 && (
@@ -104,7 +104,7 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
                     <span>
                       <span className={`font-semibold tabular-nums text-text-primary ${c.withdrawn ? 'line-through' : ''}`}>{formatMoney(c.kind === 'cash' ? c.committed_amount : c.estimated_value)}</span>
                       <span className="ml-2 text-text-secondary">{c.kind === 'cash' ? 'Cash' : `In-kind${c.in_kind_type ? ` · ${IN_KIND_TYPE_LABEL[c.in_kind_type]}` : ''}`}</span>
-                      {c.withdrawn && <span className="ml-2 text-rose-400">withdrawn</span>}
+                      {c.withdrawn && <span className="ml-2 text-status-danger">withdrawn</span>}
                     </span>
                     <span className="text-[11px] text-text-muted">{formatContributionDate(c.contributed_on, c.contributed_on_precision)}</span>
                   </li>

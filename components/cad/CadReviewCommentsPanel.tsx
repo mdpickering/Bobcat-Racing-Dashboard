@@ -58,7 +58,7 @@ export default function CadReviewCommentsPanel({ cadReviewId, comments, currentU
 
   return (
     <Panel className="p-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Review Comments</h3>
+      <h3 className="mb-3 text-sm font-semibold text-text-primary">Review Comments</h3>
 
       {comments.length === 0 ? (
         <EmptyState icon={MessageSquare} title="No comments yet" description="Start the review discussion." />
@@ -111,7 +111,7 @@ export default function CadReviewCommentsPanel({ cadReviewId, comments, currentU
 
       <form onSubmit={handleSubmit} className="space-y-2 border-t border-border pt-3">
         <Textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a review comment…" />
-        {error && <p className="text-[12px] text-rose-400">{error}</p>}
+        {error && <p className="text-[12px] text-status-danger">{error}</p>}
         <div className="flex justify-end">
           <Button size="sm" type="submit" disabled={submitting || !text.trim()}>
             <Send size={12} /> Post

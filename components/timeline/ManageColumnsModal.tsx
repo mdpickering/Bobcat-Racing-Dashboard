@@ -60,7 +60,7 @@ export default function ManageColumnsModal({ open, onClose, columns }: ManageCol
   return (
     <Modal open={open} onClose={onClose} title="Manage Timeline Columns" maxWidthClassName="max-w-2xl">
       <div className="space-y-4 text-xs">
-        {error && <p className="text-rose-400">{error}</p>}
+        {error && <p className="text-status-danger">{error}</p>}
 
         <div className="space-y-1.5">
           {columns.map((col) => (

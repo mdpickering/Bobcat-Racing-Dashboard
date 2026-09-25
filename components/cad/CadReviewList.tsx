@@ -1,40 +1,60 @@
 import Link from 'next/link'
 import { Ruler } from 'lucide-react'
 import EmptyState from '@/components/ui/EmptyState'
-import Panel from '@/components/ui/Panel'
+import DataTable, { type Column } from '@/components/ui/DataTable'
 import Avatar from '@/components/ui/Avatar'
 import CadStatusBadge from './CadStatusBadge'
 import { formatDate } from '@/lib/format'
 import type { CadReview } from '@/types/database'
 
-export default function CadReviewList({ reviews }: { reviews: CadReview[] }) {
-  if (reviews.length === 0) {
-    return <EmptyState icon={Ruler} title="No CAD reviews match these filters" description="Try adjusting or clearing your filters." />
-  }
+export default function CadReviewList({ reviews, filtered = false }: { reviews: CadReview[]; filtered?: boolean }) {
+  const columns: Column<CadReview>[] = [
+    {
+      key: 'review',
+      header: 'Review',
+      cell: (r) => (
+        <>
+          <Link href={`/cad/${r.id}`} className="block max-w-[32rem] truncate font-medium text-text-primary hover:text-accent-blue">
+            {r.title || 'Untitled review'}
+          </Link>
+          <div className="mt-0.5 text-xs text-text-muted">
+            {r.subsystem?.name ?? 'Unknown'} · Rev {r.current_revision}
+            {r.task?.title ? ` · ${r.task.title}` : ''}
+          </div>
+          <div className="mt-1 sm:hidden">
+            <CadStatusBadge status={r.status} />
+          </div>
+        </>
+      ),
+    },
+    { key: 'status', header: 'Status', hideBelow: 'sm', cell: (r) => <CadStatusBadge status={r.status} /> },
+    {
+      key: 'submitter',
+      header: 'Submitted by',
+      hideBelow: 'md',
+      cell: (r) => (
+        <span className="inline-flex items-center gap-2 text-text-secondary">
+          <Avatar name={r.submitter?.display_name || r.submitter?.email} src={r.submitter?.avatar_url} size={20} />
+          <span className="max-w-[9rem] truncate">{r.submitter?.display_name || r.submitter?.email || 'Unknown'}</span>
+        </span>
+      ),
+    },
+    { key: 'created', header: 'Created', hideBelow: 'lg', cell: (r) => <span className="text-text-secondary">{formatDate(r.created_at)}</span> },
+  ]
 
   return (
-    <Panel className="overflow-hidden">
-      <ul className="divide-y divide-border">
-        {reviews.map((review) => (
-          <li key={review.id}>
-            <Link href={`/cad/${review.id}`} className="flex items-center gap-3 px-4 py-3 text-xs transition-colors hover:bg-surface-raised">
-              <div className="min-w-0 flex-1">
-                <span className="truncate font-medium text-text-primary">{review.title}</span>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-text-muted">
-                  <span>{review.subsystem?.name ?? 'Unknown'}</span>
-                  <span>· Rev {review.current_revision}</span>
-                  {review.task?.title && <span>· {review.task.title}</span>}
-                  <span>· {formatDate(review.created_at)}</span>
-                </div>
-              </div>
-              <div className="flex flex-shrink-0 items-center gap-2">
-                <Avatar name={review.submitter?.display_name || review.submitter?.email} src={review.submitter?.avatar_url} size={22} />
-                <CadStatusBadge status={review.status} />
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </Panel>
+    <DataTable
+      caption="CAD reviews"
+      columns={columns}
+      rows={reviews}
+      rowKey={(r) => r.id}
+      emptyState={
+        <EmptyState
+          icon={Ruler}
+          title={filtered ? 'No CAD reviews match these filters' : 'No CAD reviews yet'}
+          description={filtered ? 'Try adjusting or clearing your filters.' : 'Submit a review when a design is ready for the team to check.'}
+        />
+      }
+    />
   )
 }

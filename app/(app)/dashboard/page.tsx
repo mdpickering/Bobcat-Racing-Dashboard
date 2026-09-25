@@ -1,17 +1,20 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getDashboardData } from '@/lib/supabase/queries/dashboard'
 import { isCtoOrAdmin, isTeamLead } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
-import StatCard from '@/components/dashboard/StatCard'
-import TaskListWidget from '@/components/dashboard/TaskListWidget'
+import PageHeader from '@/components/ui/PageHeader'
+import SectionHeader from '@/components/ui/SectionHeader'
+import MetricStrip from '@/components/ui/MetricStrip'
+import Panel from '@/components/ui/Panel'
+import ErrorState from '@/components/ui/ErrorState'
+import TaskGroup from '@/components/dashboard/TaskListWidget'
 import CompetitionCountdown from '@/components/dashboard/CompetitionCountdown'
 import SubsystemInfoWidget from '@/components/dashboard/SubsystemInfoWidget'
 import NotificationsWidget from '@/components/dashboard/NotificationsWidget'
 import PendingRequestsWidget from '@/components/dashboard/PendingRequestsWidget'
 import OrgPendingWidget from '@/components/dashboard/OrgPendingWidget'
 import PurchasingWidget from '@/components/dashboard/PurchasingWidget'
-import ErrorState from '@/components/ui/ErrorState'
-import { AlertTriangle, Clock, ShieldAlert, Eye, ListChecks } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -33,67 +36,93 @@ export default async function DashboardPage() {
   const lead = isTeamLead(p)
   const admin = isCtoOrAdmin(p)
 
+  // a task is shown once, in its most urgent group
+  const overdueIds = new Set(data.overdueTasks.map((t) => t.id))
+  const dueSoon = data.dueSoonTasks.filter((t) => !overdueIds.has(t.id))
+  const shown = new Set([...overdueIds, ...dueSoon.map((t) => t.id)])
+  const blocked = data.blockedTasks.filter((t) => !shown.has(t.id))
+  blocked.forEach((t) => shown.add(t.id))
+  const inReview = data.reviewTasks.filter((t) => !shown.has(t.id))
+  const attentionCount = data.overdueTasks.length + dueSoon.length + blocked.length + inReview.length
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">
-          Welcome back, {p.display_name || p.email?.split('@')[0]}
-        </h1>
-        <p className="mt-0.5 text-xs text-text-secondary">
-          {admin ? 'Full operational overview' : lead ? 'Your tasks and subsystem overview' : "Here's what's on your plate"}
-        </p>
-      </div>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title={`Welcome back, ${p.display_name || p.email?.split('@')[0]}`}
+        description={admin ? 'Full operational overview' : lead ? 'Your tasks and subsystem overview' : "Here's what's on your plate"}
+      />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Assigned Tasks" value={data.assignedTasks.length} icon={ListChecks} href="/tasks" />
-        <StatCard label="Overdue" value={data.overdueTasks.length} icon={AlertTriangle} tone="danger" href="/tasks" />
-        <StatCard label="Due Soon" value={data.dueSoonTasks.length} icon={Clock} tone="warning" href="/tasks" />
-        <StatCard label="Blocked" value={data.blockedTasks.length} icon={ShieldAlert} tone="danger" href="/tasks" />
-      </div>
+      <MetricStrip
+        className="mb-6"
+        metrics={[
+          { label: 'Assigned to me', value: String(data.assignedTasks.length), hint: data.coOwnedTasks.length > 0 ? `${data.coOwnedTasks.length} co-owned` : undefined, href: '/tasks' },
+          { label: 'Overdue', value: String(data.overdueTasks.length), tone: data.overdueTasks.length > 0 ? 'danger' : undefined, href: '/tasks' },
+          { label: 'Due in 7 days', value: String(data.dueSoonTasks.length), tone: data.dueSoonTasks.length > 0 ? 'warning' : undefined, href: '/tasks' },
+          { label: 'Blocked', value: String(data.blockedTasks.length), tone: data.blockedTasks.length > 0 ? 'danger' : undefined, href: '/tasks' },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <TaskListWidget
-            title="Overdue Tasks"
-            tasks={data.overdueTasks}
-            emptyMessage="Nothing overdue — nice work."
-            viewAllHref="/tasks"
-          />
-          <TaskListWidget
-            title="Due Soon"
-            tasks={data.dueSoonTasks}
-            emptyMessage="Nothing due in the next 7 days."
-            viewAllHref="/tasks"
-          />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <TaskListWidget title="Blocked" tasks={data.blockedTasks} emptyMessage="No blocked tasks." />
-            <TaskListWidget title="In Review" tasks={data.reviewTasks} emptyMessage="Nothing awaiting review." />
-          </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <section aria-label="Needs attention">
+            <SectionHeader
+              title="Needs your attention"
+              actions={
+                <Link href="/tasks" className="text-xs text-accent-blue hover:underline">
+                  All my tasks
+                </Link>
+              }
+            />
+            {attentionCount === 0 ? (
+              <Panel className="p-4 text-xs text-text-secondary">
+                {data.assignedTasks.length === 0 ? (
+                  <>
+                    You are not assigned to any tasks yet. Browse your{' '}
+                    <Link href="/subsystems" className="text-accent-blue hover:underline">
+                      subsystem
+                    </Link>{' '}
+                    to see what the team is working on.
+                  </>
+                ) : (
+                  'Nothing is overdue, due this week, blocked or waiting on review.'
+                )}
+              </Panel>
+            ) : (
+              <div className="space-y-4">
+                {data.overdueTasks.length > 0 && <TaskGroup title="Overdue" tasks={data.overdueTasks} viewAllHref="/tasks" />}
+                {dueSoon.length > 0 && <TaskGroup title="Due in the next 7 days" tasks={dueSoon} viewAllHref="/tasks" />}
+                {blocked.length > 0 && <TaskGroup title="Blocked" tasks={blocked} />}
+                {inReview.length > 0 && <TaskGroup title="In review" tasks={inReview} />}
+              </div>
+            )}
+          </section>
 
-          {lead && data.leadPendingTaskRequests.length > 0 && (
-            <PendingRequestsWidget requests={data.leadPendingTaskRequests} />
-          )}
+          {lead && data.leadPendingTaskRequests.length > 0 && <PendingRequestsWidget requests={data.leadPendingTaskRequests} />}
           {admin && data.orgPendingCounts && <OrgPendingWidget counts={data.orgPendingCounts} />}
         </div>
 
-        <div className="space-y-4">
-          <CompetitionCountdown competition={data.competition} />
-          <PurchasingWidget pendingCount={data.pendingPurchaseCount} subsystemCount={data.mySubsystems.length} />
-          <SubsystemInfoWidget memberships={data.mySubsystems} />
-          <NotificationsWidget notifications={data.notifications} />
-        </div>
+        <aside aria-label="Season and activity">
+          <Panel className="divide-y divide-border">
+            <div className="p-4">
+              <SectionHeader title="Season" />
+              <CompetitionCountdown competition={data.competition} />
+            </div>
+            <div className="p-4">
+              <SectionHeader title="Your subsystems" />
+              <SubsystemInfoWidget memberships={data.mySubsystems} />
+              {data.pendingPurchaseCount > 0 && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <PurchasingWidget pendingCount={data.pendingPurchaseCount} subsystemCount={data.mySubsystems.length} />
+                </div>
+              )}
+            </div>
+            <div className="p-4">
+              <SectionHeader title="Notifications" />
+              <NotificationsWidget notifications={data.notifications} />
+            </div>
+          </Panel>
+        </aside>
       </div>
-
-      {data.primaryTasks.length + data.coOwnedTasks.length === 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-4 text-xs text-text-muted">
-          <Eye size={16} />
-          You&apos;re not currently assigned to any tasks. Browse the{' '}
-          <a href="/tasks" className="text-accent-blue hover:underline">
-            task board
-          </a>{' '}
-          to see what your subsystem is working on.
-        </div>
-      )}
     </div>
   )
 }

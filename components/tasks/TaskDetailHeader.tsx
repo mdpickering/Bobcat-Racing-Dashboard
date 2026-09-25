@@ -98,7 +98,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
         <ChevronLeft size={13} /> Back to tasks
       </Link>
 
-      {error && <p className="mb-2 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 
       {editingDetails ? (
         <div className="space-y-3">
@@ -147,7 +147,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
             <Badge tone="slate">{task.subsystem?.name ?? 'Unknown subsystem'}</Badge>
             {task.category?.name && <Badge tone="slate">{task.category.name}</Badge>}
             {task.deadline && (
-              <span className={isDeadlineOverdue(task.deadline, task.status) ? 'font-semibold text-rose-400' : 'text-text-muted'}>
+              <span className={isDeadlineOverdue(task.deadline, task.status) ? 'font-semibold text-status-danger' : 'text-text-muted'}>
                 Due {formatDeadline(task.deadline)}
               </span>
             )}

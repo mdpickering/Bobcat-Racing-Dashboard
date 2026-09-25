@@ -12,8 +12,8 @@ interface AdminStatCardProps {
 
 export default function AdminStatCard({ label, value, icon: Icon, href, tone = 'default' }: AdminStatCardProps) {
   const content = (
-    <Panel className={`flex items-center gap-3 p-4 transition-colors hover:border-accent-blue/40 ${tone === 'warning' && value > 0 ? 'border-amber-500/30' : ''}`}>
-      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${tone === 'warning' && value > 0 ? 'bg-amber-500/10 text-amber-400' : 'bg-accent-blue/10 text-accent-blue'}`}>
+    <Panel className={`flex items-center gap-3 p-4 transition-colors hover:border-accent-blue/40 ${tone === 'warning' && value > 0 ? 'border-status-warning/30' : ''}`}>
+      <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${tone === 'warning' && value > 0 ? 'bg-status-warning/10 text-status-warning' : 'bg-accent-blue/10 text-accent-blue'}`}>
         <Icon size={16} />
       </div>
       <div className="min-w-0">

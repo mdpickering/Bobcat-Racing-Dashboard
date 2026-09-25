@@ -74,7 +74,7 @@ export default function RequestTaskModal({ open, onClose, subsystems }: { open: 
             <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Why / details</label>
             <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional context for the reviewer" />
           </div>
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex justify-end gap-2 pt-1">
             <Button type="button" variant="secondary" onClick={handleClose}>
               Cancel

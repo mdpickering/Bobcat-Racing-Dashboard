@@ -55,7 +55,7 @@ export default function CadReviewVersionsPanel({ cadReviewId, versions, canAddVe
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Revision History</h3>
+        <h3 className="text-sm font-semibold text-text-primary">Revision History</h3>
         {canAddVersion && !adding && (
           <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
             <Plus size={11} className="mr-0.5 inline" /> New revision
@@ -63,7 +63,7 @@ export default function CadReviewVersionsPanel({ cadReviewId, versions, canAddVe
         )}
       </div>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       {canAddVersion && adding && (
         <form onSubmit={handleAdd} className="mb-3 space-y-2 rounded-lg border border-border p-3 text-xs">

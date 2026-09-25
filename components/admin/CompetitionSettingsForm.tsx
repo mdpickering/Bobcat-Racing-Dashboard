@@ -51,7 +51,7 @@ function SeasonForm({ season, onSaved }: { season: CompetitionSettings; onSaved:
 
   return (
     <Panel className="p-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">{season.season}</h3>
+      <h3 className="mb-3 text-sm font-semibold text-text-primary">{season.season}</h3>
       <form onSubmit={handleSave} className="space-y-3 text-xs">
         <div>
           <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Competition Name</label>
@@ -79,13 +79,13 @@ function SeasonForm({ season, onSaved }: { season: CompetitionSettings; onSaved:
             <Input type="date" value={testingStart} onChange={(e) => setTestingStart(e.target.value)} />
           </div>
         </div>
-        {error && <p className="text-rose-400">{error}</p>}
+        {error && <p className="text-status-danger">{error}</p>}
         <div className="flex items-center gap-3">
           <Button size="sm" type="submit" disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
           </Button>
           {saved && (
-            <span className="flex items-center gap-1 text-emerald-400">
+            <span className="flex items-center gap-1 text-status-success">
               <Check size={12} /> Saved
             </span>
           )}
@@ -143,7 +143,7 @@ export default function CompetitionSettingsForm({ seasons }: { seasons: Competit
               Cancel
             </Button>
           </form>
-          {error && <p className="mt-2 text-[12px] text-rose-400">{error}</p>}
+          {error && <p className="mt-2 text-[12px] text-status-danger">{error}</p>}
         </Panel>
       )}
 

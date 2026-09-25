@@ -22,7 +22,7 @@ export default function ConfirmDialog({ open, onClose, onConfirm, title, descrip
     <Modal open={open} onClose={busy ? () => {} : onClose} title={title} maxWidthClassName="max-w-sm">
       <div className="space-y-4 text-xs">
         <div className="space-y-2 text-text-secondary">{description}</div>
-        {error && <p className="text-rose-400">{error}</p>}
+        {error && <p className="text-status-danger">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>
             Cancel

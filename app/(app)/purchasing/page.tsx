@@ -7,6 +7,7 @@ import PurchaseFilters from '@/components/purchasing/PurchaseFilters'
 import PurchaseRequestList from '@/components/purchasing/PurchaseRequestList'
 import PurchasingToolbar from '@/components/purchasing/PurchasingToolbar'
 import ErrorState from '@/components/ui/ErrorState'
+import PageHeader from '@/components/ui/PageHeader'
 
 export default async function PurchasingPage({
   searchParams,
@@ -45,17 +46,19 @@ export default async function PurchasingPage({
     return <ErrorState message="Could not load purchase requests." />
   }
 
+  const filtered = Boolean(searchParams.subsystem || searchParams.status)
+
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">Purchasing</h1>
-        <p className="mt-0.5 text-xs text-text-secondary">
-          {requests.length} request{requests.length === 1 ? '' : 's'} matching your filters
-        </p>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="Purchasing"
+        description={`${requests.length} request${requests.length === 1 ? '' : 's'}${filtered ? ' matching your filters' : ''}. Team orders are reviewed and approved before anything is ordered.`}
+        actions={<PurchasingToolbar canCreate={canCreate} subsystems={createSubsystemOptions} />}
+      />
+      <div className="mb-4">
+        <PurchaseFilters subsystems={subsystems} />
       </div>
-      <PurchasingToolbar canCreate={canCreate} subsystems={createSubsystemOptions} />
-      <PurchaseFilters subsystems={subsystems} />
-      <PurchaseRequestList requests={requests} />
+      <PurchaseRequestList requests={requests} filtered={filtered} />
     </div>
   )
 }

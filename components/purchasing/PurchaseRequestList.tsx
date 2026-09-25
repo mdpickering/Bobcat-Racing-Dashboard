@@ -1,50 +1,92 @@
 import Link from 'next/link'
 import { ShoppingCart } from 'lucide-react'
 import EmptyState from '@/components/ui/EmptyState'
-import Panel from '@/components/ui/Panel'
+import DataTable, { type Column } from '@/components/ui/DataTable'
 import PurchaseStatusBadge from './PurchaseStatusBadge'
 import { formatDate } from '@/lib/format'
 import type { PurchaseRequest } from '@/types/database'
 
-// "3 items · McMaster, Amazon +1 · $412.30" — a team's order can span several vendors
-function summary(pr: PurchaseRequest): string {
-  const items = pr.items ?? []
-  if (items.length === 0) return 'No items'
-  const vendors = Array.from(new Set(items.map((i) => (i.vendor ?? pr.vendor ?? '').trim()).filter(Boolean)))
-  const shown = vendors.slice(0, 2).join(', ')
-  const extra = vendors.length > 2 ? ` +${vendors.length - 2}` : ''
-  const total = items.reduce((sum, i) => sum + (i.unit_cost ?? 0) * i.quantity, 0)
-  const parts = [`${items.length} item${items.length === 1 ? '' : 's'}`]
-  if (vendors.length > 0) parts.push(shown + extra)
-  if (total > 0) parts.push(total.toLocaleString(undefined, { style: 'currency', currency: 'USD' }))
-  return parts.join(' · ')
+// A team's order can span several vendors: list the first two and count the rest.
+function vendorsOf(pr: PurchaseRequest): { shown: string; extra: number } {
+  const vendors = Array.from(new Set((pr.items ?? []).map((i) => (i.vendor ?? pr.vendor ?? '').trim()).filter(Boolean)))
+  return { shown: vendors.slice(0, 2).join(', '), extra: Math.max(vendors.length - 2, 0) }
 }
 
-export default function PurchaseRequestList({ requests }: { requests: PurchaseRequest[] }) {
-  if (requests.length === 0) {
-    return <EmptyState icon={ShoppingCart} title="No purchase requests match these filters" description="Try adjusting or clearing your filters." />
-  }
+function totalOf(pr: PurchaseRequest): number {
+  return (pr.items ?? []).reduce((sum, i) => sum + (i.unit_cost ?? 0) * i.quantity, 0)
+}
+
+const money = (n: number) => n.toLocaleString(undefined, { style: 'currency', currency: 'USD' })
+
+export default function PurchaseRequestList({ requests, filtered = false }: { requests: PurchaseRequest[]; filtered?: boolean }) {
+  const columns: Column<PurchaseRequest>[] = [
+    {
+      key: 'request',
+      header: 'Request',
+      cell: (pr) => {
+        const items = pr.items ?? []
+        return (
+          <>
+            <Link href={`/purchasing/${pr.id}`} className="block max-w-[30rem] truncate font-medium text-text-primary hover:text-accent-blue">
+              {pr.title || 'Untitled request'}
+            </Link>
+            <div className="mt-0.5 text-xs text-text-muted">
+              {pr.subsystem?.name ?? 'Unknown'} · {items.length === 0 ? 'No items' : `${items.length} item${items.length === 1 ? '' : 's'}`}
+            </div>
+            <div className="mt-1 sm:hidden">
+              <PurchaseStatusBadge status={pr.status} />
+            </div>
+          </>
+        )
+      },
+    },
+    {
+      key: 'vendors',
+      header: 'Vendors',
+      hideBelow: 'md',
+      cell: (pr) => {
+        const v = vendorsOf(pr)
+        return v.shown ? (
+          <span className="text-text-secondary">
+            {v.shown}
+            {v.extra > 0 && <span className="text-text-muted"> +{v.extra}</span>}
+          </span>
+        ) : (
+          <span className="text-text-muted">—</span>
+        )
+      },
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      align: 'right',
+      hideBelow: 'sm',
+      cell: (pr) => (totalOf(pr) > 0 ? <span className="text-text-primary">{money(totalOf(pr))}</span> : <span className="text-text-muted">—</span>),
+    },
+    {
+      key: 'requester',
+      header: 'Requested by',
+      hideBelow: 'lg',
+      cell: (pr) => <span className="text-text-secondary">{pr.requester?.display_name || pr.requester?.email || 'Unknown'}</span>,
+    },
+    { key: 'date', header: 'Created', hideBelow: 'lg', cell: (pr) => <span className="text-text-secondary">{formatDate(pr.created_at)}</span> },
+    { key: 'status', header: 'Status', hideBelow: 'sm', cell: (pr) => <PurchaseStatusBadge status={pr.status} /> },
+  ]
 
   return (
-    <Panel className="overflow-hidden">
-      <ul className="divide-y divide-border">
-        {requests.map((pr) => (
-          <li key={pr.id}>
-            <Link href={`/purchasing/${pr.id}`} className="flex items-center gap-3 px-4 py-3 text-xs transition-colors hover:bg-surface-raised">
-              <div className="min-w-0 flex-1">
-                <span className="truncate font-medium text-text-primary">{pr.title}</span>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-text-muted">
-                  <span>{pr.subsystem?.name ?? 'Unknown'}</span>
-                  <span>· {summary(pr)}</span>
-                  <span>· Requested by {pr.requester?.display_name || pr.requester?.email || 'Unknown'}</span>
-                  <span>· {formatDate(pr.created_at)}</span>
-                </div>
-              </div>
-              <PurchaseStatusBadge status={pr.status} />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </Panel>
+    <DataTable
+      caption="Purchase requests"
+      density="comfortable"
+      columns={columns}
+      rows={requests}
+      rowKey={(pr) => pr.id}
+      emptyState={
+        <EmptyState
+          icon={ShoppingCart}
+          title={filtered ? 'No purchase requests match these filters' : 'No purchase requests yet'}
+          description={filtered ? 'Try adjusting or clearing your filters.' : 'Team leads create requests here; they are reviewed and approved before anything is ordered.'}
+        />
+      }
+    />
   )
 }

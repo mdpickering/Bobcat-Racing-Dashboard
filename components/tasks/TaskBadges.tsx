@@ -1,25 +1,12 @@
-import Badge from '@/components/ui/Badge'
+import UiStatusBadge from '@/components/ui/StatusBadge'
 import type { TaskPriority, TaskStatus } from '@/types/database'
 
-const STATUS_TONE: Record<TaskStatus, Parameters<typeof Badge>[0]['tone']> = {
-  'To Do': 'slate',
-  'In Progress': 'sky',
-  Blocked: 'rose',
-  Review: 'amber',
-  Complete: 'emerald',
-}
-
-const PRIORITY_TONE: Record<TaskPriority, Parameters<typeof Badge>[0]['tone']> = {
-  Critical: 'rose',
-  High: 'amber',
-  Medium: 'sky',
-  Low: 'slate',
-}
-
+// Tones come from the shared status registry (lib/status.ts) so a task status means the same colour as it does
+// everywhere else in the application.
 export function StatusBadge({ status }: { status: TaskStatus }) {
-  return <Badge tone={STATUS_TONE[status]}>{status}</Badge>
+  return <UiStatusBadge domain="task" value={status} />
 }
 
 export function PriorityBadge({ priority }: { priority: TaskPriority }) {
-  return <Badge tone={PRIORITY_TONE[priority]}>{priority}</Badge>
+  return <UiStatusBadge domain="priority" value={priority} />
 }

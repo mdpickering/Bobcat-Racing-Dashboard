@@ -7,7 +7,7 @@ import type { PurchaseStatusHistory } from '@/types/database'
 export default function PurchaseStatusHistoryPanel({ history }: { history: PurchaseStatusHistory[] }) {
   return (
     <Panel className="p-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Status History</h3>
+      <h3 className="mb-3 text-sm font-semibold text-text-primary">Status History</h3>
       {history.length === 0 ? (
         <EmptyState icon={History} title="No history yet" />
       ) : (

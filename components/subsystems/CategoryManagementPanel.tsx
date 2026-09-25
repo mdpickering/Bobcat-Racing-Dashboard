@@ -45,7 +45,7 @@ function CategoryRow({ category, canManage, onChanged }: { category: SubsystemCa
         <div className="space-y-2">
           <Input value={name} onChange={(e) => setName(e.target.value)} />
           <Textarea rows={2} value={rule} onChange={(e) => setRule(e.target.value)} placeholder="Engineering rule" />
-          {error && <p className="text-[12px] text-rose-400">{error}</p>}
+          {error && <p className="text-[12px] text-status-danger">{error}</p>}
           <div className="flex gap-2">
             <Button size="sm" disabled={busy} onClick={handleSave}>
               <Check size={11} /> Save
@@ -74,7 +74,7 @@ function CategoryRow({ category, canManage, onChanged }: { category: SubsystemCa
             <button type="button" onClick={() => setEditing(true)} className="text-text-muted hover:text-accent-blue">
               <Pencil size={12} />
             </button>
-            <button type="button" disabled={busy} onClick={() => persist({ active: !category.active })} className="text-text-muted hover:text-rose-400" title={category.active ? 'Archive' : 'Restore'}>
+            <button type="button" disabled={busy} onClick={() => persist({ active: !category.active })} className="text-text-muted hover:text-status-danger" title={category.active ? 'Archive' : 'Restore'}>
               {category.active ? <Archive size={12} /> : <RotateCcw size={12} />}
             </button>
           </div>
@@ -121,7 +121,7 @@ export default function CategoryManagementPanel({ subsystemId, categories, canMa
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <BookOpen size={13} className="text-accent-blue" />
-          <h2 className="text-xs font-bold uppercase tracking-wide text-text-primary">Categories &amp; Engineering Rules</h2>
+          <h2 className="text-sm font-semibold text-text-primary">Categories &amp; Engineering Rules</h2>
         </div>
         {canManage && !adding && (
           <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
@@ -130,7 +130,7 @@ export default function CategoryManagementPanel({ subsystemId, categories, canMa
         )}
       </div>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       {categories.length === 0 && !adding ? (
         <EmptyState title="No categories defined yet" />

@@ -74,7 +74,7 @@ export default function RecurringEventsPanel({ recurringEvents, canManage, subsy
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+        <h3 className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
           <Repeat size={12} /> Weekly Schedule
         </h3>
         {canManage && !adding && (
@@ -84,7 +84,7 @@ export default function RecurringEventsPanel({ recurringEvents, canManage, subsy
         )}
       </div>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       {canManage && adding && (
         <form onSubmit={handleAdd} className="mb-3 space-y-2 rounded-lg border border-border p-3 text-xs">
@@ -135,7 +135,7 @@ export default function RecurringEventsPanel({ recurringEvents, canManage, subsy
                   </div>
                 </div>
                 {editable && (
-                  <button type="button" disabled={busy} onClick={() => handleArchive(r.id)} className="flex-shrink-0 text-text-muted hover:text-rose-400">
+                  <button type="button" disabled={busy} onClick={() => handleArchive(r.id)} className="flex-shrink-0 text-text-muted hover:text-status-danger">
                     <Archive size={13} />
                   </button>
                 )}

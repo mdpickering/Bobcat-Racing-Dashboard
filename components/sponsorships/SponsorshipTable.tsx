@@ -69,7 +69,7 @@ export default function SponsorshipTable({ rows, levels, filtered }: Sponsorship
               </td>
               <td className="px-2 py-2.5 text-right tabular-nums text-text-primary">{formatMoney(row.cash_committed)}</td>
               <td className="px-2 py-2.5 text-right tabular-nums text-text-primary">{formatMoney(row.cash_received)}</td>
-              <td className={`px-2 py-2.5 text-right tabular-nums ${row.cash_outstanding > 0 ? 'text-amber-400' : 'text-text-muted'}`}>{formatMoney(row.cash_outstanding)}</td>
+              <td className={`px-2 py-2.5 text-right tabular-nums ${row.cash_outstanding > 0 ? 'text-status-warning' : 'text-text-muted'}`}>{formatMoney(row.cash_outstanding)}</td>
               <td className="px-2 py-2.5 text-right tabular-nums text-text-primary">{formatMoney(row.in_kind_value)}</td>
               <td className="px-2 py-2.5 text-[12px]">{deliverablesCell(row, levels)}</td>
               <td className="px-4 py-2.5">

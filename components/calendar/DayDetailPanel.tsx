@@ -105,7 +105,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
   return (
     <Modal open={open} onClose={onClose} title={date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} maxWidthClassName="max-w-lg">
       <div className="space-y-4 text-xs">
-        {error && <p className="text-rose-400">{error}</p>}
+        {error && <p className="text-status-danger">{error}</p>}
 
         <div>
           <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-mono uppercase text-text-muted">
@@ -149,7 +149,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                               >
                                 <Pencil size={12} />
                               </button>
-                              <button type="button" disabled={busy} onClick={() => handleArchiveEvent(ev.id)} className="text-text-muted hover:text-rose-400">
+                              <button type="button" disabled={busy} onClick={() => handleArchiveEvent(ev.id)} className="text-text-muted hover:text-status-danger">
                                 <Archive size={12} />
                               </button>
                             </div>
@@ -211,7 +211,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                               >
                                 <Pencil size={12} />
                               </button>
-                              <button type="button" disabled={busy} onClick={() => handleArchiveMilestone(m.id)} className="text-text-muted hover:text-rose-400">
+                              <button type="button" disabled={busy} onClick={() => handleArchiveMilestone(m.id)} className="text-text-muted hover:text-status-danger">
                                 <Archive size={12} />
                               </button>
                             </div>
@@ -239,7 +239,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
               {taskDeadlines.map((t) => (
                 <li key={t.id}>
                   <Link href={`/tasks/${t.id}`} className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-1.5 hover:bg-surface-raised">
-                    <span className={isDeadlineOverdue(t.deadline, t.status) ? 'font-medium text-rose-400' : 'text-text-primary'}>{t.title}</span>
+                    <span className={isDeadlineOverdue(t.deadline, t.status) ? 'font-medium text-status-danger' : 'text-text-primary'}>{t.title}</span>
                     <Badge tone="slate">{t.subsystem?.name}</Badge>
                   </Link>
                 </li>

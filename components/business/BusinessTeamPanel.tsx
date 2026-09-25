@@ -88,7 +88,7 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
     <div className="space-y-4">
       {canManageTeam && (
         <Panel className="p-4">
-          <h2 className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+          <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-text-primary">
             <UserPlus size={13} className="text-accent-blue" /> Add a member
           </h2>
           {candidates.length === 0 ? (
@@ -113,10 +113,10 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
         </Panel>
       )}
 
-      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {error && <p className="text-xs text-status-danger">{error}</p>}
 
       <Panel className="p-4">
-        <h2 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-text-primary">
+        <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-text-primary">
           <Briefcase size={13} className="text-accent-blue" /> Business team ({members.length})
         </h2>
 
@@ -176,7 +176,7 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
                       disabled={busy}
                       title={m.user_id === currentUserId ? 'Leave the Business team' : 'Remove from the Business team'}
                       onClick={() => setRemoving(m)}
-                      className="text-text-muted hover:text-rose-400"
+                      className="text-text-muted hover:text-status-danger"
                     >
                       <X size={14} />
                     </button>

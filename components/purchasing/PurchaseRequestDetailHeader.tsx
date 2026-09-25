@@ -167,7 +167,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
         <ChevronLeft size={13} /> Back to purchasing
       </Link>
 
-      {error && <p className="mb-2 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 
       {editing ? (
         <div className="space-y-3">
@@ -244,7 +244,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
             </p>
             <p>The purchase sheet (.xlsx) will download automatically once it is approved.</p>
           </div>
-          {approveError && <p className="text-rose-400">{approveError}</p>}
+          {approveError && <p className="text-status-danger">{approveError}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={approving} onClick={() => setApproveOpen(false)}>
               Cancel

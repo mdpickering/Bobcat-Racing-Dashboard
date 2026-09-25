@@ -107,7 +107,7 @@ export default function AddSponsorshipButton({ season, sponsors }: AddSponsorshi
           )}
 
           <p className="text-[12px] text-text-muted">It starts as a Prospect. Add a contribution and a level from its page.</p>
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>
               Cancel

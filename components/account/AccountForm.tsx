@@ -79,7 +79,7 @@ export default function AccountForm({ profile, emailSection }: { profile: Profil
       </Panel>
 
       <Panel className="p-5">
-        <h2 className="mb-4 text-xs font-bold uppercase tracking-wide text-text-primary">Profile</h2>
+        <h2 className="mb-4 text-sm font-semibold text-text-primary">Profile</h2>
         <form onSubmit={handleSave} className="space-y-3 text-xs">
           <div>
             <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Display name</label>
@@ -110,13 +110,13 @@ export default function AccountForm({ profile, emailSection }: { profile: Profil
             <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" />
           </div>
 
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-status-danger">{error}</p>}
           <div className="flex items-center gap-3 pt-1">
             <Button type="submit" disabled={saving || !displayName.trim()}>
               {saving ? 'Saving…' : 'Save changes'}
             </Button>
             {saved && (
-              <span className="flex items-center gap-1 text-emerald-400">
+              <span className="flex items-center gap-1 text-status-success">
                 <Check size={12} /> Saved
               </span>
             )}
@@ -125,7 +125,7 @@ export default function AccountForm({ profile, emailSection }: { profile: Profil
       </Panel>
 
       <Panel className="p-5">
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Preferences</h2>
+        <h2 className="mb-3 text-sm font-semibold text-text-primary">Preferences</h2>
         <div className="flex items-center justify-between text-xs">
           <span className="text-text-secondary">Theme</span>
           <Button type="button" size="sm" variant="secondary" onClick={toggleTheme}>

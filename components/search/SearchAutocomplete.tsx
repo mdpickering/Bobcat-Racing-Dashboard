@@ -222,7 +222,7 @@ export default function SearchAutocomplete({ className = '', autoFocus, onDone, 
           className="absolute inset-x-0 top-full z-40 mt-1.5 max-h-[min(26rem,70vh)] overflow-y-auto scrollbar-thin rounded-xl border border-border bg-surface-raised p-1.5 shadow-panel"
         >
           {status === 'loading' && flat.length === 0 && <div className="px-3 py-2.5 text-[12px] text-text-muted">Searching…</div>}
-          {status === 'error' && <div className="px-3 py-2.5 text-[12px] text-rose-400">Couldn&apos;t load suggestions. Press Enter to search.</div>}
+          {status === 'error' && <div className="px-3 py-2.5 text-[12px] text-status-danger">Couldn&apos;t load suggestions. Press Enter to search.</div>}
           {status === 'done' && flat.length === 0 && (
             <div className="px-3 py-2.5 text-[12px] text-text-muted">
               No matches for &ldquo;{trimmed}&rdquo;

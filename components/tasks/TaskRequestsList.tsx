@@ -2,19 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Panel from '@/components/ui/Panel'
-import Badge from '@/components/ui/Badge'
+import Link from 'next/link'
+import { Inbox } from 'lucide-react'
+import StatusBadge from '@/components/ui/StatusBadge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { reviewTaskRequest } from '@/lib/supabase/queries/tasks'
 import { formatDate } from '@/lib/format'
 import { getErrorMessage } from '@/lib/errors'
 import type { TaskRequest } from '@/types/database'
-import { Inbox } from 'lucide-react'
 
-const STATUS_TONE = { pending: 'amber', approved: 'emerald', declined: 'rose' } as const
+const STATUS_TONE = { pending: 'warning', approved: 'success', declined: 'danger' } as const
 
 interface TaskRequestsListProps {
   requests: TaskRequest[]
@@ -46,26 +45,26 @@ export default function TaskRequestsList({ requests, canReviewAll, reviewableSub
   }
 
   if (requests.length === 0) {
-    return <EmptyState icon={Inbox} title="No task requests yet" />
+    return <EmptyState icon={Inbox} title="No task requests yet" description="Anyone on the team can request a task for a subsystem. Requests appear here for review." />
   }
 
   return (
-    <div className="space-y-3">
-      {error && <p className="text-xs text-rose-400">{error}</p>}
-      {requests.map((r) => (
-        <Panel key={r.id} className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold text-text-primary">{r.title}</h3>
-                <Badge tone={STATUS_TONE[r.status]}>{r.status}</Badge>
+    <div>
+      {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
+      <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+        {requests.map((r) => (
+          <li key={r.id} className="flex flex-wrap items-start justify-between gap-3 px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold text-text-primary">{r.title}</h3>
+                <StatusBadge tone={STATUS_TONE[r.status]}>{r.status}</StatusBadge>
               </div>
-              <p className="mt-1 text-[11px] text-text-muted">
+              <p className="mt-0.5 text-xs text-text-muted">
                 {r.requester?.display_name || r.requester?.email} · {r.subsystem?.name} · {formatDate(r.created_at)}
               </p>
-              {r.description && <p className="mt-2 text-[12px] text-text-secondary">{r.description}</p>}
+              {r.description && <p className="mt-1.5 text-xs text-text-secondary">{r.description}</p>}
               {r.status === 'approved' && r.converted_task_id && (
-                <Link href={`/tasks/${r.converted_task_id}`} className="mt-2 inline-block text-[12px] text-accent-blue hover:underline">
+                <Link href={`/tasks/${r.converted_task_id}`} className="mt-1.5 inline-block text-xs text-accent-blue hover:underline">
                   View task →
                 </Link>
               )}
@@ -80,9 +79,9 @@ export default function TaskRequestsList({ requests, canReviewAll, reviewableSub
                 </Button>
               </div>
             )}
-          </div>
-        </Panel>
-      ))}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

@@ -68,7 +68,7 @@ export default function TaskCommentsPanel({ taskId, comments, subsystemMembers, 
 
   return (
     <Panel className="p-4">
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-primary">Activity</h3>
+      <h3 className="mb-3 text-sm font-semibold text-text-primary">Activity</h3>
 
       {comments.length === 0 ? (
         <EmptyState icon={MessageSquare} title="No comments yet" description="Start the conversation on this task." />
@@ -146,7 +146,7 @@ export default function TaskCommentsPanel({ taskId, comments, subsystemMembers, 
             ))}
           </div>
         )}
-        {error && <p className="text-[12px] text-rose-400">{error}</p>}
+        {error && <p className="text-[12px] text-status-danger">{error}</p>}
         <div className="flex items-center justify-between">
           <button
             type="button"

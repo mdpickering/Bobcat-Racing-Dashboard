@@ -139,7 +139,7 @@ export default function MonthCalendar({ year, month, events, milestones, taskDea
               <div className="flex w-full flex-wrap gap-0.5">
                 {dayMilestones.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-qu-gold" title="Milestone" />}
                 {dayEvents.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-accent-blue" title="Event" />}
-                {dayTasks.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-rose-400" title="Task deadline" />}
+                {dayTasks.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-status-danger" title="Task deadline" />}
               </div>
               {total > 0 && <span className="text-[9px] text-text-muted">{total} item{total === 1 ? '' : 's'}</span>}
             </button>

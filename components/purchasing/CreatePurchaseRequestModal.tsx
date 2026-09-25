@@ -123,7 +123,7 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
               </div>
               <div>
                 <label htmlFor="purchase-product-url" className={LABEL}>
-                  Product link <span className="text-rose-400">*</span>
+                  Product link <span className="text-status-danger">*</span>
                 </label>
                 <Input
                   id="purchase-product-url"
@@ -136,11 +136,11 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
                   aria-invalid={showUrlError}
                   aria-describedby="purchase-product-url-help"
                   placeholder="https://www.example.com/the-item"
-                  className={showUrlError ? 'border-rose-500/60 focus:border-rose-400' : ''}
+                  className={showUrlError ? 'border-status-danger/60 focus:border-status-danger' : ''}
                 />
               </div>
             </div>
-            <p id="purchase-product-url-help" className={`-mt-1 text-[12px] ${showUrlError ? 'text-rose-400' : 'text-text-muted'}`}>
+            <p id="purchase-product-url-help" className={`-mt-1 text-[12px] ${showUrlError ? 'text-status-danger' : 'text-text-muted'}`}>
               {showUrlError ? urlError : 'The link to the exact item is required.'}
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -166,7 +166,7 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
           </div>
         </div>
 
-        {error && <p className="text-rose-400">{error}</p>}
+        {error && <p className="text-status-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel

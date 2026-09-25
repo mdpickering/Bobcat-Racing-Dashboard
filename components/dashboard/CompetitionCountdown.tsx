@@ -1,54 +1,39 @@
-import Panel from '@/components/ui/Panel'
 import { daysUntil, formatDate } from '@/lib/format'
 import type { CompetitionSettings } from '@/types/database'
-import { Flag } from 'lucide-react'
 
-const MILESTONES: { key: keyof CompetitionSettings; label: string }[] = [
-  { key: 'design_freeze', label: 'Design Freeze' },
-  { key: 'manufacturing_start', label: 'Manufacturing Start' },
-  { key: 'testing_start', label: 'Testing Start' },
+const KEY_DATES: { key: keyof CompetitionSettings; label: string }[] = [
+  { key: 'design_freeze', label: 'Design freeze' },
+  { key: 'manufacturing_start', label: 'Manufacturing start' },
+  { key: 'testing_start', label: 'Testing start' },
 ]
 
+// The season countdown: one large figure and the key dates that have been set. Renders inside a panel supplied by the page.
 export default function CompetitionCountdown({ competition }: { competition: CompetitionSettings | null }) {
   if (!competition) {
-    return (
-      <Panel className="p-4">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">Competition</h3>
-        <p className="text-[12px] text-text-muted">No competition season configured yet.</p>
-      </Panel>
-    )
+    return <p className="text-xs text-text-muted">No competition season is configured yet.</p>
   }
-
   const days = daysUntil(competition.competition_date)
-
   return (
-    <Panel className="p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <Flag size={14} className="text-qu-gold" />
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">
-          {competition.competition_name || `${competition.season} Competition`}
-        </h3>
-      </div>
+    <div>
+      <div className="text-xs text-text-secondary">{competition.competition_name || `${competition.season} competition`}</div>
       {days !== null && (
-        <div className="mb-3">
-          <div className="text-2xl font-black leading-none text-qu-gold">{days >= 0 ? days : 0}</div>
-          <div className="text-[11px] font-mono uppercase tracking-wide text-text-muted">
-            {days >= 0 ? 'days remaining' : 'competition has passed'}
-          </div>
+        <div className="mt-1 flex items-baseline gap-2">
+          <span className="text-2xl font-semibold tabular-nums leading-8 text-text-primary">{days >= 0 ? days : 0}</span>
+          <span className="text-xs text-text-muted">{days >= 0 ? 'days remaining' : 'competition has passed'}</span>
         </div>
       )}
-      <div className="space-y-1.5 border-t border-border pt-3">
-        {MILESTONES.map((m) => {
+      <dl className="mt-2 space-y-1">
+        {KEY_DATES.map((m) => {
           const value = competition[m.key] as string | null
           if (!value) return null
           return (
-            <div key={m.key} className="flex items-center justify-between text-[12px]">
-              <span className="text-text-secondary">{m.label}</span>
-              <span className="font-mono text-text-primary">{formatDate(value)}</span>
+            <div key={m.key} className="flex items-center justify-between gap-3 text-xs">
+              <dt className="text-text-secondary">{m.label}</dt>
+              <dd className="tabular-nums text-text-primary">{formatDate(value)}</dd>
             </div>
           )
         })}
-      </div>
-    </Panel>
+      </dl>
+    </div>
   )
 }

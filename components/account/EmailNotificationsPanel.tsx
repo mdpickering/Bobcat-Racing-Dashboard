@@ -52,14 +52,14 @@ export default function EmailNotificationsPanel({ categories, email, loadError }
 
   return (
     <Panel className="p-5">
-      <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-text-primary">Email Notifications</h2>
+      <h2 className="mb-1 text-sm font-semibold text-text-primary">Email Notifications</h2>
       <p className="mb-4 text-xs text-text-muted">
         Choose which notifications you want to receive by email{email ? <> at <span className="text-text-secondary">{email}</span></> : ''}. You will always
         still see every notification in the app.
       </p>
 
       {loadError ? (
-        <p className="text-xs text-rose-400">{loadError}</p>
+        <p className="text-xs text-status-danger">{loadError}</p>
       ) : categories.length === 0 ? (
         <p className="text-xs text-text-muted">No email notification categories are available yet.</p>
       ) : (
@@ -74,7 +74,7 @@ export default function EmailNotificationsPanel({ categories, email, loadError }
                     {c.label}
                   </div>
                   <div className="mt-0.5 text-[12px] text-text-muted">{c.description}</div>
-                  {state.status === 'error' && <div className="mt-1 text-[12px] text-rose-400">{state.message}</div>}
+                  {state.status === 'error' && <div className="mt-1 text-[12px] text-status-danger">{state.message}</div>}
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-2.5">
                   <span className="flex w-16 items-center justify-end gap-1 text-[11px] font-mono text-text-muted" aria-live="polite">
@@ -84,7 +84,7 @@ export default function EmailNotificationsPanel({ categories, email, loadError }
                       </>
                     )}
                     {state.status === 'saved' && (
-                      <span className="flex items-center gap-1 text-emerald-400">
+                      <span className="flex items-center gap-1 text-status-success">
                         <Check size={11} /> Saved
                       </span>
                     )}

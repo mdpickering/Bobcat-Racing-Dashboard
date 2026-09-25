@@ -6,7 +6,8 @@ import { listAllProfiles } from '@/lib/supabase/queries/admin'
 import { listTasks } from '@/lib/supabase/queries/tasks'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
-import Panel from '@/components/ui/Panel'
+import PageHeader from '@/components/ui/PageHeader'
+import SectionHeader from '@/components/ui/SectionHeader'
 import ErrorState from '@/components/ui/ErrorState'
 import TaskList from '@/components/tasks/TaskList'
 import SubsystemEditPanel from '@/components/subsystems/SubsystemEditPanel'
@@ -63,15 +64,15 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <Link href="/subsystems" className="flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
-        <ChevronLeft size={13} /> Back to subsystems
-      </Link>
-
-      {admin ? <SubsystemEditPanel subsystem={subsystem} leads={leads} /> : (
-        <Panel className="p-5">
-          <h1 className="text-base font-bold text-text-primary">{subsystem.name}</h1>
-          {subsystem.description && <p className="mt-2 text-xs text-text-secondary">{subsystem.description}</p>}
-        </Panel>
+      {admin ? (
+        <>
+          <Link href="/subsystems" className="flex items-center gap-1 text-xs text-text-muted hover:text-text-primary">
+            <ChevronLeft size={14} /> Back to subsystems
+          </Link>
+          <SubsystemEditPanel subsystem={subsystem} leads={leads} />
+        </>
+      ) : (
+        <PageHeader title={subsystem.name} description={subsystem.description ?? undefined} back={{ label: 'Back to subsystems', href: '/subsystems' }} />
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -87,9 +88,7 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
       </div>
 
       <div>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">
-          Open Tasks ({openTasks.length})
-        </h2>
+        <SectionHeader title={`Open tasks (${openTasks.length})`} />
         <TaskList tasks={openTasks} canAccept={canAcceptTasks} />
       </div>
     </div>

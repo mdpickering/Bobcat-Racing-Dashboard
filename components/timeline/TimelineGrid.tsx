@@ -60,7 +60,7 @@ export default function TimelineGrid({ columns, subsystems, milestones, canEditS
 
   return (
     <Panel className="overflow-x-auto p-0">
-      {error && <p className="p-3 text-xs text-rose-400">{error}</p>}
+      {error && <p className="p-3 text-xs text-status-danger">{error}</p>}
       <table className="w-full min-w-[900px] border-collapse text-xs">
         <thead>
           <tr>

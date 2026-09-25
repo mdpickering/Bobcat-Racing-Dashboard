@@ -12,8 +12,8 @@ interface StatCardProps {
 
 const TONE_CLASSES: Record<NonNullable<StatCardProps['tone']>, string> = {
   default: 'text-accent-blue bg-accent-blue/10',
-  warning: 'text-amber-400 bg-amber-500/10',
-  danger: 'text-rose-400 bg-rose-500/10',
+  warning: 'text-status-warning bg-status-warning/10',
+  danger: 'text-status-danger bg-status-danger/10',
 }
 
 export default function StatCard({ label, value, icon: Icon, href, tone = 'default' }: StatCardProps) {

@@ -45,7 +45,7 @@ function DeadlineRow({ task }: { task: SchedulingTask }) {
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-text-muted">
             <span>{task.subsystem?.name ?? 'Unknown'}</span>
             <span>· {task.primary_owner ? task.primary_owner.display_name || task.primary_owner.email : 'Unassigned'}</span>
-            <span className={overdue ? 'font-semibold text-rose-400' : ''}>
+            <span className={overdue ? 'font-semibold text-status-danger' : ''}>
               · {task.deadline ? `Due ${formatDeadline(task.deadline)}` : 'No deadline'}
             </span>
           </div>
@@ -73,7 +73,7 @@ function DeadlineRow({ task }: { task: SchedulingTask }) {
           )}
         </div>
       </div>
-      {error && <p className="mt-1.5 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mt-1.5 text-[12px] text-status-danger">{error}</p>}
     </li>
   )
 }

@@ -43,7 +43,7 @@ export default function MigrationExceptionsPanel({ exceptions }: { exceptions: M
 
   return (
     <div className="space-y-2">
-      {error && <p className="text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="text-[12px] text-status-danger">{error}</p>}
       {exceptions.map((e) => (
         <Panel key={e.id} className="p-3">
           <div className="flex items-start justify-between gap-3 text-xs">
@@ -57,10 +57,10 @@ export default function MigrationExceptionsPanel({ exceptions }: { exceptions: M
             </div>
             {e.resolution_status === 'unresolved' && (
               <div className="flex flex-shrink-0 gap-2">
-                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'resolved')} title="Mark resolved" className="text-text-muted hover:text-emerald-400">
+                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'resolved')} title="Mark resolved" className="text-text-muted hover:text-status-success">
                   <Check size={14} />
                 </button>
-                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'ignored')} title="Ignore" className="text-text-muted hover:text-rose-400">
+                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'ignored')} title="Ignore" className="text-text-muted hover:text-status-danger">
                   <X size={14} />
                 </button>
               </div>

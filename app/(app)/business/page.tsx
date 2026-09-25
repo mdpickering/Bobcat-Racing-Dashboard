@@ -35,7 +35,7 @@ export default async function BusinessPage() {
       </div>
 
       <Panel className="p-4">
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-primary">Your access</h2>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Your access</h2>
         <div className="flex flex-wrap items-center gap-2">
           {access.isLead && <Badge tone="gold">Business Lead</Badge>}
           {access.responsibilities.includes('sponsorship_lead') && <Badge tone="sky">Sponsorship Lead</Badge>}

@@ -79,7 +79,7 @@ export default function TaskAttachmentsPanel({ taskId, attachments }: { taskId: 
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-text-primary">Attachments</h3>
+        <h3 className="text-sm font-semibold text-text-primary">Attachments</h3>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -93,7 +93,7 @@ export default function TaskAttachmentsPanel({ taskId, attachments }: { taskId: 
 
       <p className="mb-2 text-[11px] text-text-muted">Images and documents up to 10 MB, PDFs up to 20 MB. For large CAD files, use an external link instead.</p>
 
-      {error && <p className="mb-2 text-[12px] text-rose-400">{error}</p>}
+      {error && <p className="mb-2 text-[12px] text-status-danger">{error}</p>}
 
       {attachments.length === 0 ? (
         <EmptyState icon={Paperclip} title="No attachments yet" />

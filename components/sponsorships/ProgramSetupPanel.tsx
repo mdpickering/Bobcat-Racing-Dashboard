@@ -72,7 +72,7 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
         <div className="space-y-4 text-xs">
           {copyableSeasons.length > 0 && (
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Start from</label>
+              <label className="mb-1 block text-xs text-text-secondary">Start from</label>
               <Select value={source} onChange={(e) => setSource(e.target.value)} disabled={busy}>
                 <option value="flyer">The 2026–27 flyer levels (standard)</option>
                 {copyableSeasons.map((s) => (
@@ -92,7 +92,7 @@ export default function ProgramSetupPanel({ season, canManage, historical, copya
                   <div key={level.key} className="rounded-lg border border-border p-3">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="font-semibold text-text-primary">{level.name}</span>
-                      <span className="font-mono text-[12px] text-text-secondary">{formatMoney(level.minAmount)}+</span>
+                      <span className="text-xs tabular-nums text-text-secondary">{formatMoney(level.minAmount)}+</span>
                     </div>
                     <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[12px] text-text-secondary">
                       {level.deliverables.map((d) => (

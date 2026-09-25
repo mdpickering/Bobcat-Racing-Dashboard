@@ -1,4 +1,5 @@
 import PageHeader from '@/components/ui/PageHeader'
+import MetricStrip from '@/components/ui/MetricStrip'
 import { createClient } from '@/lib/supabase/server'
 import { getBusinessAccess, listBusinessCandidates, listBusinessMembers } from '@/lib/supabase/queries/business'
 import type { Profile } from '@/types/user'
@@ -28,6 +29,14 @@ export default async function BusinessTeamPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Business team" description="The people who run the business side of the team, and who leads it." back={{ label: 'Back to Business', href: '/business' }} />
+      <MetricStrip
+        className="mb-6"
+        metrics={[
+          { label: 'Members', value: String(members.length) },
+          { label: 'Business Leads', value: String(members.filter((m) => m.is_lead).length) },
+          { label: 'Sponsorship Leads', value: String(members.filter((m) => (m.responsibilities ?? []).some((r) => r.responsibility === 'sponsorship_lead')).length) },
+        ]}
+      />
       <BusinessTeamPanel
         members={members}
         candidates={candidates}

@@ -68,7 +68,7 @@ export default function AddSponsorshipButton({ season, sponsors }: AddSponsorshi
       <Modal open={open} onClose={busy ? () => {} : () => setOpen(false)} title={`Add a sponsorship for ${seasonLabel(season)}`} maxWidthClassName="max-w-md">
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Sponsor</label>
+            <label className="mb-1 block text-xs text-text-secondary">Sponsor</label>
             <Select value={sponsorId} onChange={(e) => setSponsorId(e.target.value)} disabled={busy}>
               {sponsors.length > 0 && <option value="">Select a sponsor…</option>}
               {sponsors.map((s) => (
@@ -84,12 +84,12 @@ export default function AddSponsorshipButton({ season, sponsors }: AddSponsorshi
           {creatingNew && (
             <>
               <div>
-                <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Sponsor name</label>
+                <label className="mb-1 block text-xs text-text-secondary">Sponsor name</label>
                 <Input value={name} onChange={(e) => { setName(e.target.value); setCreatedSponsorId(null) }} placeholder="e.g. Acme Corp" maxLength={120} disabled={busy} autoFocus />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Type</label>
+                  <label className="mb-1 block text-xs text-text-secondary">Type</label>
                   <Select value={type} onChange={(e) => setType(e.target.value as SponsorType)} disabled={busy}>
                     {(Object.keys(SPONSOR_TYPE_LABEL) as SponsorType[]).map((t) => (
                       <option key={t} value={t}>
@@ -99,7 +99,7 @@ export default function AddSponsorshipButton({ season, sponsors }: AddSponsorshi
                   </Select>
                 </div>
                 <div>
-                  <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Website (optional)</label>
+                  <label className="mb-1 block text-xs text-text-secondary">Website (optional)</label>
                   <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" disabled={busy} />
                 </div>
               </div>

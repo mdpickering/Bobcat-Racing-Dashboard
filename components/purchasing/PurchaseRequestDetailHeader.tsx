@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Pencil, Check, X, Trash2, BadgeCheck, FileSpreadsheet } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
+import PageHeader from '@/components/ui/PageHeader'
 import Modal from '@/components/ui/Modal'
 import Badge from '@/components/ui/Badge'
 import Textarea from '@/components/ui/Textarea'
@@ -161,66 +162,67 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
     }
   }
 
+  const reviewerName = request.reviewer?.display_name || request.reviewer?.email
+
   return (
-    <Panel className="p-5">
-      <Link href="/purchasing" className="mb-3 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
-        <ChevronLeft size={13} /> Back to purchasing
-      </Link>
-
-      {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
-
+    <>
       {editing ? (
-        <div className="space-y-3">
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} className="text-sm font-bold" />
-          <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
-          <div className="flex gap-2">
-            <Button size="sm" disabled={saving} onClick={handleSaveDetails}>
-              <Check size={12} /> Save
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-              <X size={12} /> Cancel
-            </Button>
+        <Panel className="mb-5 p-5">
+          <Link href="/purchasing" className="mb-3 inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-primary">
+            <ChevronLeft size={14} aria-hidden="true" /> Back to purchasing
+          </Link>
+          {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
+          <div className="space-y-3">
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="text-sm font-semibold" aria-label="Title" />
+            <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" aria-label="Description" />
+            <div className="flex gap-2">
+              <Button size="sm" disabled={saving} onClick={handleSaveDetails}>
+                <Check size={12} /> Save
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                <X size={12} /> Cancel
+              </Button>
+            </div>
           </div>
-        </div>
+        </Panel>
       ) : (
-        <>
-          <div className="flex items-start justify-between gap-3">
-            <h1 className="text-base font-bold text-text-primary">{request.title}</h1>
-            {canManage && (
-              <button type="button" onClick={() => setEditing(true)} className="flex-shrink-0 text-text-muted hover:text-accent-blue">
-                <Pencil size={14} />
-              </button>
-            )}
-          </div>
-          {request.description && <p className="mt-2 whitespace-pre-wrap text-xs text-text-secondary">{request.description}</p>}
-
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-            <Badge tone="slate">{request.subsystem?.name ?? 'Unknown subsystem'}</Badge>
-            {request.vendor && <Badge tone="slate">{request.vendor}</Badge>}
-            <span className="text-text-muted">Requested by {request.requester?.display_name || request.requester?.email} · {formatDate(request.created_at)}</span>
-            {request.reviewer && (
-              <span className="text-text-muted">
-                · Reviewed by {request.reviewer.display_name || request.reviewer.email}
+        <PageHeader
+          title={request.title || 'Untitled request'}
+          description={request.description ? <span className="whitespace-pre-wrap">{request.description}</span> : undefined}
+          back={{ label: 'Back to purchasing', href: '/purchasing' }}
+          actions={
+            canManage ? (
+              <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+                <Pencil size={13} /> Edit details
+              </Button>
+            ) : undefined
+          }
+        >
+          {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-text-muted">
+            <Badge tone="neutral">{request.subsystem?.name ?? 'Unknown subsystem'}</Badge>
+            {request.vendor && <Badge tone="neutral">{request.vendor}</Badge>}
+            <span>
+              Requested by {request.requester?.display_name || request.requester?.email} · {formatDate(request.created_at)}
+            </span>
+            {reviewerName && (
+              <span>
+                · Reviewed by {reviewerName}
                 {request.reviewed_at ? ` (${formatDate(request.reviewed_at)})` : ''}
               </span>
             )}
           </div>
-        </>
+        </PageHeader>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
-        <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Status</label>
+      {/* status and the next-step actions; approval and the purchase sheet are explicit buttons, exactly as before */}
+      <div className="mb-6 flex flex-wrap items-center gap-3 border-y border-border py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Status</span>
           <PurchaseStatusBadge status={request.status} />
         </div>
         {actions.map((action) => (
-          <Button
-            key={action.id}
-            size="sm"
-            variant={action.tone === 'primary' ? 'primary' : action.tone}
-            disabled={saving || approving}
-            onClick={() => handleAction(action)}
-          >
+          <Button key={action.id} size="sm" variant={action.tone === 'primary' ? 'primary' : action.tone} disabled={saving || approving} onClick={() => handleAction(action)}>
             {action.kind === 'approve' && <BadgeCheck size={13} />} {action.label}
           </Button>
         ))}
@@ -229,13 +231,13 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
             <FileSpreadsheet size={13} /> {downloading ? 'Preparing…' : 'Download Purchase Sheet'}
           </Button>
         )}
+        {!canManage && !canApprove && <span className="text-xs text-text-muted">Read-only: your team lead or an approver makes changes.</span>}
         {canDelete && (
           <Button size="sm" variant="danger" className="ml-auto" onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
             <Trash2 size={12} /> Delete
           </Button>
         )}
       </div>
-
       <Modal open={approveOpen} onClose={approving ? () => {} : () => setApproveOpen(false)} title="Approve this purchase?" maxWidthClassName="max-w-sm">
         <div className="space-y-4 text-xs">
           <div className="space-y-2 text-text-secondary">
@@ -285,6 +287,6 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
           </>
         }
       />
-    </Panel>
+    </>
   )
 }

@@ -7,6 +7,7 @@ import Panel from '@/components/ui/Panel'
 import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice'
 import Avatar from '@/components/ui/Avatar'
 import EmptyState from '@/components/ui/EmptyState'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
@@ -142,7 +143,7 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
 
                 <div className="flex flex-wrap items-center gap-2">
                   {m.is_lead && <Badge tone="gold">Business Lead</Badge>}
-                  {hasSponsorshipLead(m) && <Badge tone="sky">Sponsorship Lead</Badge>}
+                  {hasSponsorshipLead(m) && <Badge tone="info">Sponsorship Lead</Badge>}
 
                   {canManageTeam && (
                     <Button
@@ -187,7 +188,11 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
           </ul>
         )}
 
-        {!canManageTeam && members.length > 0 && <p className="mt-3 text-[12px] text-text-muted">You can see the Business team. Only the Business Lead (or an admin) changes it.</p>}
+        {!canManageTeam && members.length > 0 && (
+          <div className="mt-3">
+            <ReadOnlyNotice>You can see the Business team. Only the Business Lead or an admin changes it.</ReadOnlyNotice>
+          </div>
+        )}
       </Panel>
 
       <ConfirmDialog

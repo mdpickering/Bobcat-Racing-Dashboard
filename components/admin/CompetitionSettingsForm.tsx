@@ -54,28 +54,28 @@ function SeasonForm({ season, onSaved }: { season: CompetitionSettings; onSaved:
       <h3 className="mb-3 text-sm font-semibold text-text-primary">{season.season}</h3>
       <form onSubmit={handleSave} className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Competition Name</label>
+          <label className="mb-1 block text-xs text-text-secondary">Competition Name</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Baja SAE California" />
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Competition Date</label>
+            <label className="mb-1 block text-xs text-text-secondary">Competition Date</label>
             <Input type="date" value={competitionDate} onChange={(e) => setCompetitionDate(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Build Start</label>
+            <label className="mb-1 block text-xs text-text-secondary">Build Start</label>
             <Input type="date" value={buildStart} onChange={(e) => setBuildStart(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Design Freeze</label>
+            <label className="mb-1 block text-xs text-text-secondary">Design Freeze</label>
             <Input type="date" value={designFreeze} onChange={(e) => setDesignFreeze(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Manufacturing Start</label>
+            <label className="mb-1 block text-xs text-text-secondary">Manufacturing Start</label>
             <Input type="date" value={manufacturingStart} onChange={(e) => setManufacturingStart(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Testing Start</label>
+            <label className="mb-1 block text-xs text-text-secondary">Testing Start</label>
             <Input type="date" value={testingStart} onChange={(e) => setTestingStart(e.target.value)} />
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function CompetitionSettingsForm({ seasons }: { seasons: Competit
         <Panel className="p-4">
           <form onSubmit={handleAddSeason} className="flex items-end gap-2 text-xs">
             <div className="flex-1">
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Season (e.g. 2027)</label>
+              <label className="mb-1 block text-xs text-text-secondary">Season (e.g. 2027)</label>
               <Input required value={newSeason} onChange={(e) => setNewSeason(e.target.value)} placeholder="2027" />
             </div>
             <Button size="sm" type="submit" disabled={busy || !newSeason}>

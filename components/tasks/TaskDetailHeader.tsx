@@ -157,7 +157,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Status</label>
+          <label className="mb-1 block text-xs text-text-secondary">Status</label>
           {canManage || canChangeStatus ? (
             <Select value={task.status} disabled={saving} onChange={(e) => handleStatusChange(e.target.value)} className="w-36">
               {STATUSES.map((s) => (
@@ -172,7 +172,7 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
         </div>
         {!editingDetails && (
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Priority</label>
+            <label className="mb-1 block text-xs text-text-secondary">Priority</label>
             <Badge tone="slate">{task.priority}</Badge>
           </div>
         )}

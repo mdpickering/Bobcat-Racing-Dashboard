@@ -163,7 +163,7 @@ export default function CadReviewDetailHeader({
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Status</label>
+          <label className="mb-1 block text-xs text-text-secondary">Status</label>
           {canEditStatus ? (
             <Select value={review.status} disabled={saving} onChange={(e) => handleStatusChange(e.target.value)} className="w-52">
               {statusOptions.map((s) => (

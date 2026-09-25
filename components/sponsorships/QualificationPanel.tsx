@@ -60,14 +60,14 @@ export default function QualificationPanel({ sponsorshipId, summary, review, lev
       )}
       {customTerms && (
         <div className="mb-3 rounded-lg border border-border p-3 text-[12px]">
-          <div className="font-mono text-[11px] uppercase text-text-muted">Custom terms</div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Custom terms</div>
           <p className="mt-1 whitespace-pre-wrap text-text-secondary">{customTerms}</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-5 text-xs md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 text-xs">
         <div className="space-y-1.5">
-          <div className="font-mono text-[11px] uppercase text-text-muted">Qualifying value</div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Qualifying value</div>
           <Row label="Cash committed" value={formatMoney(summary.cash_committed)} />
           <Row label="+ In-kind (estimated)" value={formatMoney(summary.in_kind_value)} />
           <Row label="Total sponsorship value" value={formatMoney(summary.total_sponsorship_value)} strong />
@@ -87,13 +87,13 @@ export default function QualificationPanel({ sponsorshipId, summary, review, lev
         </div>
 
         <div className="space-y-1.5">
-          <div className="font-mono text-[11px] uppercase text-text-muted">Cash position</div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Cash position</div>
           <Row label="Committed" value={formatMoney(summary.cash_committed)} />
           <Row label="Received" value={formatMoney(summary.cash_received)} />
           <Row label="Outstanding" value={formatMoney(summary.cash_outstanding)} strong />
           {summary.cash_over_received > 0 && <Row label="Received over committed" value={formatMoney(summary.cash_over_received)} muted />}
           {summary.cash_refunded > 0 && <Row label="Refunded (already deducted)" value={formatMoney(summary.cash_refunded)} muted />}
-          <div className="pt-1 font-mono text-[11px] uppercase text-text-muted">Where the received cash is</div>
+          <div className="pt-1 text-[11px] font-medium uppercase tracking-wide text-text-muted">Where the received cash is</div>
           <Row label="Available to the team" value={formatMoney(summary.cash_available)} muted />
           <Row label="Held by the university" value={formatMoney(summary.cash_held_by_university)} muted />
           <Row label="Availability unknown" value={formatMoney(summary.cash_availability_unknown)} muted />

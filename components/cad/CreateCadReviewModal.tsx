@@ -63,16 +63,16 @@ export default function CreateCadReviewModal({ open, onClose, subsystems, defaul
     <Modal open={open} onClose={onClose} title="Submit CAD Review">
       <form onSubmit={handleSubmit} className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Title</label>
+          <label className="mb-1 block text-xs text-text-secondary">Title</label>
           <Input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Rear upright v2" />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Description</label>
+          <label className="mb-1 block text-xs text-text-secondary">Description</label>
           <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional details" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Subsystem</label>
+            <label className="mb-1 block text-xs text-text-secondary">Subsystem</label>
             <Select value={subsystemId} onChange={(e) => { setSubsystemId(e.target.value); setTaskId('') }}>
               {subsystems.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -82,7 +82,7 @@ export default function CreateCadReviewModal({ open, onClose, subsystems, defaul
             </Select>
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Related Task</label>
+            <label className="mb-1 block text-xs text-text-secondary">Related Task</label>
             <Select value={taskId} onChange={(e) => setTaskId(e.target.value)}>
               <option value="">None</option>
               {tasks.map((t) => (

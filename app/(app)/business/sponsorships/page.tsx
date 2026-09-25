@@ -1,5 +1,3 @@
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import {
   getSponsorshipAccess,
@@ -12,6 +10,8 @@ import { getCurrentCompetitionSettings } from '@/lib/supabase/queries/competitio
 import { NEEDS_REVIEW_FLAGS, isHistoricalSeason, seasonLabel } from '@/lib/sponsorships'
 import type { Profile } from '@/types/user'
 import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
+import PageHeader from '@/components/ui/PageHeader'
+import ReadOnlyNotice from '@/components/ui/ReadOnlyNotice'
 import EmptyState from '@/components/ui/EmptyState'
 import SponsorshipFilters from '@/components/sponsorships/SponsorshipFilters'
 import SeasonTotals from '@/components/sponsorships/SeasonTotals'
@@ -81,32 +81,30 @@ export default async function SponsorshipsPage({ searchParams }: { searchParams:
   const eventName = seasons.find((s) => s.season === selected)?.competition_name
 
   return (
-    <div className="space-y-5">
-      <div>
-        <Link href="/business" className="mb-2 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
-          <ChevronLeft size={13} /> Back to Business
-        </Link>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold text-text-primary">Sponsorships</h1>
-            <p className="mt-0.5 text-xs text-text-secondary">
-              {seasonLabel(selected)}
-              {eventName ? ` · ${eventName}` : ''} · {rows.length} sponsorship{rows.length === 1 ? '' : 's'}
-            </p>
-          </div>
-          {access.canManage && <AddSponsorshipButton season={selected} sponsors={sponsors} />}
-        </div>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="Sponsorships"
+        description={`${seasonLabel(selected)}${eventName ? ` · ${eventName}` : ''} · ${rows.length} sponsorship${rows.length === 1 ? '' : 's'}`}
+        back={{ label: 'Back to Business', href: '/business' }}
+        actions={access.canManage ? <AddSponsorshipButton season={selected} sponsors={sponsors} /> : <ReadOnlyNotice>Read-only: the Sponsorship Lead, Business Lead or an admin makes changes.</ReadOnlyNotice>}
+      />
+      <div className="mb-6">
+        <SponsorshipFilters seasons={seasons} selectedSeason={selected} levels={levels} />
       </div>
 
-      <SponsorshipFilters seasons={seasons} selectedSeason={selected} levels={levels} />
-
-      {rows.length > 0 && <SeasonTotals rows={rows} />}
-
-      {levels.length === 0 ? (
-        <ProgramSetupPanel season={selected} canManage={access.canManage} historical={historical} copyableSeasons={otherPrograms} />
-      ) : (
-        <ProgramPanel season={selected} levels={levels} />
+      {rows.length > 0 && (
+        <div className="mb-6">
+          <SeasonTotals rows={rows} />
+        </div>
       )}
+
+      <div className="mb-6">
+        {levels.length === 0 ? (
+          <ProgramSetupPanel season={selected} canManage={access.canManage} historical={historical} copyableSeasons={otherPrograms} />
+        ) : (
+          <ProgramPanel season={selected} levels={levels} />
+        )}
+      </div>
 
       {rows.length === 0 ? (
         <EmptyState

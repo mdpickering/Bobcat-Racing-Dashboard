@@ -138,3 +138,9 @@ body {
     transition: none;
   }
 }
+
+/* Inline meta lists (subsystem · category): the dot sits after every item but the last, so wrapping never leaves one at the start of a line. */
+.meta-dots > :not(:last-child)::after {
+  content: '·';
+  margin-left: 0.5rem;
+}

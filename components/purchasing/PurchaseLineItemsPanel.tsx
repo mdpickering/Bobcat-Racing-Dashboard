@@ -152,11 +152,11 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
   return (
     <Panel className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-text-primary">Line Items</h3>
+        <h2 className="text-sm font-semibold text-text-primary">Line items <span className="ml-1 text-xs font-normal text-text-muted">{items.length}</span></h2>
         {canManage && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
-            <Plus size={11} className="mr-0.5 inline" /> Add item
-          </button>
+          <Button type="button" size="sm" variant="secondary" onClick={() => setAdding(true)}>
+            <Plus size={12} /> Add item
+          </Button>
         )}
       </div>
 
@@ -165,18 +165,18 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
       {items.length === 0 && !adding ? (
         <EmptyState icon={Package} title="No line items yet" description="Add parts, quantities, vendors and product links to this order." />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full min-w-[820px] text-xs">
             <thead>
-              <tr className="border-b border-border text-left text-[11px] uppercase text-text-muted">
+              <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-text-muted">
                 <th className="pb-2 font-medium">Description</th>
                 <th className="pb-2 font-medium">Vendor</th>
                 <th className="pb-2 font-medium">Part #</th>
                 <th className="pb-2 font-medium">Subassembly</th>
                 <th className="pb-2 font-medium">Responsible</th>
-                <th className="pb-2 font-medium">Qty</th>
-                <th className="pb-2 font-medium">Unit Cost</th>
-                <th className="pb-2 font-medium">Line Total</th>
+                <th className="pb-2 pr-2 text-right font-medium">Qty</th>
+                <th className="whitespace-nowrap pb-2 pr-2 text-right font-medium">Unit cost</th>
+                <th className="whitespace-nowrap pb-2 pr-2 text-right font-medium">Line total</th>
                 <th className="pb-2 font-medium">Link</th>
                 {canManage && <th className="pb-2"></th>}
               </tr>
@@ -225,7 +225,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                       nameOf(item.responsible) || requesterName || '—'
                     )}
                   </td>
-                  <td className="py-2 pr-2">
+                  <td className="py-2 pr-2 text-right tabular-nums">
                     {canManage ? (
                       <Input
                         type="number"
@@ -239,8 +239,8 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                       item.quantity
                     )}
                   </td>
-                  <td className="py-2 pr-2 text-text-secondary">{formatCurrency(item.unit_cost)}</td>
-                  <td className="py-2 pr-2 font-medium text-text-primary">{formatCurrency(lineTotal(item))}</td>
+                  <td className="py-2 pr-2 text-right tabular-nums text-text-secondary">{formatCurrency(item.unit_cost)}</td>
+                  <td className="py-2 pr-2 text-right font-medium tabular-nums text-text-primary">{formatCurrency(lineTotal(item))}</td>
                   <td className="py-2 pr-2">
                     {item.link && (
                       <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-accent-blue hover:underline">
@@ -261,10 +261,10 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
             {items.length > 0 && (
               <tfoot>
                 <tr className="border-t border-border">
-                  <td colSpan={7} className="pt-2 text-right text-[11px] font-mono uppercase text-text-muted">
+                  <td colSpan={7} className="pt-3 pr-2 text-right text-[11px] font-medium uppercase tracking-wide text-text-muted">
                     Total
                   </td>
-                  <td className="pt-2 font-bold text-text-primary">{formatCurrency(total)}</td>
+                  <td className="pt-3 pr-2 text-right text-sm font-semibold tabular-nums text-text-primary">{formatCurrency(total)}</td>
                   <td colSpan={canManage ? 2 : 1}></td>
                 </tr>
               </tfoot>
@@ -275,14 +275,14 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
 
       {byVendor.size > 1 && (
         <div className="mt-3 border-t border-border pt-3">
-          <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-text-muted">By vendor</p>
+          <h3 className="mb-1.5 text-xs font-medium text-text-secondary">By vendor</h3>
           <ul className="space-y-1 text-xs">
             {Array.from(byVendor.entries()).map(([name, v]) => (
               <li key={name} className="flex items-center justify-between gap-3">
                 <span className="text-text-primary">
                   {name} <span className="text-text-muted">· {v.items} item{v.items === 1 ? '' : 's'}</span>
                 </span>
-                <span className="text-text-secondary">{formatCurrency(v.total)}</span>
+                <span className="tabular-nums text-text-secondary">{formatCurrency(v.total)}</span>
               </li>
             ))}
           </ul>

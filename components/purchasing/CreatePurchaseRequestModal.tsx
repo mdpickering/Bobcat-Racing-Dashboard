@@ -20,7 +20,7 @@ interface CreatePurchaseRequestModalProps {
   defaultSubsystemId?: string
 }
 
-const LABEL = 'mb-1 block font-mono text-[11px] uppercase text-text-muted'
+const LABEL = 'mb-1 block text-xs text-text-secondary'
 
 // A purchase request is a TEAM's order. It starts with its first item; the rest of the order (more items,
 // each from any vendor) is added on the request's page.

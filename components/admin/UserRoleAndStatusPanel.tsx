@@ -77,7 +77,7 @@ export default function UserRoleAndStatusPanel({ user, isSelf }: { user: Profile
 
       <div className="space-y-3 text-xs">
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Role</label>
+          <label className="mb-1 block text-xs text-text-secondary">Role</label>
           <Select value={user.role} disabled={busy} onChange={(e) => handleRoleChange(e.target.value)} className="w-44">
             {ROLES.map((r) => (
               <option key={r} value={r}>

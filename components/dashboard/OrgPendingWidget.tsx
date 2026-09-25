@@ -12,12 +12,12 @@ export default function OrgPendingWidget({ counts }: { counts: NonNullable<Dashb
   return (
     <section aria-label="Organization queue">
       <h3 className="mb-1.5 text-sm font-semibold text-text-primary">Waiting on you</h3>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-border p-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-border p-3 sm:grid-cols-4">
         {items.map((i) => {
           const body = (
             <>
-              <dd className={`text-xl font-semibold tabular-nums ${i.value > 0 ? 'text-status-warning' : 'text-text-primary'}`}>{i.value}</dd>
-              <dt className="text-xs text-text-muted">{i.label}</dt>
+              <div className={`text-xl font-semibold tabular-nums ${i.value > 0 ? 'text-status-warning' : 'text-text-primary'}`}>{i.value}</div>
+              <div className="text-xs text-text-muted">{i.label}</div>
             </>
           )
           return i.href ? (
@@ -28,7 +28,7 @@ export default function OrgPendingWidget({ counts }: { counts: NonNullable<Dashb
             <div key={i.label}>{body}</div>
           )
         })}
-      </dl>
+      </div>
     </section>
   )
 }

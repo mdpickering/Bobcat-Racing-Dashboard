@@ -125,11 +125,11 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
         <p className="text-[12px] text-text-muted">No payments recorded yet.</p>
       ) : (
         <div className="overflow-x-auto scrollbar-thin">
-          <table className="w-full min-w-[640px] text-left text-xs">
+          <table className="w-full min-w-[520px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border font-mono text-[11px] uppercase text-text-muted">
+              <tr className="border-b border-border text-[11px] font-medium uppercase tracking-wide text-text-muted">
                 <th className="py-2 pr-2 font-medium">Received</th>
-                <th className="px-2 py-2 font-medium">Entry</th>
+                
                 <th className="px-2 py-2 text-right font-medium">Amount</th>
                 <th className="px-2 py-2 font-medium">Method</th>
                 <th className="px-2 py-2 font-medium">Received by</th>
@@ -144,10 +144,10 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
                     <div className="text-text-primary">{formatContributionDate(p.received_on, p.received_on_precision)}</div>
                     <div className="text-[11px] text-text-muted">{nameOf(p.recorder) ? `by ${nameOf(p.recorder)}` : 'imported'}</div>
                   </td>
-                  <td className="px-2 py-2 align-top">{p.entry_type === 'refund' ? <Badge tone="rose">Refund</Badge> : <Badge tone="emerald">Payment</Badge>}</td>
                   <td className={`px-2 py-2 text-right align-top tabular-nums ${p.entry_type === 'refund' ? 'text-status-danger' : 'text-text-primary'}`}>
                     {p.entry_type === 'refund' ? '−' : ''}
                     {formatMoney(p.amount)}
+                    {p.entry_type === 'refund' && <span className="mt-0.5 block text-[11px] font-normal uppercase tracking-wide">Refund</span>}
                   </td>
                   <td className="px-2 py-2 align-top text-text-secondary">
                     {PAYMENT_METHOD_LABEL[p.method]}
@@ -183,19 +183,19 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Entry</label>
+              <label className="mb-1 block text-xs text-text-secondary">Entry</label>
               <Select value={entryType} onChange={(e) => setEntryType(e.target.value as PaymentEntryType)} disabled={busy}>
                 <option value="payment">Payment received</option>
                 <option value="refund">Refund</option>
               </Select>
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Amount ($)</label>
+              <label className="mb-1 block text-xs text-text-secondary">Amount ($)</label>
               <Input type="number" min="0.01" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} disabled={busy} autoFocus />
             </div>
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Against cash contribution</label>
+            <label className="mb-1 block text-xs text-text-secondary">Against cash contribution</label>
             <Select value={contributionId} onChange={(e) => setContributionId(e.target.value)} disabled={busy}>
               {cashContributions.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -206,11 +206,11 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">{entryType === 'refund' ? 'Refunded on' : 'Received on'}</label>
+              <label className="mb-1 block text-xs text-text-secondary">{entryType === 'refund' ? 'Refunded on' : 'Received on'}</label>
               <Input type="date" value={receivedOn} onChange={(e) => setReceivedOn(e.target.value)} disabled={busy} />
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Method</label>
+              <label className="mb-1 block text-xs text-text-secondary">Method</label>
               <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)} disabled={busy}>
                 {(Object.keys(PAYMENT_METHOD_LABEL) as PaymentMethod[]).map((m) => (
                   <option key={m} value={m}>
@@ -221,14 +221,14 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
             </div>
           </div>
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Reference (check number, transaction id…)</label>
+            <label className="mb-1 block text-xs text-text-secondary">Reference (check number, transaction id…)</label>
             <Input value={reference} onChange={(e) => setReference(e.target.value)} disabled={busy} />
           </div>
           {entryType === 'payment' && (
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Received by</label>
+                  <label className="mb-1 block text-xs text-text-secondary">Received by</label>
                   <Select value={receivedBy} onChange={(e) => changeReceivedBy(e.target.value as PaymentReceivedBy)} disabled={busy}>
                     {(Object.keys(RECEIVED_BY_LABEL) as PaymentReceivedBy[]).map((r) => (
                       <option key={r} value={r}>
@@ -238,7 +238,7 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
                   </Select>
                 </div>
                 <div>
-                  <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Available to the team?</label>
+                  <label className="mb-1 block text-xs text-text-secondary">Available to the team?</label>
                   <Select value={availability} onChange={(e) => setAvailability(e.target.value as PaymentAvailability)} disabled={busy}>
                     {(Object.keys(AVAILABILITY_LABEL) as PaymentAvailability[])
                       .filter((a) => a !== 'held_by_university' || receivedBy === 'university')
@@ -252,14 +252,14 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
               </div>
               {availability === 'available' && (
                 <div>
-                  <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Available since</label>
+                  <label className="mb-1 block text-xs text-text-secondary">Available since</label>
                   <Input type="date" value={availableOn} onChange={(e) => setAvailableOn(e.target.value)} disabled={busy} />
                 </div>
               )}
             </>
           )}
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Notes (optional)</label>
+            <label className="mb-1 block text-xs text-text-secondary">Notes (optional)</label>
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} disabled={busy} />
           </div>
           <p className="text-[12px] text-text-muted">This entry cannot be edited or deleted afterwards.</p>

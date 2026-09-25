@@ -49,23 +49,31 @@ export default async function SponsorshipDetailPage({ params }: { params: { id: 
   const currentLevel = levels.find((l) => l.id === sponsorship.level_id) ?? null
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
+    <div className="mx-auto max-w-6xl">
       <SponsorshipHeader sponsorship={sponsorship} eventName={eventName} businessMembers={businessMembers} canManage={access.canManage} />
-      <QualificationPanel
-        sponsorshipId={sponsorship.id}
-        summary={summary}
-        review={review}
-        levels={levels}
-        currentDecision={currentDecision}
-        customTerms={sponsorship.custom_terms}
-        canManage={access.canManage}
-      />
-      <ContributionsPanel sponsorshipId={sponsorship.id} contributions={contributions} canManage={access.canManage} />
-      <PaymentsPanel contributions={contributions} payments={payments} canManage={access.canManage} />
-      <LevelDecisionsPanel decisions={decisions} currentDecisionId={sponsorship.level_decision_id} />
-      <DeliverablesPanel level={currentLevel} />
-      <ContactsPanel sponsorId={sponsorship.sponsor_id} contacts={contacts} canManage={access.canManage} />
-      <HistoryPanel sponsorshipId={sponsorship.id} history={history} canManage={access.canManage} />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        {/* the summary rail comes first on phones and sits to the right (sticky) on desktop */}
+        <aside className="space-y-4 lg:col-start-2 lg:row-start-1 lg:sticky lg:top-0 lg:self-start">
+          <QualificationPanel
+            sponsorshipId={sponsorship.id}
+            summary={summary}
+            review={review}
+            levels={levels}
+            currentDecision={currentDecision}
+            customTerms={sponsorship.custom_terms}
+            canManage={access.canManage}
+          />
+          <ContactsPanel sponsorId={sponsorship.sponsor_id} contacts={contacts} canManage={access.canManage} />
+        </aside>
+        <div className="space-y-4 lg:col-start-1 lg:row-start-1">
+          <ContributionsPanel sponsorshipId={sponsorship.id} contributions={contributions} canManage={access.canManage} />
+          <PaymentsPanel contributions={contributions} payments={payments} canManage={access.canManage} />
+          <LevelDecisionsPanel decisions={decisions} currentDecisionId={sponsorship.level_decision_id} />
+          <DeliverablesPanel level={currentLevel} />
+          <HistoryPanel sponsorshipId={sponsorship.id} history={history} canManage={access.canManage} />
+        </div>
+      </div>
     </div>
   )
 }

@@ -114,21 +114,21 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
         <form onSubmit={handleAdd} className="space-y-3 text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Name</label>
+              <label className="mb-1 block text-xs text-text-secondary">Name</label>
               <Input value={form.name} onChange={(e) => set('name', e.target.value)} disabled={busy} autoFocus />
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Title</label>
+              <label className="mb-1 block text-xs text-text-secondary">Title</label>
               <Input value={form.title} onChange={(e) => set('title', e.target.value)} disabled={busy} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Email</label>
+              <label className="mb-1 block text-xs text-text-secondary">Email</label>
               <Input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} disabled={busy} />
             </div>
             <div>
-              <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Phone</label>
+              <label className="mb-1 block text-xs text-text-secondary">Phone</label>
               <Input value={form.phone} onChange={(e) => set('phone', e.target.value)} disabled={busy} />
             </div>
           </div>

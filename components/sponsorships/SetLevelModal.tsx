@@ -67,7 +67,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
     <Modal open={open} onClose={busy ? () => {} : onClose} title="Set the sponsorship level" maxWidthClassName="max-w-lg">
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="rounded-lg border border-border p-3">
-          <div className="font-mono text-[11px] uppercase text-text-muted">Qualifying value</div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Qualifying value</div>
           <div className="mt-1.5 space-y-1">
             <div className="flex justify-between text-text-secondary">
               <span>Cash committed</span>
@@ -86,7 +86,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
         </div>
 
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Level</label>
+          <label className="mb-1 block text-xs text-text-secondary">Level</label>
           <Select value={choice} onChange={(e) => setChoice(e.target.value)} disabled={busy}>
             <option value="">Select a level…</option>
             {activeLevels.map((l) => (
@@ -118,7 +118,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
 
         {reasonRequired && (
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">{custom ? 'Custom terms / reason (required)' : 'Reason for the exception (required)'}</label>
+            <label className="mb-1 block text-xs text-text-secondary">{custom ? 'Custom terms / reason (required)' : 'Reason for the exception (required)'}</label>
             <Textarea
               rows={3}
               value={reason}
@@ -130,7 +130,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
         )}
         {!reasonRequired && choice && (
           <div>
-            <label className="mb-1 block font-mono text-[11px] uppercase text-text-muted">Note (optional)</label>
+            <label className="mb-1 block text-xs text-text-secondary">Note (optional)</label>
             <Textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} disabled={busy} />
           </div>
         )}

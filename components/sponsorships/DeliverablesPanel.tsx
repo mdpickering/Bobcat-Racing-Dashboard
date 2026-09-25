@@ -38,7 +38,7 @@ export default function DeliverablesPanel({ level, tracked = false }: { level: S
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full min-w-[560px] text-left text-xs">
               <thead>
-                <tr className="border-b border-border font-mono text-[11px] uppercase text-text-muted">
+                <tr className="border-b border-border text-[11px] font-medium uppercase tracking-wide text-text-muted">
                   <th className="py-2 pr-2 font-medium">Deliverable</th>
                   <th className="px-2 py-2 font-medium">Status</th>
                   <th className="px-2 py-2 font-medium">Assigned to</th>

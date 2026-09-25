@@ -3,10 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import { getPurchaseRequestById, listPurchaseRequestItems, listPurchaseStatusHistory } from '@/lib/supabase/queries/purchasing'
 import { listSubsystemMembers } from '@/lib/supabase/queries/subsystems'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import { vendorName } from '@/lib/purchaseSheet/format'
+import { formatMoney } from '@/lib/sponsorships'
 import type { Profile } from '@/types/user'
 import PurchaseRequestDetailHeader from '@/components/purchasing/PurchaseRequestDetailHeader'
 import PurchaseLineItemsPanel from '@/components/purchasing/PurchaseLineItemsPanel'
 import PurchaseStatusHistoryPanel from '@/components/purchasing/PurchaseStatusHistoryPanel'
+import MetricStrip from '@/components/ui/MetricStrip'
 import ErrorState from '@/components/ui/ErrorState'
 
 export default async function PurchaseRequestDetailPage({ params }: { params: { id: string } }) {
@@ -37,18 +40,33 @@ export default async function PurchaseRequestDetailPage({ params }: { params: { 
   // Mirrors the purchase_requests_delete RLS policy (migration 0022); the database decides.
   const canDelete = !request.legacy_id && (canApprove || (request.requested_by === profile.id && request.status === 'Draft'))
 
+  // The order at a glance (all derived from the line items shown below).
+  const orderTotal = items.reduce((sum, i) => sum + (i.unit_cost ?? 0) * i.quantity, 0)
+  const vendors = new Set(items.map((i) => vendorName(i.vendor, request.vendor, i.link)).filter(Boolean))
+  const uncosted = items.filter((i) => i.unit_cost === null).length
+
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto max-w-6xl">
       <PurchaseRequestDetailHeader request={request} canManage={canManage} canApprove={canApprove} canDelete={canDelete} itemCount={items.length} />
-      <PurchaseLineItemsPanel
-        purchaseRequestId={request.id}
-        items={items}
-        canManage={canManage}
-        requestVendor={request.vendor}
-        members={subsystemMembers}
-        requesterName={request.requester?.display_name || request.requester?.email || ''}
+      <MetricStrip
+        className="mb-6"
+        metrics={[
+          { label: 'Order total', value: formatMoney(orderTotal), hint: uncosted > 0 ? `${uncosted} item${uncosted === 1 ? '' : 's'} without a cost` : undefined, tone: uncosted > 0 ? 'warning' : undefined },
+          { label: 'Line items', value: String(items.length) },
+          { label: 'Vendors', value: String(vendors.size) },
+        ]}
       />
-      <PurchaseStatusHistoryPanel history={history} />
+      <div className="space-y-6">
+        <PurchaseLineItemsPanel
+          purchaseRequestId={request.id}
+          items={items}
+          canManage={canManage}
+          requestVendor={request.vendor}
+          members={subsystemMembers}
+          requesterName={request.requester?.display_name || request.requester?.email || ''}
+        />
+        <PurchaseStatusHistoryPanel history={history} />
+      </div>
     </div>
   )
 }

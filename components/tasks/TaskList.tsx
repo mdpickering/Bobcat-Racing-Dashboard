@@ -41,15 +41,16 @@ export default function TaskList({ tasks, canAccept = false, emptyTitle = 'No ta
           <Link href={`/tasks/${task.id}`} className="block max-w-[34rem] truncate font-medium text-text-primary hover:text-accent-blue">
             {task.title || 'Untitled task'}
           </Link>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-text-muted">
-            <span>{task.subsystem?.name ?? 'Unknown'}</span>
-            {task.category?.name && <span>· {task.category.name}</span>}
-            {/* on phones the due date and badges fold into the first column */}
-            <span className="sm:hidden">
-              · <DueCell task={task} />
-            </span>
+          {/* the separator is drawn by CSS after the first item, so a wrapped line never starts with a stray dot */}
+          <div className="meta-dots mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-text-muted">
+            <span className="min-w-0 max-w-full truncate">{task.subsystem?.name ?? 'Unknown'}</span>
+            {task.category?.name && <span className="min-w-0 max-w-full truncate">{task.category.name}</span>}
           </div>
-          <div className="mt-1 flex items-center gap-1.5 sm:hidden">
+          {/* on phones the due date and badges fold into the first column, each on its own line */}
+          <div className="mt-1 text-xs sm:hidden">
+            <DueCell task={task} />
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:hidden">
             <PriorityBadge priority={task.priority} />
             <StatusBadge status={task.status} />
           </div>

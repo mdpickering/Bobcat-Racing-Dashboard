@@ -10,7 +10,7 @@ export interface TabItem {
 // Link-based tabs (each tab is a real URL, so it can be bookmarked and works without client state).
 export default function Tabs({ tabs, label }: { tabs: TabItem[]; label: string }) {
   return (
-    <nav aria-label={label} className="flex gap-1 overflow-x-auto border-b border-border scrollbar-thin">
+    <nav aria-label={label} className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border scrollbar-thin">
       {tabs.map((t) => (
         <Link
           key={t.label}

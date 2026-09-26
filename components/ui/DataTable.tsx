@@ -7,7 +7,7 @@ export interface Column<T> {
   // money and counts are right-aligned so they scan in a column
   align?: 'left' | 'right'
   // narrow screens keep the columns that matter; put the essentials in the first column's cell
-  hideBelow?: 'sm' | 'md' | 'lg'
+  hideBelow?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   className?: string
 }
 
@@ -23,7 +23,7 @@ interface DataTableProps<T> {
   rowClassName?: (row: T) => string
 }
 
-const HIDE = { sm: 'hidden sm:table-cell', md: 'hidden md:table-cell', lg: 'hidden lg:table-cell' } as const
+const HIDE = { sm: 'hidden sm:table-cell', md: 'hidden md:table-cell', lg: 'hidden lg:table-cell', xl: 'hidden xl:table-cell', '2xl': 'hidden 2xl:table-cell' } as const
 
 // The one table for every workspace: quiet header, subtle row rules, hover, right-aligned numerals, and horizontal
 // scrolling as a last resort. Rows are not made clickable as a whole; the first column carries the link so keyboard

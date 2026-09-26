@@ -126,20 +126,20 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
     description: 'Schedule, events, deadlines and timeline',
     home: '/operations',
     groups: [
-      { label: 'Workspace', items: [{ label: 'Operations Dashboard', icon: 'operations', status: 'available', href: '/operations' }] },
+      { label: 'Workspace', items: [{ label: 'Operations Dashboard', icon: 'operations', status: 'available', href: '/operations', activeWhen: (p) => p === '/operations' }] },
       {
         label: 'Schedule',
         items: [
           { label: 'Calendar', icon: 'calendar', status: 'available', href: '/calendar' },
           { label: 'Timeline', icon: 'timeline', status: 'available', href: '/timeline' },
-          { label: 'Deadlines', icon: 'deadlines', status: 'soon' },
-          { label: 'Events', icon: 'events', status: 'soon' },
+          { label: 'Deadlines', icon: 'deadlines', status: 'available', href: '/operations/deadlines' },
+          { label: 'Events', icon: 'events', status: 'available', href: '/operations/events' },
         ],
       },
       {
         label: 'Overview',
         items: [
-          { label: 'Subsystem Schedule', icon: 'subsystems', status: 'soon' },
+          { label: 'Subsystem Schedule', icon: 'subsystems', status: 'available', href: '/operations/subsystems' },
           { label: 'Team Schedule', icon: 'schedule', status: 'soon' },
         ],
       },

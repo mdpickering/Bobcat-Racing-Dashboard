@@ -1,32 +1,33 @@
 import Link from 'next/link'
-import { AlertTriangle, CalendarClock, CalendarDays, Flag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { listCalendarEventsInRange, listMilestonesInRange, listTaskDeadlinesInRange, listRecurringEvents } from '@/lib/supabase/queries/calendar'
-import { listTimelineColumns, listTimelineMilestones } from '@/lib/supabase/queries/timeline'
+import { listCalendarEventsInRange, listMilestonesInRange, listRecurringEvents } from '@/lib/supabase/queries/calendar'
 import { listOpenSchedulingTasks } from '@/lib/supabase/queries/operations'
 import { listSubsystems } from '@/lib/supabase/queries/subsystems'
 import { canManageOperations } from '@/lib/permissions/roles'
-import { deadlineDateKey, formatDeadline, isDeadlineDueSoon, isDeadlineOverdue, todayDateKey } from '@/lib/deadline'
+import { deadlineCounts, groupDeadlines, sortByAttention, subsystemSchedule, bucketFor, addDaysToKey, type AgendaItem } from '@/lib/operationsSchedule'
+import { deadlineDateKey, todayDateKey } from '@/lib/deadline'
 import { formatDate } from '@/lib/format'
 import type { Profile } from '@/types/user'
+import PageHeader from '@/components/ui/PageHeader'
+import SectionHeader from '@/components/ui/SectionHeader'
+import MetricStrip from '@/components/ui/MetricStrip'
 import Panel from '@/components/ui/Panel'
-import EmptyState from '@/components/ui/EmptyState'
+import StatusBadge from '@/components/ui/StatusBadge'
+import DataTable, { type Column } from '@/components/ui/DataTable'
 import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
-import AdminStatCard from '@/components/admin/AdminStatCard'
-import MonthCalendar from '@/components/calendar/MonthCalendar'
-import RecurringEventsPanel from '@/components/calendar/RecurringEventsPanel'
 import CalendarToolbar from '@/components/calendar/CalendarToolbar'
-import TimelineGrid from '@/components/timeline/TimelineGrid'
-import TimelineToolbar from '@/components/timeline/TimelineToolbar'
-import TaskDeadlineTable from '@/components/operations/TaskDeadlineTable'
+import AgendaList from '@/components/operations/AgendaList'
+import DeadlineTable from '@/components/operations/DeadlineTable'
+import type { SubsystemScheduleRow } from '@/lib/operationsSchedule'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className="mb-2 text-sm font-semibold text-text-primary">{children}</h2>
+const keyLabel = (key: string) => {
+  const [y, m, d] = key.slice(0, 10).split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
-export default async function OperationsPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
+export default async function OperationsPage() {
   const supabase = createClient()
   const {
     data: { user },
@@ -42,203 +43,234 @@ export default async function OperationsPage({ searchParams }: { searchParams: {
   }
 
   const now = new Date()
-  const year = searchParams.year ? Number(searchParams.year) : now.getFullYear()
-  const month = searchParams.month ? Number(searchParams.month) - 1 : now.getMonth()
-  const rangeStart = new Date(year, month, 1)
-  const rangeEnd = new Date(year, month + 1, 0, 23, 59, 59)
-  const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  // Task deadlines are date-only midnight-UTC values (lib/deadline.ts) — month bounds are UTC too.
-  const deadlineRangeStart = new Date(Date.UTC(year, month, 1)).toISOString()
-  const deadlineRangeEnd = new Date(Date.UTC(year, month + 1, 1) - 1).toISOString()
+  const today = todayDateKey(now)
+  const in14 = new Date(now.getTime() + 14 * DAY_MS)
+  const in30 = new Date(now.getTime() + 30 * DAY_MS)
 
-  const in14Days = new Date(now.getTime() + 14 * DAY_MS)
-  const in30Days = new Date(now.getTime() + 30 * DAY_MS)
-
-  let subsystems, events, milestones, taskDeadlines, recurringEvents, upcomingEvents, upcomingMilestones, openTasks, activeColumns, allColumns, timelineCells
+  let subsystems, openTasks, events30, milestones30, recurring
   try {
-    ;[subsystems, events, milestones, taskDeadlines, recurringEvents, upcomingEvents, upcomingMilestones, openTasks, activeColumns, allColumns, timelineCells] = await Promise.all([
+    ;[subsystems, openTasks, events30, milestones30, recurring] = await Promise.all([
       listSubsystems(supabase),
-      listCalendarEventsInRange(supabase, rangeStart.toISOString(), rangeEnd.toISOString()),
-      listMilestonesInRange(supabase, key(rangeStart), key(rangeEnd)),
-      listTaskDeadlinesInRange(supabase, deadlineRangeStart, deadlineRangeEnd),
-      listRecurringEvents(supabase),
-      listCalendarEventsInRange(supabase, now.toISOString(), in30Days.toISOString()),
-      listMilestonesInRange(supabase, todayDateKey(now), key(in30Days)),
       listOpenSchedulingTasks(supabase),
-      listTimelineColumns(supabase),
-      listTimelineColumns(supabase, true),
-      listTimelineMilestones(supabase),
+      listCalendarEventsInRange(supabase, now.toISOString(), in30.toISOString()),
+      listMilestonesInRange(supabase, today, addDaysToKey(today, 30)),
+      listRecurringEvents(supabase),
     ])
   } catch {
     return <ErrorState message="Could not load the operations overview." />
   }
 
-  const overdue = openTasks.filter((t) => isDeadlineOverdue(t.deadline, t.status))
-  const dueSoon = openTasks.filter((t) => isDeadlineDueSoon(t.deadline, t.status, 14, now))
+  const counts = deadlineCounts(openTasks, today)
+  const overdue = groupDeadlines(openTasks, today).find((g) => g.bucket === 'overdue')!.tasks
   const unscheduled = openTasks.filter((t) => !t.deadline)
-  const dueThisWeek = openTasks.filter((t) => isDeadlineDueSoon(t.deadline, t.status, 7, now)).length
-  const eventsNext14 = upcomingEvents.filter((e) => new Date(e.start_time) <= in14Days).length
+  const dueThisWeek = counts.today + counts.tomorrow + counts.next_7
+  const eventsNext14 = events30.filter((e) => new Date(e.start_time) <= in14).length
+  const teamName = (id: string | null | undefined) => subsystems.find((s) => s.id === id)?.name ?? null
 
-  const overview = subsystems.map((s) => {
-    const mine = openTasks.filter((t) => t.subsystem_id === s.id)
-    const dated = mine.filter((t) => t.deadline).sort((a, b) => (deadlineDateKey(a.deadline)! < deadlineDateKey(b.deadline)! ? -1 : 1))
-    const next = dated.find((t) => !isDeadlineOverdue(t.deadline, t.status))
-    return {
-      subsystem: s,
-      open: mine.length,
-      overdue: mine.filter((t) => isDeadlineOverdue(t.deadline, t.status)).length,
-      dueSoon: mine.filter((t) => isDeadlineDueSoon(t.deadline, t.status, 7, now)).length,
-      unscheduled: mine.filter((t) => !t.deadline).length,
-      next: next?.deadline ?? null,
-    }
-  })
+  // This week: real events and milestones, task deadlines in the next 7 days (date-only), and the weekly recurring events.
+  const agenda: AgendaItem[] = [
+    ...events30.map((e): AgendaItem => ({ id: e.id, kind: 'event', title: e.title, start: e.start_time, team: e.subsystem?.name ?? null, href: '/calendar' })),
+    ...openTasks
+      .filter((t) => ['today', 'tomorrow', 'next_7'].includes(bucketFor(t.deadline, today)))
+      .map((t): AgendaItem => ({ id: t.id, kind: 'deadline', title: t.title, dateKey: deadlineDateKey(t.deadline) as string, team: t.subsystem?.name ?? null, href: `/tasks/${t.id}` })),
+    ...milestones30.map((m): AgendaItem => ({ id: m.id, kind: 'milestone', title: m.name, dateKey: m.date.slice(0, 10), team: m.subsystem?.name ?? null, href: '/milestones' })),
+    ...recurring.map((r): AgendaItem => ({ id: r.id, kind: 'recurring', title: r.title, weekday: r.day_of_week, timeLabel: r.time_label, team: r.subsystem?.name ?? null })),
+  ]
 
-  const canManage = true
+  const laterEvents = events30.filter((e) => new Date(e.start_time).getTime() > now.getTime() + 7 * DAY_MS).slice(0, 5)
+  const schedule = sortByAttention(subsystemSchedule(subsystems, openTasks, events30, milestones30, today, now))
+  const attentionRows = schedule.filter((r) => r.attention.length > 0).slice(0, 6)
+
+  const scheduleColumns: Column<SubsystemScheduleRow>[] = [
+    {
+      key: 'name',
+      header: 'Subsystem',
+      cell: (r) => (
+        <Link href={`/subsystems/${r.subsystemId}`} className="font-medium text-text-primary hover:text-accent-blue">
+          {r.name}
+        </Link>
+      ),
+    },
+    { key: 'open', header: 'Open', align: 'right', cell: (r) => r.open },
+    { key: 'overdue', header: 'Overdue', align: 'right', cell: (r) => <span className={r.overdue > 0 ? 'font-medium text-status-danger' : 'text-text-muted'}>{r.overdue}</span> },
+    { key: 'none', header: 'No deadline', align: 'right', hideBelow: 'sm', cell: (r) => <span className={r.noDeadline > 0 ? 'text-text-primary' : 'text-text-muted'}>{r.noDeadline}</span> },
+    {
+      key: 'attention',
+      header: 'Needs attention',
+      hideBelow: 'md',
+      cell: (r) => (
+        <div className="flex flex-wrap gap-1.5">
+          {r.attention.map((a) =>
+            a.kind === 'overdue' ? (
+              <StatusBadge key="o" tone="danger">{a.count} overdue</StatusBadge>
+            ) : (
+              <StatusBadge key="u" tone="warning">{a.count} without a deadline</StatusBadge>
+            )
+          )}
+        </div>
+      ),
+    },
+  ]
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">Operations</h1>
-        <p className="mt-0.5 text-xs text-text-secondary">
-          Scheduling overview: calendar, events, timeline, milestones and task deadlines across every subsystem.
-        </p>
-      </div>
+    <div className="mx-auto max-w-7xl">
+      <PageHeader
+        title="Operations"
+        description="What is happening, what is coming up, and what needs scheduling."
+        actions={<CalendarToolbar canManage subsystemOptions={subsystems} isCtoOrAdmin />}
+      />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <AdminStatCard label="Overdue tasks" value={overdue.length} icon={AlertTriangle} tone="warning" />
-        <AdminStatCard label="Due in 7 days" value={dueThisWeek} icon={CalendarClock} />
-        <AdminStatCard label="Events, next 14 days" value={eventsNext14} icon={CalendarDays} href="/calendar" />
-        <AdminStatCard label="Milestones, next 30 days" value={upcomingMilestones.length} icon={Flag} />
-      </div>
+      <MetricStrip
+        className="mb-8"
+        metrics={[
+          { label: 'Overdue deadlines', value: String(counts.overdue), tone: counts.overdue > 0 ? 'danger' : undefined, href: '/operations/deadlines?range=overdue' },
+          { label: 'Due in 7 days', value: String(dueThisWeek), tone: dueThisWeek > 0 ? 'warning' : undefined, hint: 'including today', href: '/operations/deadlines?range=week' },
+          { label: 'Events, next 14 days', value: String(eventsNext14), href: '/operations/events' },
+          { label: 'Milestones, next 30 days', value: String(milestones30.length), href: '/milestones' },
+          { label: 'Need a deadline', value: String(counts.none), tone: counts.none > 0 ? 'warning' : undefined, hint: 'open tasks', href: '/operations/deadlines?range=none' },
+        ]}
+      />
 
-      <section>
-        <SectionHeading>Overdue deadlines ({overdue.length})</SectionHeading>
-        <TaskDeadlineTable tasks={overdue} emptyTitle="Nothing is overdue" />
-      </section>
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 space-y-8">
+          <section aria-label="This week">
+            <SectionHeader
+              title="This week"
+              description="Events, task deadlines, milestones and weekly meetings for the next 7 days."
+              actions={
+                <Link href="/calendar" className="text-xs text-accent-blue hover:underline">
+                  Open calendar
+                </Link>
+              }
+            />
+            <AgendaList items={agenda} days={7} emptyTitle="Nothing scheduled for the next 7 days" emptyText="Add an event or milestone with the buttons above, or set deadlines on open tasks." />
+          </section>
 
-      <section>
-        <SectionHeading>Due in the next 14 days ({dueSoon.length})</SectionHeading>
-        <TaskDeadlineTable tasks={dueSoon} emptyTitle="Nothing due in the next 14 days" />
-      </section>
-
-      <section>
-        <SectionHeading>No deadline set ({unscheduled.length})</SectionHeading>
-        <TaskDeadlineTable tasks={unscheduled.slice(0, 15)} emptyTitle="Every open task has a deadline" />
-        {unscheduled.length > 15 && <p className="mt-1.5 text-[12px] text-text-muted">Showing 15 of {unscheduled.length}.</p>}
-      </section>
-
-      <section>
-        <SectionHeading>Subsystem scheduling overview</SectionHeading>
-        <Panel className="overflow-x-auto p-0">
-          <table className="w-full min-w-[560px] text-xs">
-            <thead>
-              <tr className="border-b border-border text-left text-[11px] font-mono uppercase text-text-muted">
-                <th className="p-3 font-medium">Subsystem</th>
-                <th className="p-3 text-right font-medium">Open</th>
-                <th className="p-3 text-right font-medium">Overdue</th>
-                <th className="p-3 text-right font-medium">Due in 7d</th>
-                <th className="p-3 text-right font-medium">No deadline</th>
-                <th className="p-3 font-medium">Next deadline</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {overview.map((o) => (
-                <tr key={o.subsystem.id}>
-                  <td className="p-3 font-medium">
-                    <Link href={`/subsystems/${o.subsystem.id}`} className="text-text-primary hover:text-accent-blue">
-                      {o.subsystem.name}
+          <section aria-label="Overdue deadlines">
+            <SectionHeader
+              title={`Overdue deadlines (${overdue.length})`}
+              actions={
+                overdue.length > 0 ? (
+                  <Link href="/operations/deadlines?range=overdue" className="text-xs text-accent-blue hover:underline">
+                    Reschedule on Deadlines
+                  </Link>
+                ) : undefined
+              }
+            />
+            {overdue.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface px-4 py-3 text-xs text-text-secondary">Nothing is overdue.</p>
+            ) : (
+              <>
+                <DeadlineTable tasks={overdue.slice(0, 8)} today={today} bucket="overdue" compact />
+                {overdue.length > 8 && (
+                  <p className="mt-1.5 text-xs text-text-muted">
+                    Showing 8 of {overdue.length}.{' '}
+                    <Link href="/operations/deadlines?range=overdue" className="text-accent-blue hover:underline">
+                      See all
                     </Link>
-                  </td>
-                  <td className="p-3 text-right text-text-secondary">{o.open}</td>
-                  <td className={`p-3 text-right ${o.overdue > 0 ? 'font-semibold text-status-danger' : 'text-text-secondary'}`}>{o.overdue}</td>
-                  <td className="p-3 text-right text-text-secondary">{o.dueSoon}</td>
-                  <td className="p-3 text-right text-text-secondary">{o.unscheduled}</td>
-                  <td className="p-3 text-text-secondary">{o.next ? formatDeadline(o.next) : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Panel>
-      </section>
+                  </p>
+                )}
+              </>
+            )}
+          </section>
 
-      <section>
-        <SectionHeading>Calendar</SectionHeading>
-        <div className="space-y-3">
-          <CalendarToolbar canManage={canManage} subsystemOptions={subsystems} isCtoOrAdmin={canManage} />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <MonthCalendar
-                year={year}
-                month={month}
-                events={events}
-                milestones={milestones}
-                taskDeadlines={taskDeadlines}
-                canEditSubsystemIds={new Set<string>()}
-                isCtoOrAdmin={canManage}
-                basePath="/operations"
-              />
-            </div>
-            <div>
-              <RecurringEventsPanel
-                recurringEvents={recurringEvents}
-                canManage={canManage}
-                subsystemOptions={subsystems}
-                isCtoOrAdmin={canManage}
-                canEditSubsystemIds={new Set<string>()}
-              />
-            </div>
-          </div>
+          <section aria-label="Subsystem schedule">
+            <SectionHeader
+              title="Subsystem schedule"
+              description="Subsystems with overdue or unscheduled work."
+              actions={
+                <Link href="/operations/subsystems" className="text-xs text-accent-blue hover:underline">
+                  Full schedule
+                </Link>
+              }
+            />
+            {attentionRows.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface px-4 py-3 text-xs text-text-secondary">
+                {subsystems.length === 0 ? 'No active subsystems.' : 'No subsystem has overdue or unscheduled work.'}
+              </p>
+            ) : (
+              <DataTable caption="Subsystems needing attention" columns={scheduleColumns} rows={attentionRows} rowKey={(r) => r.subsystemId} />
+            )}
+          </section>
         </div>
-      </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <SectionHeading>Upcoming events, next 30 days ({upcomingEvents.length})</SectionHeading>
-          {upcomingEvents.length === 0 ? (
-            <EmptyState icon={CalendarDays} title="No events in the next 30 days" />
-          ) : (
-            <Panel className="overflow-hidden">
-              <ul className="divide-y divide-border">
-                {upcomingEvents.map((e) => (
-                  <li key={e.id} className="px-4 py-2.5 text-xs">
-                    <div className="font-medium text-text-primary">{e.title}</div>
-                    <div className="mt-0.5 text-[11px] text-text-muted">
-                      {new Date(e.start_time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} · {e.subsystem?.name ?? 'Team-wide'}
-                    </div>
-                  </li>
+        <aside aria-label="Coming up" className="space-y-8">
+          <section aria-label="Needs scheduling">
+            <SectionHeader
+              title={`Needs scheduling (${unscheduled.length})`}
+              actions={
+                unscheduled.length > 0 ? (
+                  <Link href="/operations/deadlines?range=none" className="text-xs text-accent-blue hover:underline">
+                    All
+                  </Link>
+                ) : undefined
+              }
+            />
+            {unscheduled.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface px-4 py-3 text-xs text-text-secondary">Every open task has a deadline.</p>
+            ) : (
+              <Panel className="divide-y divide-border overflow-hidden">
+                {unscheduled.slice(0, 6).map((t) => (
+                  <Link key={t.id} href={`/tasks/${t.id}`} className="block px-4 py-2.5 text-xs transition-colors hover:bg-surface-raised">
+                    <span className="block truncate font-medium text-text-primary">{t.title || 'Untitled task'}</span>
+                    <span className="block truncate text-text-muted">{t.subsystem?.name ?? 'Unknown'}</span>
+                  </Link>
                 ))}
-              </ul>
-            </Panel>
-          )}
-        </div>
-        <div>
-          <SectionHeading>Upcoming milestones, next 30 days ({upcomingMilestones.length})</SectionHeading>
-          {upcomingMilestones.length === 0 ? (
-            <EmptyState icon={Flag} title="No milestones in the next 30 days" />
-          ) : (
-            <Panel className="overflow-hidden">
-              <ul className="divide-y divide-border">
-                {upcomingMilestones.map((m) => (
-                  <li key={m.id} className="px-4 py-2.5 text-xs">
-                    <div className="font-medium text-text-primary">{m.name}</div>
-                    <div className="mt-0.5 text-[11px] text-text-muted">
-                      {formatDate(`${m.date.slice(0, 10)}T12:00:00`)} · {m.subsystem?.name ?? 'Team-wide'}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          )}
-        </div>
-      </section>
+              </Panel>
+            )}
+          </section>
 
-      <section>
-        <SectionHeading>Master timeline</SectionHeading>
-        <div className="space-y-3">
-          <TimelineToolbar isCtoOrAdmin={canManage} allColumns={allColumns} />
-          <TimelineGrid columns={activeColumns} subsystems={subsystems} milestones={timelineCells} canEditSubsystemIds={new Set<string>()} isCtoOrAdmin={canManage} />
-        </div>
-      </section>
+          <section aria-label="Upcoming milestones">
+            <SectionHeader title={`Milestones, next 30 days (${milestones30.length})`} actions={<Link href="/milestones" className="text-xs text-accent-blue hover:underline">All</Link>} />
+            {milestones30.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface px-4 py-3 text-xs text-text-secondary">No milestones in the next 30 days.</p>
+            ) : (
+              <Panel className="divide-y divide-border overflow-hidden">
+                {milestones30.slice(0, 6).map((m) => (
+                  <div key={m.id} className="flex items-baseline justify-between gap-3 px-4 py-2.5 text-xs">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-text-primary">{m.name}</span>
+                      <span className="block truncate text-text-muted">{m.subsystem?.name ?? teamName(m.subsystem_id) ?? 'Team-wide'}</span>
+                    </span>
+                    <span className="flex-shrink-0 tabular-nums text-text-secondary">{keyLabel(m.date)}</span>
+                  </div>
+                ))}
+              </Panel>
+            )}
+          </section>
+
+          <section aria-label="Later events">
+            <SectionHeader title="Later this month" description="Events after the next 7 days." actions={<Link href="/operations/events" className="text-xs text-accent-blue hover:underline">All events</Link>} />
+            {laterEvents.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface px-4 py-3 text-xs text-text-secondary">No further events in the next 30 days.</p>
+            ) : (
+              <Panel className="divide-y divide-border overflow-hidden">
+                {laterEvents.map((e) => (
+                  <div key={e.id} className="flex items-baseline justify-between gap-3 px-4 py-2.5 text-xs">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-text-primary">{e.title}</span>
+                      <span className="block truncate text-text-muted">{e.subsystem?.name ?? 'Team-wide'}</span>
+                    </span>
+                    <span className="flex-shrink-0 tabular-nums text-text-secondary">{formatDate(e.start_time, { month: 'short', day: 'numeric' })}</span>
+                  </div>
+                ))}
+              </Panel>
+            )}
+          </section>
+        </aside>
+      </div>
+
+      <p className="mt-10 text-xs text-text-muted">
+        The full month view and the master timeline live in{' '}
+        <Link href="/calendar" className="text-accent-blue hover:underline">
+          Calendar
+        </Link>{' '}
+        and{' '}
+        <Link href="/timeline" className="text-accent-blue hover:underline">
+          Timeline
+        </Link>
+        .
+      </p>
     </div>
   )
 }

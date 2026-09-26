@@ -23,6 +23,8 @@ import type {
   SponsorshipLevelDecision,
   SponsorshipLevelReview,
   SponsorshipPayment,
+  SponsorshipRenewalReminder,
+  SponsorshipRenewalStatus,
   SponsorshipStage,
   SponsorshipSummary,
   CompetitionSettings,
@@ -109,6 +111,8 @@ export interface SponsorshipListRow extends SponsorshipSummary {
   review: SponsorshipLevelReview | null
   // null when the sponsorship has no deliverables at all (historical / not yet levelled): never shown as 0 / 0
   deliverables: SponsorshipDeliverableProgress | null
+  // null before migration 0036 exists
+  renewal: SponsorshipRenewalStatus | null
 }
 
 // Everything a season's list needs, read from the database's own derived views (nothing is recomputed here).
@@ -133,7 +137,23 @@ export async function listSponsorshipRows(supabase: SupabaseClient, season: stri
     for (const p of (progress ?? []) as SponsorshipDeliverableProgress[]) progressById.set(p.sponsorship_id, p)
   }
 
-  return summaryRows.map((s) => ({ ...normalizeSummary(s), review: reviewById.get(s.sponsorship_id) ?? null, deliverables: progressById.get(s.sponsorship_id) ?? null }))
+  const renewalById = new Map<string, SponsorshipRenewalStatus>()
+  if (summaryRows.length > 0) {
+    const { data: renewals, error: renewalError } = await supabase
+      .from('sponsorship_renewal_status')
+      .select('*')
+      .in('sponsorship_id', summaryRows.map((s) => s.sponsorship_id))
+    // before migration 0036 is applied the view does not exist yet: show no renewal column data rather than break the list
+    if (renewalError && !isMissingRelation(renewalError)) throw renewalError
+    for (const r of (renewals ?? []) as SponsorshipRenewalStatus[]) renewalById.set(r.sponsorship_id, r)
+  }
+
+  return summaryRows.map((s) => ({
+    ...normalizeSummary(s),
+    review: reviewById.get(s.sponsorship_id) ?? null,
+    deliverables: progressById.get(s.sponsorship_id) ?? null,
+    renewal: renewalById.get(s.sponsorship_id) ?? null,
+  }))
 }
 
 export async function listSponsors(supabase: SupabaseClient): Promise<Pick<Sponsor, 'id' | 'name' | 'active'>[]> {
@@ -151,8 +171,36 @@ export interface SponsorshipDetail {
   payments: SponsorshipPayment[]
   decisions: SponsorshipLevelDecision[]
   deliverables: SponsorshipDeliverable[]
+  // null / [] before migration 0036 exists
+  renewal: SponsorshipRenewalStatus | null
+  // the reminders already sent for the CURRENT renewal date (a changed date is a new cycle)
+  reminders: SponsorshipRenewalReminder[]
   history: SponsorshipHistoryEntry[]
   levels: SponsorshipLevel[]
+}
+
+export async function getSponsorshipRenewal(
+  supabase: SupabaseClient,
+  sponsorshipId: string,
+  renewalDate: string | null
+): Promise<{ renewal: SponsorshipRenewalStatus | null; reminders: SponsorshipRenewalReminder[] }> {
+  const status = await supabase.from('sponsorship_renewal_status').select('*').eq('sponsorship_id', sponsorshipId).maybeSingle()
+  if (status.error) {
+    if (isMissingRelation(status.error)) return { renewal: null, reminders: [] }
+    throw status.error
+  }
+  let reminders: SponsorshipRenewalReminder[] = []
+  if (renewalDate) {
+    const sent = await supabase
+      .from('sponsorship_renewal_reminders')
+      .select('*')
+      .eq('sponsorship_id', sponsorshipId)
+      .eq('renewal_date', renewalDate)
+      .order('threshold_days', { ascending: false })
+    if (sent.error && !isMissingRelation(sent.error)) throw sent.error
+    reminders = (sent.data ?? []) as SponsorshipRenewalReminder[]
+  }
+  return { renewal: (status.data as SponsorshipRenewalStatus | null) ?? null, reminders }
 }
 
 const PERSON_EMBED = 'id, display_name, email'
@@ -183,7 +231,7 @@ export async function getSponsorshipDetail(supabase: SupabaseClient, id: string)
   if (!row) return null
   const sponsorship = row as unknown as SponsorshipDetail['sponsorship']
 
-  const [summary, review, contacts, contributions, decisions, history, levels, deliverables] = await Promise.all([
+  const [summary, review, contacts, contributions, decisions, history, levels, deliverables, renewalInfo] = await Promise.all([
     supabase.from('sponsorship_summary').select('*').eq('sponsorship_id', id).maybeSingle(),
     supabase.from('sponsorship_level_review').select('*').eq('sponsorship_id', id).maybeSingle(),
     supabase.from('sponsor_contacts').select('*').eq('sponsor_id', sponsorship.sponsor_id).order('is_primary', { ascending: false }).order('name'),
@@ -200,6 +248,7 @@ export async function getSponsorshipDetail(supabase: SupabaseClient, id: string)
       .order('created_at', { ascending: false }),
     listSponsorshipLevels(supabase, sponsorship.season),
     listSponsorshipDeliverables(supabase, id),
+    getSponsorshipRenewal(supabase, id, sponsorship.renewal_date),
   ])
   for (const r of [summary, review, contacts, contributions, decisions, history]) if (r.error) throw r.error
   if (!summary.data) return null
@@ -237,6 +286,8 @@ export async function getSponsorshipDetail(supabase: SupabaseClient, id: string)
       threshold: d.threshold == null ? null : toNumber(d.threshold),
     })),
     deliverables,
+    renewal: renewalInfo.renewal,
+    reminders: renewalInfo.reminders,
     history: (history.data ?? []) as unknown as SponsorshipHistoryEntry[],
     levels,
   }

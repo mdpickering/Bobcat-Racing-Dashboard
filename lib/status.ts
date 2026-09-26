@@ -87,6 +87,15 @@ export const STATUS_REGISTRY = {
     in_progress: 'info',
     complete: 'success',
   },
+  // renewal state is derived (renewal date + today + stage), not a pipeline stage
+  renewal: {
+    not_applicable: 'neutral',
+    no_date: 'neutral',
+    scheduled: 'info',
+    approaching: 'warning',
+    overdue: 'danger',
+    renewed: 'success',
+  },
   payment: {
     available: 'success',
     held_by_university: 'warning',

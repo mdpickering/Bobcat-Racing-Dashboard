@@ -144,6 +144,7 @@ export type NotificationType =
   | 'purchase_status'
   | 'comment_mention'
   | 'sponsorship_deliverable_assigned'
+  | 'sponsorship_renewal'
   | 'subsystem_announcement'
   | 'account_approval'
   | 'account_rejection'
@@ -572,10 +573,35 @@ export interface SponsorshipLevelDecision {
 export interface SponsorshipHistoryEntry {
   id: string
   sponsorship_id: string
-  kind: 'note' | 'stage_change' | 'level_decision' | 'contribution' | 'payment' | 'availability' | 'deliverable'
+  kind: 'note' | 'stage_change' | 'level_decision' | 'contribution' | 'payment' | 'availability' | 'deliverable' | 'renewal'
   body: string | null
   created_at: string
   author?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+// Sponsorship renewals (migration 0036)
+export type RenewalState = 'not_applicable' | 'no_date' | 'scheduled' | 'approaching' | 'overdue' | 'renewed'
+
+// One row of the sponsorship_renewal_status view (derived in the database; not a pipeline stage).
+export interface SponsorshipRenewalStatus {
+  sponsorship_id: string
+  sponsor_id: string
+  season: string
+  stage: SponsorshipStage
+  renewal_date: string | null
+  days_remaining: number | null
+  renewed: boolean
+  renewal_state: RenewalState
+  reminder_recipients: number | null
+}
+
+// One reminder that was sent for one renewal date (the ledger that makes each threshold fire once).
+export interface SponsorshipRenewalReminder {
+  sponsorship_id: string
+  renewal_date: string
+  threshold_days: 60 | 30 | 7
+  days_remaining: number
+  created_at: string
 }
 
 // Sponsorship deliverables (migration 0035)

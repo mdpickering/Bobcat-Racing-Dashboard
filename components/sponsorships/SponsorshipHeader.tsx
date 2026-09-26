@@ -39,7 +39,6 @@ export default function SponsorshipHeader({ sponsorship, eventName, businessMemb
     agreement_url: sponsorship.agreement_url ?? '',
     notes: sponsorship.notes ?? '',
     custom_terms: sponsorship.custom_terms ?? '',
-    renewal_date: sponsorship.renewal_date ?? '',
     responsible_user_id: sponsorship.responsible_user_id ?? '',
   })
   const [busy, setBusy] = useState(false)
@@ -70,7 +69,6 @@ export default function SponsorshipHeader({ sponsorship, eventName, businessMemb
       agreement_url: form.agreement_url.trim() || null,
       notes: form.notes.trim() || null,
       custom_terms: form.custom_terms.trim() || null,
-      renewal_date: form.renewal_date || null,
       responsible_user_id: form.responsible_user_id || null,
     })
     if (ok) setEditing(false)
@@ -173,10 +171,7 @@ export default function SponsorshipHeader({ sponsorship, eventName, businessMemb
                 ))}
               </Select>
             </div>
-            <div>
-              <label className="mb-1 block text-xs text-text-secondary">Renewal date (optional)</label>
-              <Input type="date" value={form.renewal_date} onChange={(e) => set('renewal_date', e.target.value)} disabled={busy} />
-            </div>
+            <p className="text-[12px] text-text-muted">The renewal date is set from the Renewal panel, next to its reminders.</p>
           </fieldset>
           <fieldset className="space-y-3">
             <legend className="mb-1 text-sm font-semibold text-text-primary">Agreement and terms</legend>

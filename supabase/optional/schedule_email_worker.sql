@@ -4,9 +4,12 @@
 -- Vercel and the app has been redeployed.
 --
 -- What it does: makes Supabase call the app's email worker every 5 minutes.
--- The worker (app/api/cron/email) sends queued emails and runs the once-a-day
--- "task due soon" scan. Until something calls it, emails simply stay queued
--- (nothing is lost, and in-app notifications are unaffected).
+-- The worker (app/api/cron/email) sends queued emails and runs the "task due
+-- soon" scan and (from migration 0036) the sponsorship renewal-reminder scan.
+-- Both scans are idempotent, so running every 5 minutes never repeats a
+-- notification. Until something calls it, emails simply stay queued and NO
+-- renewal reminder (in-app or email) is created; nothing is lost, and other
+-- in-app notifications are unaffected.
 --
 -- Vercel environment variables (server-side only, never NEXT_PUBLIC_):
 --   CRON_SECRET                long random string; the worker refuses any call without it

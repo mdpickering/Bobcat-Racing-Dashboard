@@ -136,7 +136,7 @@ export default function NotificationBell() {
                     <div className="flex items-start justify-between gap-2 px-3 py-2">
                       <button type="button" onClick={() => handleNotificationClick(n)} className="min-w-0 flex-1 text-left">
                         <div className="truncate font-semibold text-text-primary">{n.title}</div>
-                        {n.message && <div className="mt-0.5 line-clamp-2 text-[12px] text-text-secondary">{n.message}</div>}
+                        {n.message && <div className="mt-0.5 line-clamp-2 whitespace-pre-line text-[12px] text-text-secondary">{n.message}</div>}
                         <div className="mt-1 text-[11px] text-text-muted">{timeAgo(n.created_at)}</div>
                       </button>
                       {!n.read_at && (

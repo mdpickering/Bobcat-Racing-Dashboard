@@ -3,7 +3,9 @@ import { Handshake } from 'lucide-react'
 import EmptyState from '@/components/ui/EmptyState'
 import DataTable, { type Column } from '@/components/ui/DataTable'
 import { LevelBadge, ReviewBadge, StageBadge } from './SponsorshipBadges'
-import { formatMoney } from '@/lib/sponsorships'
+import StatusBadge from '@/components/ui/StatusBadge'
+import { formatContributionDate, formatMoney } from '@/lib/sponsorships'
+import { statusTone } from '@/lib/status'
 import type { SponsorshipListRow } from '@/lib/supabase/queries/sponsorships'
 
 interface SponsorshipTableProps {
@@ -27,6 +29,20 @@ function DeliverablesCell({ row }: { row: SponsorshipListRow }) {
   if (flag === 'custom') return <span className="text-text-muted">None defined</span>
   if (!row.level_id) return <span className="text-text-muted">No level</span>
   return <span className="text-text-muted">—</span>
+}
+
+// Only what needs attention gets a badge; a scheduled renewal is just its date, and a sponsorship with no date shows a dash.
+function RenewalCell({ row }: { row: SponsorshipListRow }) {
+  const r = row.renewal
+  if (!r || !r.renewal_date || r.renewal_state === 'no_date' || r.renewal_state === 'not_applicable') return <span className="text-text-muted">—</span>
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <span className="text-text-primary">{formatContributionDate(r.renewal_date, 'day')}</span>
+      {(r.renewal_state === 'approaching' || r.renewal_state === 'overdue' || r.renewal_state === 'renewed') && (
+        <StatusBadge tone={statusTone('renewal', r.renewal_state)}>{r.renewal_state === 'renewed' ? 'Renewed' : r.renewal_state === 'overdue' ? 'Overdue' : 'Approaching'}</StatusBadge>
+      )}
+    </span>
+  )
 }
 
 export default function SponsorshipTable({ rows, filtered }: SponsorshipTableProps) {
@@ -60,6 +76,7 @@ export default function SponsorshipTable({ rows, filtered }: SponsorshipTablePro
     },
     { key: 'inkind', header: 'In-kind', align: 'right', hideBelow: 'lg', cell: (r) => <span className="text-text-primary">{formatMoney(r.in_kind_value)}</span> },
     { key: 'deliverables', header: 'Deliverables', hideBelow: 'lg', cell: (r) => <span className="text-xs"><DeliverablesCell row={r} /></span> },
+    { key: 'renewal', header: 'Renewal', hideBelow: 'lg', cell: (r) => <span className="text-xs"><RenewalCell row={r} /></span> },
     { key: 'review', header: 'Level review', hideBelow: 'md', cell: (r) => <ReviewBadge flag={r.review?.review_flag} /> },
   ]
 

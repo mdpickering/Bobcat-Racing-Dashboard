@@ -11,6 +11,7 @@ import PaymentsPanel from '@/components/sponsorships/PaymentsPanel'
 import LevelDecisionsPanel from '@/components/sponsorships/LevelDecisionsPanel'
 import DeliverablesPanel from '@/components/sponsorships/DeliverablesPanel'
 import ContactsPanel from '@/components/sponsorships/ContactsPanel'
+import RenewalPanel from '@/components/sponsorships/RenewalPanel'
 import HistoryPanel from '@/components/sponsorships/HistoryPanel'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -44,7 +45,7 @@ export default async function SponsorshipDetailPage({ params }: { params: { id: 
   const eventName = seasons.find((s) => s.season === detail.sponsorship.season)?.competition_name ?? null
   const businessMembers = members.map((m) => ({ user_id: m.user_id, name: m.profile?.display_name || m.profile?.email || 'Unknown' }))
 
-  const { sponsorship, summary, review, contacts, contributions, payments, decisions, deliverables, history, levels } = detail
+  const { sponsorship, summary, review, contacts, contributions, payments, decisions, deliverables, renewal, reminders, history, levels } = detail
   const currentDecision = decisions.find((d) => d.id === sponsorship.level_decision_id) ?? null
   const currentLevel = levels.find((l) => l.id === sponsorship.level_id) ?? null
 
@@ -62,6 +63,14 @@ export default async function SponsorshipDetailPage({ params }: { params: { id: 
             levels={levels}
             currentDecision={currentDecision}
             customTerms={sponsorship.custom_terms}
+            canManage={access.canManage}
+          />
+          <RenewalPanel
+            sponsorshipId={sponsorship.id}
+            renewalDate={sponsorship.renewal_date}
+            responsibleName={sponsorship.responsible?.display_name || sponsorship.responsible?.email || null}
+            status={renewal}
+            reminders={reminders}
             canManage={access.canManage}
           />
           <ContactsPanel sponsorId={sponsorship.sponsor_id} contacts={contacts} canManage={access.canManage} />

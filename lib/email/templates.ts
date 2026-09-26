@@ -1,4 +1,5 @@
 import { notificationHref } from '@/lib/notificationLinks'
+import { parseRenewalMessage } from '@/lib/sponsorshipRenewals'
 import type { AppNotification } from '@/types/database'
 
 // One claimed row from claim_email_batch() (migration 0029): the recipient plus the content of the
@@ -44,17 +45,40 @@ export function renderEmail(job: EmailJob, appUrl: string): RenderedEmail {
   const settings = `${base}/account`
   const greeting = job.recipient_name ? `Hi ${job.recipient_name},` : 'Hi,'
 
-  const subject = `Bobcat Racing: ${job.title}`
+  // A sponsorship renewal reminder gets its own, more useful layout: the facts as a small table. Anything the message
+  // does not parse as (it always does when the database wrote it) falls back to the generic email below.
+  const renewal = job.notification_type === 'sponsorship_renewal' ? parseRenewalMessage(job.message) : null
+  const renewalRows: [string, string][] = renewal
+    ? [
+        ['Sponsor', renewal.sponsor],
+        ...(renewal.level ? ([['Level', renewal.level]] as [string, string][]) : []),
+        ['Renewal date', renewal.renewalDate],
+        ['Time left', renewal.remaining === 'renews today' ? 'Renews today' : renewal.remaining.replace(' remaining', '')],
+        ['Responsible', renewal.responsible === 'not assigned' ? 'Not assigned' : renewal.responsible],
+      ]
+    : []
+
+  const subject = renewal
+    ? `Bobcat Racing: ${renewal.sponsor} renewal ${renewal.daysRemaining === 0 ? 'is today' : `in ${renewal.daysRemaining} ${renewal.daysRemaining === 1 ? 'day' : 'days'}`}`
+    : `Bobcat Racing: ${job.title}`
   const text = [
     greeting,
     '',
     job.title,
-    ...(job.message ? [job.message] : []),
+    ...(renewal ? renewalRows.map(([k, v]) => `${k}: ${v}`) : job.message ? [job.message] : []),
     '',
     `Open it: ${link}`,
     '',
     `You get this email because this type of notification is turned on. You can change that under Account > Email Notifications: ${settings}`,
   ].join('\n')
+
+  const detailsHtml = renewal
+    ? `<table role="presentation" style="border-collapse:collapse;margin:0 0 20px;font-size:14px;color:#374151">${renewalRows
+        .map(([k, v]) => `<tr><td style="padding:4px 16px 4px 0;color:#6b7280">${escapeHtml(k)}</td><td style="padding:4px 0;color:#111827;font-weight:600">${escapeHtml(v)}</td></tr>`)
+        .join('')}</table>`
+    : job.message
+      ? `<p style="margin:0 0 20px;font-size:14px;color:#374151;white-space:pre-wrap">${escapeHtml(job.message)}</p>`
+      : '<div style="height:12px"></div>'
 
   const html = `<!doctype html>
 <html><body style="margin:0;padding:24px;background:#f4f5f7;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#111827">
@@ -62,7 +86,7 @@ export function renderEmail(job: EmailJob, appUrl: string): RenderedEmail {
     <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280">Bobcat Racing</div>
     <p style="margin:16px 0 4px;font-size:14px;color:#374151">${escapeHtml(greeting)}</p>
     <h1 style="margin:0 0 8px;font-size:18px;line-height:1.3">${escapeHtml(job.title)}</h1>
-    ${job.message ? `<p style="margin:0 0 20px;font-size:14px;color:#374151;white-space:pre-wrap">${escapeHtml(job.message)}</p>` : '<div style="height:12px"></div>'}
+    ${detailsHtml}
     <a href="${escapeHtml(link)}" style="display:inline-block;background:#00205b;color:#ffffff;text-decoration:none;font-weight:600;font-size:13px;padding:10px 16px;border-radius:8px">Open in Bobcat Racing</a>
     <p style="margin:24px 0 0;font-size:11px;color:#6b7280">You get this email because this type of notification is turned on. Change it any time under <a href="${escapeHtml(settings)}" style="color:#6b7280">Account &rarr; Email Notifications</a>.</p>
   </div>

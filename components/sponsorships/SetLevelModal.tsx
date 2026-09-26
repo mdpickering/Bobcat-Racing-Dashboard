@@ -135,6 +135,12 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
           </div>
         )}
 
+        {level && (
+          <p className="text-[12px] text-text-muted">
+            Saving adds this level’s {level.deliverables?.length ?? 0} standard deliverables to the sponsorship. Anything already there is kept exactly as it is: nothing is removed, reset or duplicated.
+          </p>
+        )}
+        {custom && <p className="text-[12px] text-text-muted">A custom sponsorship gets no standard deliverables. Add the ones it was promised from the Deliverables panel afterwards.</p>}
         <p className="text-[12px] text-text-muted">This adds a permanent entry to the level history. A level is never changed automatically when contributions change; you will only see a review flag.</p>
         {unchanged && choice && <p className="text-[12px] text-text-muted">This level is already recorded. Choose a different one to change it.</p>}
         {error && <p className="text-status-danger">{error}</p>}

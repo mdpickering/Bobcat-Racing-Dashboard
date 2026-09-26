@@ -81,6 +81,12 @@ export const STATUS_REGISTRY = {
     historical_unassigned: 'neutral',
     none_recorded: 'neutral',
   },
+  // sponsorship deliverables: same meaning as a task (grey not started, blue active, green done)
+  deliverable: {
+    not_started: 'neutral',
+    in_progress: 'info',
+    complete: 'success',
+  },
   payment: {
     available: 'success',
     held_by_university: 'warning',

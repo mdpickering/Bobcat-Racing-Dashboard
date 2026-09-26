@@ -1,5 +1,6 @@
 import type {
   ContributionKind,
+  DeliverableStatus,
   InKindType,
   LevelDecisionMethod,
   LevelReviewFlag,
@@ -196,6 +197,28 @@ export const REVIEW_FLAG_LABEL: Record<LevelReviewFlag, { label: string; tone: T
   custom: { label: 'Custom', tone: 'slate', help: 'A custom sponsorship with its own terms.' },
   historical_unassigned: { label: 'Historical — no level', tone: 'slate', help: 'A historical record. No level has been assigned and none was invented.' },
   none_recorded: { label: 'No level yet', tone: 'slate', help: 'No level decision has been recorded.' },
+}
+
+// ---------------------------------------------------------
+// Deliverables (migration 0035)
+// ---------------------------------------------------------
+export const DELIVERABLE_STATUSES: DeliverableStatus[] = ['not_started', 'in_progress', 'complete']
+
+export const DELIVERABLE_STATUS_LABEL: Record<DeliverableStatus, string> = {
+  not_started: 'Not Started',
+  in_progress: 'In Progress',
+  complete: 'Complete',
+}
+
+// Overdue = not complete and due strictly before today (a deliverable due today is not overdue). `today` is a
+// 'YYYY-MM-DD' key in the viewer's own calendar.
+export function isDeliverableOverdue(d: { status: DeliverableStatus; due_date: string | null }, today: string | null): boolean {
+  return !!today && !!d.due_date && d.status !== 'complete' && d.due_date.slice(0, 10) < today
+}
+
+// "3 / 6 complete". A sponsorship with no deliverables has no progress at all, so this is only called with a row.
+export function deliverableProgressLabel(p: { completed: number; total: number }): string {
+  return `${p.completed} / ${p.total} complete`
 }
 
 // Flags that mean someone should look at the level.

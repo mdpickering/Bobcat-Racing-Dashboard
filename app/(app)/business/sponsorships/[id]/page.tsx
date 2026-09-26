@@ -44,7 +44,7 @@ export default async function SponsorshipDetailPage({ params }: { params: { id: 
   const eventName = seasons.find((s) => s.season === detail.sponsorship.season)?.competition_name ?? null
   const businessMembers = members.map((m) => ({ user_id: m.user_id, name: m.profile?.display_name || m.profile?.email || 'Unknown' }))
 
-  const { sponsorship, summary, review, contacts, contributions, payments, decisions, history, levels } = detail
+  const { sponsorship, summary, review, contacts, contributions, payments, decisions, deliverables, history, levels } = detail
   const currentDecision = decisions.find((d) => d.id === sponsorship.level_decision_id) ?? null
   const currentLevel = levels.find((l) => l.id === sponsorship.level_id) ?? null
 
@@ -70,7 +70,15 @@ export default async function SponsorshipDetailPage({ params }: { params: { id: 
           <ContributionsPanel sponsorshipId={sponsorship.id} contributions={contributions} canManage={access.canManage} />
           <PaymentsPanel contributions={contributions} payments={payments} canManage={access.canManage} />
           <LevelDecisionsPanel decisions={decisions} currentDecisionId={sponsorship.level_decision_id} />
-          <DeliverablesPanel level={currentLevel} />
+          <DeliverablesPanel
+            sponsorshipId={sponsorship.id}
+            level={currentLevel}
+            decisionMethod={currentDecision?.method ?? null}
+            deliverables={deliverables}
+            canManage={access.canManage}
+            currentUserId={profile.id}
+            businessMembers={businessMembers}
+          />
           <HistoryPanel sponsorshipId={sponsorship.id} history={history} canManage={access.canManage} />
         </div>
       </div>

@@ -5,6 +5,7 @@ import { toNumber } from '@/lib/sponsorships'
 import type {
   ContributionKind,
   DatePrecision,
+  DeliverableStatus,
   InKindType,
   PaymentEntryType,
   PaymentMethod,
@@ -15,6 +16,8 @@ import type {
   SponsorType,
   Sponsorship,
   SponsorshipContribution,
+  SponsorshipDeliverable,
+  SponsorshipDeliverableProgress,
   SponsorshipHistoryEntry,
   SponsorshipLevel,
   SponsorshipLevelDecision,
@@ -27,6 +30,13 @@ import type {
 import type { Profile } from '@/types/user'
 
 type PersonRef = { id: string; display_name: string | null; email: string | null }
+
+// PostgREST says PGRST205 (or Postgres 42P01) when a table/view is not in the schema yet: the one case where the
+// deliverables reads may quietly return nothing (the page then behaves as it did before migration 0035).
+function isMissingRelation(error: unknown): boolean {
+  const code = (error as { code?: string } | null)?.code
+  return code === 'PGRST205' || code === '42P01'
+}
 
 // ---------------------------------------------------------
 // Access
@@ -97,6 +107,8 @@ function normalizeReview(row: SponsorshipLevelReview): SponsorshipLevelReview {
 
 export interface SponsorshipListRow extends SponsorshipSummary {
   review: SponsorshipLevelReview | null
+  // null when the sponsorship has no deliverables at all (historical / not yet levelled): never shown as 0 / 0
+  deliverables: SponsorshipDeliverableProgress | null
 }
 
 // Everything a season's list needs, read from the database's own derived views (nothing is recomputed here).
@@ -107,8 +119,21 @@ export async function listSponsorshipRows(supabase: SupabaseClient, season: stri
   ])
   if (summaries.error) throw summaries.error
   if (reviews.error) throw reviews.error
+  const summaryRows = (summaries.data ?? []) as SponsorshipSummary[]
   const reviewById = new Map(((reviews.data ?? []) as SponsorshipLevelReview[]).map((r) => [r.sponsorship_id, normalizeReview(r)]))
-  return ((summaries.data ?? []) as SponsorshipSummary[]).map((s) => ({ ...normalizeSummary(s), review: reviewById.get(s.sponsorship_id) ?? null }))
+
+  const progressById = new Map<string, SponsorshipDeliverableProgress>()
+  if (summaryRows.length > 0) {
+    const { data: progress, error: progressError } = await supabase
+      .from('sponsorship_deliverable_progress')
+      .select('*')
+      .in('sponsorship_id', summaryRows.map((s) => s.sponsorship_id))
+    // before migration 0035 is applied the view does not exist yet: show no progress rather than break the list
+    if (progressError && !isMissingRelation(progressError)) throw progressError
+    for (const p of (progress ?? []) as SponsorshipDeliverableProgress[]) progressById.set(p.sponsorship_id, p)
+  }
+
+  return summaryRows.map((s) => ({ ...normalizeSummary(s), review: reviewById.get(s.sponsorship_id) ?? null, deliverables: progressById.get(s.sponsorship_id) ?? null }))
 }
 
 export async function listSponsors(supabase: SupabaseClient): Promise<Pick<Sponsor, 'id' | 'name' | 'active'>[]> {
@@ -125,8 +150,27 @@ export interface SponsorshipDetail {
   contributions: SponsorshipContribution[]
   payments: SponsorshipPayment[]
   decisions: SponsorshipLevelDecision[]
+  deliverables: SponsorshipDeliverable[]
   history: SponsorshipHistoryEntry[]
   levels: SponsorshipLevel[]
+}
+
+const PERSON_EMBED = 'id, display_name, email'
+
+export async function listSponsorshipDeliverables(supabase: SupabaseClient, sponsorshipId: string): Promise<SponsorshipDeliverable[]> {
+  const { data, error } = await supabase
+    .from('sponsorship_deliverables')
+    .select(
+      `*, assignee:profiles!sponsorship_deliverables_assigned_to_fkey(${PERSON_EMBED}), completer:profiles!sponsorship_deliverables_completed_by_fkey(${PERSON_EMBED})`
+    )
+    .eq('sponsorship_id', sponsorshipId)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (error) {
+    if (isMissingRelation(error)) return []
+    throw error
+  }
+  return (data ?? []) as unknown as SponsorshipDeliverable[]
 }
 
 export async function getSponsorshipDetail(supabase: SupabaseClient, id: string): Promise<SponsorshipDetail | null> {
@@ -139,7 +183,7 @@ export async function getSponsorshipDetail(supabase: SupabaseClient, id: string)
   if (!row) return null
   const sponsorship = row as unknown as SponsorshipDetail['sponsorship']
 
-  const [summary, review, contacts, contributions, decisions, history, levels] = await Promise.all([
+  const [summary, review, contacts, contributions, decisions, history, levels, deliverables] = await Promise.all([
     supabase.from('sponsorship_summary').select('*').eq('sponsorship_id', id).maybeSingle(),
     supabase.from('sponsorship_level_review').select('*').eq('sponsorship_id', id).maybeSingle(),
     supabase.from('sponsor_contacts').select('*').eq('sponsor_id', sponsorship.sponsor_id).order('is_primary', { ascending: false }).order('name'),
@@ -155,6 +199,7 @@ export async function getSponsorshipDetail(supabase: SupabaseClient, id: string)
       .eq('sponsorship_id', id)
       .order('created_at', { ascending: false }),
     listSponsorshipLevels(supabase, sponsorship.season),
+    listSponsorshipDeliverables(supabase, id),
   ])
   for (const r of [summary, review, contacts, contributions, decisions, history]) if (r.error) throw r.error
   if (!summary.data) return null
@@ -191,6 +236,7 @@ export async function getSponsorshipDetail(supabase: SupabaseClient, id: string)
       basis_total: toNumber(d.basis_total),
       threshold: d.threshold == null ? null : toNumber(d.threshold),
     })),
+    deliverables,
     history: (history.data ?? []) as unknown as SponsorshipHistoryEntry[],
     levels,
   }
@@ -362,6 +408,45 @@ export async function recordPayment(
 export async function markPaymentAvailable(supabase: SupabaseClient, paymentId: string, availableOn: string) {
   const { error } = await supabase.rpc('mark_payment_available', { p_payment_id: paymentId, p_available_on: availableOn })
   if (error) throw error
+}
+
+// ---- Deliverables (0035). The database decides who may change what; these only ask. ----
+
+// A manager adds a custom deliverable (standard ones are created by the database when a level is set).
+export async function addDeliverable(
+  supabase: SupabaseClient,
+  input: { sponsorship_id: string; title: string; assigned_to?: string | null; due_date?: string | null; notes?: string | null }
+) {
+  const { error } = await supabase.from('sponsorship_deliverables').insert({
+    sponsorship_id: input.sponsorship_id,
+    title: input.title.trim(),
+    assigned_to: input.assigned_to || null,
+    due_date: input.due_date || null,
+    notes: input.notes?.trim() || null,
+  })
+  if (error) {
+    if ((error as { code?: string }).code === '23505') throw new Error('This sponsorship already has a deliverable with that title.')
+    throw error
+  }
+}
+
+// Managers may change any of these; the assigned Business member may change ONLY status and notes (the database
+// refuses anything else from them with a clear message).
+export async function updateDeliverable(
+  supabase: SupabaseClient,
+  id: string,
+  patch: { title?: string; status?: DeliverableStatus; assigned_to?: string | null; due_date?: string | null; notes?: string | null }
+) {
+  const { error, data } = await supabase.from('sponsorship_deliverables').update(patch).eq('id', id).select('id')
+  if (error) {
+    if ((error as { code?: string }).code === '23505') throw new Error('This sponsorship already has a deliverable with that title.')
+    throw error
+  }
+  if (!data || data.length === 0) throw new Error(NO_PERMISSION)
+}
+
+export async function deleteDeliverable(supabase: SupabaseClient, id: string) {
+  await requireRow(supabase.from('sponsorship_deliverables').delete().eq('id', id).select('id'), 'That deliverable was not removed. Completed deliverables can only be removed by an admin.')
 }
 
 export async function addSponsorshipNote(supabase: SupabaseClient, sponsorshipId: string, body: string) {

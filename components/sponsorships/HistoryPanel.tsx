@@ -20,6 +20,7 @@ const KIND_LABEL: Record<SponsorshipHistoryEntry['kind'], string> = {
   contribution: 'Contribution',
   payment: 'Payment',
   availability: 'Availability',
+  deliverable: 'Deliverable',
 }
 
 // The append-only log of everything that happened to this sponsorship: notes people wrote plus system events the

@@ -116,7 +116,7 @@ export default async function SponsorshipsPage({ searchParams }: { searchParams:
           }
         />
       ) : (
-        <SponsorshipTable rows={filtered} levels={levels} filtered={isFiltered} />
+        <SponsorshipTable rows={filtered} filtered={isFiltered} />
       )}
     </div>
   )

@@ -5,28 +5,31 @@ import DataTable, { type Column } from '@/components/ui/DataTable'
 import { LevelBadge, ReviewBadge, StageBadge } from './SponsorshipBadges'
 import { formatMoney } from '@/lib/sponsorships'
 import type { SponsorshipListRow } from '@/lib/supabase/queries/sponsorships'
-import type { SponsorshipLevel } from '@/types/database'
 
 interface SponsorshipTableProps {
   rows: SponsorshipListRow[]
-  levels: SponsorshipLevel[]
   filtered: boolean
 }
 
-// Deliverable tracking (status, assignee, due date) is added by a later update; until then the standard
-// checklist for the sponsorship's level is what there is to show, so say that instead of inventing progress.
-function DeliverablesCell({ row, levels }: { row: SponsorshipListRow; levels: SponsorshipLevel[] }) {
-  const level = levels.find((l) => l.id === row.level_id)
-  if (!level) return <span className="text-text-muted">—</span>
-  const count = level.deliverables?.length ?? 0
-  return (
-    <span className="text-text-muted" title="Status tracking for deliverables is not switched on yet">
-      {count} standard · not tracked yet
-    </span>
-  )
+// Progress comes from the database view, which has no row for a sponsorship without deliverables, so a historical or
+// not-yet-levelled sponsorship shows why there is nothing to track instead of a misleading "0 / 0".
+function DeliverablesCell({ row }: { row: SponsorshipListRow }) {
+  const p = row.deliverables
+  if (p) {
+    const allDone = p.completed === p.total
+    return (
+      <span className={`tabular-nums ${allDone ? 'font-medium text-status-success' : 'text-text-primary'}`} title={`${p.completed} of ${p.total} deliverables complete`}>
+        {p.completed} / {p.total} <span className="font-normal text-text-muted">complete</span>
+      </span>
+    )
+  }
+  const flag = row.review?.review_flag
+  if (flag === 'custom') return <span className="text-text-muted">None defined</span>
+  if (!row.level_id) return <span className="text-text-muted">No level</span>
+  return <span className="text-text-muted">—</span>
 }
 
-export default function SponsorshipTable({ rows, levels, filtered }: SponsorshipTableProps) {
+export default function SponsorshipTable({ rows, filtered }: SponsorshipTableProps) {
   const columns: Column<SponsorshipListRow>[] = [
     {
       key: 'sponsor',
@@ -56,7 +59,7 @@ export default function SponsorshipTable({ rows, levels, filtered }: Sponsorship
       cell: (r) => <span className={r.cash_outstanding > 0 ? 'font-medium text-status-warning' : 'text-text-muted'}>{formatMoney(r.cash_outstanding)}</span>,
     },
     { key: 'inkind', header: 'In-kind', align: 'right', hideBelow: 'lg', cell: (r) => <span className="text-text-primary">{formatMoney(r.in_kind_value)}</span> },
-    { key: 'deliverables', header: 'Deliverables', hideBelow: 'lg', cell: (r) => <span className="text-xs"><DeliverablesCell row={r} levels={levels} /></span> },
+    { key: 'deliverables', header: 'Deliverables', hideBelow: 'lg', cell: (r) => <span className="text-xs"><DeliverablesCell row={r} /></span> },
     { key: 'review', header: 'Level review', hideBelow: 'md', cell: (r) => <ReviewBadge flag={r.review?.review_flag} /> },
   ]
 

@@ -15,6 +15,8 @@ export function notificationHref(n: AppNotification): string {
       return `/purchasing/${n.entity_id}`
     case 'cad_review':
       return `/cad/${n.entity_id}`
+    case 'sponsorship':
+      return `/business/sponsorships/${n.entity_id}`
     default:
       return '/notifications'
   }

@@ -143,6 +143,7 @@ export type NotificationType =
   | 'cad_review'
   | 'purchase_status'
   | 'comment_mention'
+  | 'sponsorship_deliverable_assigned'
   | 'subsystem_announcement'
   | 'account_approval'
   | 'account_rejection'
@@ -571,8 +572,39 @@ export interface SponsorshipLevelDecision {
 export interface SponsorshipHistoryEntry {
   id: string
   sponsorship_id: string
-  kind: 'note' | 'stage_change' | 'level_decision' | 'contribution' | 'payment' | 'availability'
+  kind: 'note' | 'stage_change' | 'level_decision' | 'contribution' | 'payment' | 'availability' | 'deliverable'
   body: string | null
   created_at: string
   author?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+// Sponsorship deliverables (migration 0035)
+export type DeliverableStatus = 'not_started' | 'in_progress' | 'complete'
+export type DeliverableSource = 'standard' | 'custom'
+
+export interface SponsorshipDeliverable {
+  id: string
+  sponsorship_id: string
+  title: string
+  status: DeliverableStatus
+  assigned_to: string | null
+  due_date: string | null
+  completed_at: string | null
+  completed_by: string | null
+  notes: string | null
+  template_id: string | null
+  source: DeliverableSource
+  sort_order: number
+  created_at: string
+  updated_at: string
+  assignee?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+  completer?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+// One row of the sponsorship_deliverable_progress view. A sponsorship with no deliverables has NO row (never 0 / 0).
+export interface SponsorshipDeliverableProgress {
+  sponsorship_id: string
+  total: number
+  completed: number
+  in_progress: number
 }

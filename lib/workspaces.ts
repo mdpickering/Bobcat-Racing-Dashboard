@@ -79,6 +79,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
           { label: 'CAD Review', icon: 'cad', status: 'available', href: '/cad' },
           { label: 'Task Requests', icon: 'requests', status: 'available', href: '/tasks?tab=requests', activeWhen: isTaskRequests },
           { label: 'Purchasing', icon: 'purchasing', status: 'available', href: '/purchasing' },
+          { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
         ],
       },
       {
@@ -111,9 +112,10 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
       {
         label: 'Assets',
         items: [
-          { label: 'Parts', icon: 'parts', status: 'soon' },
+          // the same read-only catalog page as Engineering's Parts (one route, one data set)
+          { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
           { label: 'Inventory', icon: 'inventory', status: 'soon' },
-          { label: 'Vendors', icon: 'vendors', status: 'soon' },
+          { label: 'Vendors', icon: 'vendors', status: 'available', href: '/business/vendors' },
         ],
       },
       { label: 'Reporting', items: [{ label: 'Reports', icon: 'reports', status: 'soon' }] },

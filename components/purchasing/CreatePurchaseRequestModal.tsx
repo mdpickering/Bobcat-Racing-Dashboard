@@ -10,6 +10,8 @@ import Button from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase/client'
 import { createPurchaseRequest } from '@/lib/supabase/queries/purchasing'
 import { validateProductUrl } from '@/lib/validation'
+import { prefillFromPart, prefillFromVendor } from '@/lib/parts'
+import { CatalogPartPicker, CatalogVendorPicker, fetchPreferredLink, type PickedPart, type PickedVendor } from '@/components/purchasing/CatalogPickers'
 import { getErrorMessage } from '@/lib/errors'
 import type { Subsystem } from '@/types/database'
 
@@ -39,6 +41,32 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
   const [urlTouched, setUrlTouched] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // optional catalog links (migration 0037); the typed fields below remain the record
+  const [pickedPart, setPickedPart] = useState<PickedPart | null>(null)
+  const [pickedVendor, setPickedVendor] = useState<PickedVendor | null>(null)
+
+  const currentText = () => ({ itemDescription, partNumber, vendor, unitCost, link: productUrl })
+  const applyText = (t: { itemDescription: string; partNumber: string; vendor: string; unitCost: string; link: string }) => {
+    setItemDescription(t.itemDescription)
+    setPartNumber(t.partNumber)
+    setVendor(t.vendor)
+    setUnitCost(t.unitCost)
+    setProductUrl(t.link)
+  }
+
+  async function handlePickPart(part: PickedPart | null) {
+    setPickedPart(part)
+    if (!part) return
+    const preferred = await fetchPreferredLink(part.id).catch(() => null)
+    applyText(prefillFromPart(currentText(), part, preferred))
+    // the part's preferred vendor is offered as the vendor link too, unless one was already chosen
+    if (!pickedVendor && part.preferred_vendor_id && part.preferred_vendor_name) setPickedVendor({ id: part.preferred_vendor_id, name: part.preferred_vendor_name, website: null })
+  }
+
+  function handlePickVendor(v: PickedVendor | null) {
+    setPickedVendor(v)
+    if (v) applyText(prefillFromVendor(currentText(), v))
+  }
 
   const urlError = validateProductUrl(productUrl)
   // Blank-but-untouched stays quiet (the submit button is already disabled and the label says
@@ -64,8 +92,12 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
         subassembly,
         quantity: Math.max(1, Math.floor(Number(quantity)) || 1),
         unit_cost: unitCost ? Number(unitCost) : null,
+        part_id: pickedPart?.id ?? null,
+        vendor_id: pickedVendor?.id ?? null,
       })
       onClose()
+      setPickedPart(null)
+      setPickedVendor(null)
       setTitle('')
       setDescription('')
       setItemDescription('')
@@ -112,6 +144,11 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
         <div className="border-t border-border pt-3">
           <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-muted">First item — add more items, from any vendor, on the next page</p>
           <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <CatalogPartPicker selected={pickedPart} onChange={handlePickPart} disabled={submitting} />
+              <CatalogVendorPicker selected={pickedVendor} onChange={handlePickVendor} disabled={submitting} />
+            </div>
+            <p className="-mt-1 text-[12px] text-text-muted">Optional. Picking one fills the blank fields below; you can still type or change anything.</p>
             <div>
               <label className={LABEL}>Item</label>
               <Input value={itemDescription} onChange={(e) => setItemDescription(e.target.value)} placeholder="Defaults to the order name" />

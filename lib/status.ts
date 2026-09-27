@@ -87,6 +87,11 @@ export const STATUS_REGISTRY = {
     in_progress: 'info',
     complete: 'success',
   },
+  // parts and vendors are archived, never deleted
+  catalog: {
+    active: 'success',
+    inactive: 'neutral',
+  },
   // renewal state is derived (renewal date + today + stage), not a pipeline stage
   renewal: {
     not_applicable: 'neutral',

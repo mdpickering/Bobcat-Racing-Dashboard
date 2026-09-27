@@ -51,6 +51,9 @@ export async function createPurchaseRequest(
     quantity?: number
     unit_cost?: number | null
     responsible_user_id?: string | null
+    // optional links to the parts / vendors catalog (migration 0037); the text fields stay the record
+    part_id?: string | null
+    vendor_id?: string | null
   }
 ): Promise<string> {
   const { data, error } = await supabase.rpc('create_purchase_request', {
@@ -66,6 +69,9 @@ export async function createPurchaseRequest(
     p_quantity: input.quantity ?? 1,
     p_unit_cost: input.unit_cost ?? null,
     p_responsible_user_id: input.responsible_user_id || null,
+    // sent only when a catalog record was chosen, so a request without one is byte-for-byte the same call as before 0037
+    ...(input.part_id ? { p_part_id: input.part_id } : {}),
+    ...(input.vendor_id ? { p_vendor_id: input.vendor_id } : {}),
   })
   if (error) throw error
   return data as string
@@ -119,6 +125,8 @@ export async function addPurchaseRequestItem(
     subassembly?: string | null
     vendor?: string | null
     responsible_user_id?: string | null
+    part_id?: string | null
+    vendor_id?: string | null
   }
 ) {
   const { data, error } = await supabase.from('purchase_request_items').insert(input).select().single()

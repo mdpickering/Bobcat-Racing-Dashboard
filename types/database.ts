@@ -229,9 +229,80 @@ export interface PurchaseRequestItem {
   vendor: string | null
   responsible_user_id: string | null
   responsible?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+  // optional links to the parts / vendors catalog (migration 0037); the text fields above stay the snapshot
+  part_id?: string | null
+  vendor_id?: string | null
   created_at: string
   updated_at: string
   legacy_id: string | null
+}
+
+// ---------------------------------------------------------
+// Parts and vendors (migration 0037)
+// ---------------------------------------------------------
+export interface Vendor {
+  id: string
+  name: string
+  website: string | null
+  contact_name: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  address: string | null
+  notes: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// One row of the vendors_overview view.
+export interface VendorOverview extends Vendor {
+  part_count: number
+  purchase_items: number
+  purchase_total: number
+  last_purchase_at: string | null
+}
+
+// One row of the parts_catalog view (the part plus its derived vendor / price figures).
+export interface PartCatalogRow {
+  id: string
+  part_number: string
+  name: string
+  description: string | null
+  subsystem_id: string
+  subsystem_name: string
+  category: string | null
+  manufacturer: string | null
+  manufacturer_part_number: string | null
+  unit_cost: number | null
+  source_url: string | null
+  notes: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+  vendor_count: number
+  preferred_vendor_id: string | null
+  preferred_vendor_name: string | null
+  preferred_vendor_cost: number | null
+  preferred_vendor_part_number: string | null
+  vendor_names: string
+  effective_unit_cost: number | null
+  has_vendor: boolean
+  missing_cost: boolean
+}
+
+export interface PartVendorLink {
+  part_id: string
+  vendor_id: string
+  vendor_part_number: string | null
+  unit_cost: number | null
+  product_url: string | null
+  is_preferred: boolean
+  availability_notes: string | null
+  last_verified_on: string | null
+  created_at: string
+  updated_at: string
+  vendor?: Pick<Vendor, 'id' | 'name' | 'website' | 'active'> | null
+  part?: Pick<PartCatalogRow, 'id' | 'part_number' | 'name' | 'active' | 'subsystem_id'> | null
 }
 
 export interface PurchaseStatusHistory {

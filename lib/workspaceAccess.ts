@@ -71,6 +71,8 @@ const ROUTE_WORKSPACES: { prefix: string; workspaces: WorkspaceId[] }[] = [
   // Purchasing is one system used from both sides: engineering creates and works requests, business manages,
   // approves and exports them. There is one route and one data set.
   { prefix: '/purchasing', workspaces: ['business', 'engineering'] },
+  // The parts catalog is primarily engineering's; Business gets the same page read-only (one route, one data set).
+  { prefix: '/parts', workspaces: ['engineering', 'business'] },
   { prefix: '/calendar', workspaces: ['engineering', 'operations'] },
   { prefix: '/timeline', workspaces: ['engineering', 'operations'] },
 ]

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Link as LinkIcon, Package } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
@@ -13,6 +14,8 @@ import { addPurchaseRequestItem, updatePurchaseRequestItem, deletePurchaseReques
 import { validateProductUrl } from '@/lib/validation'
 import { getErrorMessage } from '@/lib/errors'
 import { vendorName } from '@/lib/purchaseSheet/format'
+import { prefillFromPart, prefillFromVendor } from '@/lib/parts'
+import { CatalogPartPicker, CatalogVendorPicker, fetchPreferredLink, type PickedPart, type PickedVendor } from '@/components/purchasing/CatalogPickers'
 import type { PurchaseRequestItem, SubsystemMember } from '@/types/database'
 
 interface PurchaseLineItemsPanelProps {
@@ -45,6 +48,9 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
   const [link, setLink] = useState('')
   const [partNumber, setPartNumber] = useState('')
   const [subassembly, setSubassembly] = useState('')
+  // optional catalog links (migration 0037); the typed fields remain the record
+  const [pickedPart, setPickedPart] = useState<PickedPart | null>(null)
+  const [pickedVendor, setPickedVendor] = useState<PickedVendor | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -75,6 +81,28 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
   const linkError = validateProductUrl(link)
   const showLinkError = linkError !== null && link.trim() !== ''
 
+  const currentText = () => ({ itemDescription: description, partNumber, vendor, unitCost, link })
+  const applyText = (t: { itemDescription: string; partNumber: string; vendor: string; unitCost: string; link: string }) => {
+    setDescription(t.itemDescription)
+    setPartNumber(t.partNumber)
+    setVendor(t.vendor)
+    setUnitCost(t.unitCost)
+    setLink(t.link)
+  }
+
+  async function handlePickPart(part: PickedPart | null) {
+    setPickedPart(part)
+    if (!part) return
+    const preferred = await fetchPreferredLink(part.id).catch(() => null)
+    applyText(prefillFromPart(currentText(), part, preferred))
+    if (!pickedVendor && part.preferred_vendor_id && part.preferred_vendor_name) setPickedVendor({ id: part.preferred_vendor_id, name: part.preferred_vendor_name, website: null })
+  }
+
+  function handlePickVendor(v: PickedVendor | null) {
+    setPickedVendor(v)
+    if (v) applyText(prefillFromVendor(currentText(), v))
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (linkError) return
@@ -92,7 +120,12 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         subassembly: subassembly.trim() || null,
         vendor: vendor.trim() || null,
         responsible_user_id: responsibleId || null,
+        // sent only when a catalog record was chosen (undefined is omitted from the request)
+        part_id: pickedPart?.id ?? undefined,
+        vendor_id: pickedVendor?.id ?? undefined,
       })
+      setPickedPart(null)
+      setPickedVendor(null)
       setPartNumber('')
       setSubassembly('')
       setVendor('')
@@ -187,6 +220,18 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                   <td className="py-2 pr-2 text-text-primary">
                     {item.description}
                     {item.notes && <div className="text-[11px] text-text-muted">{item.notes}</div>}
+                    {(item.part_id || item.vendor_id) && (
+                      <div className="mt-0.5 text-[11px] text-text-muted">
+                        Catalog:{' '}
+                        {item.part_id && (
+                          <Link href={`/parts/${item.part_id}`} className="text-accent-blue hover:underline">
+                            part
+                          </Link>
+                        )}
+                        {item.part_id && item.vendor_id && ' · '}
+                        {item.vendor_id && <span>vendor</span>}
+                      </div>
+                    )}
                   </td>
                   {(['vendor', 'part_number', 'subassembly'] as const).map((field) => (
                     <td key={field} className="py-2 pr-2 text-text-secondary">
@@ -291,6 +336,11 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
 
       {canManage && adding && (
         <form onSubmit={handleAdd} noValidate className="mt-3 space-y-2 border-t border-border pt-3 text-xs">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <CatalogPartPicker selected={pickedPart} onChange={handlePickPart} disabled={busy} />
+            <CatalogVendorPicker selected={pickedVendor} onChange={handlePickVendor} disabled={busy} />
+          </div>
+          <p className="text-[12px] text-text-muted">Optional. Picking a catalog part or vendor fills the blank fields below; you can still type or change anything.</p>
           <Input required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Item description" />
           <div className="grid grid-cols-2 gap-2">
             <Input value={vendor} maxLength={100} onChange={(e) => setVendor(e.target.value)} placeholder={requestVendor ? `Vendor (default ${requestVendor})` : "Vendor (else the link's site)"} />

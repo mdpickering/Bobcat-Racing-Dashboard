@@ -12,6 +12,7 @@ import MetricStrip from '@/components/ui/MetricStrip'
 import Badge from '@/components/ui/Badge'
 import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
 import ContactsPanel from '@/components/sponsorships/ContactsPanel'
+import DeleteSponsorButton from '@/components/sponsorships/DeleteSponsorButton'
 import { LevelBadge, ReviewBadge, StageBadge } from '@/components/sponsorships/SponsorshipBadges'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -61,7 +62,12 @@ export default async function SponsorHistoryPage({ params }: { params: { id: str
           </span>
         }
         back={{ label: 'Back to sponsorships', href: '/business/sponsorships' }}
-        actions={!sponsor.active ? <Badge tone="neutral">Archived</Badge> : undefined}
+        actions={
+          <>
+            {!sponsor.active && <Badge tone="neutral">Archived</Badge>}
+            {access.canManage && <DeleteSponsorButton sponsorId={sponsor.id} sponsorName={sponsor.name} />}
+          </>
+        }
       >
         {seasons.length > 0 && (
           <MetricStrip

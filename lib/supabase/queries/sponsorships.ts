@@ -397,6 +397,17 @@ export async function updateSponsor(supabase: SupabaseClient, id: string, patch:
   await requireRow(Promise.resolve(result), NO_PERMISSION)
 }
 
+// Permanent, not archival. The database (delete_sponsor, migration 0039) is the real gate: it checks permission
+// itself and refuses with a clear message unless every sponsorship this sponsor has is still an empty prospect
+// record (no contribution, payment, level decision, deliverable, renewal reminder or history entry) — anything
+// past the prospect stage, or with any of that recorded, blocks it. Returns the deleted sponsor's name for the
+// success toast, since the row is gone by the time this resolves.
+export async function deleteSponsor(supabase: SupabaseClient, id: string): Promise<string> {
+  const { data, error } = await supabase.rpc('delete_sponsor', { p_sponsor_id: id })
+  if (error) throw error
+  return data as string
+}
+
 export async function createSponsorship(supabase: SupabaseClient, input: { sponsor_id: string; season: string; stage: SponsorshipStage }): Promise<string> {
   const { data, error } = await supabase.from('sponsorships').insert(input).select('id').single()
   if (error) {

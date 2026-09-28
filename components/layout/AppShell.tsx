@@ -83,7 +83,12 @@ export default function AppShell({ profile, available, startWorkspace, children 
 
         <div className="flex min-w-0 flex-1 flex-col">
           <Header profile={profile} workspace={workspace} available={available} onOpenMobileNav={() => setMobileOpen(true)} />
-          <main className="flex-1 overflow-y-auto scrollbar-thin p-4 md:p-6">{children}</main>
+          {/* overscroll-contain: <main> is the one real scroll container (the shell above is h-screen/overflow-hidden).
+              Without this, once main's own content is fully scrolled, further wheel input "chains" to the outer
+              document — and on pages where html/body end up with a sliver of their own scrollable slack (e.g. tall
+              two-column grids like /operations), that chaining lets you scroll into empty space below the shell
+              entirely. This only stops that hand-off; it does not hide or clip any real content. */}
+          <main className="flex-1 overflow-y-auto overscroll-contain scrollbar-thin p-4 md:p-6">{children}</main>
         </div>
       </div>
     </ToastProvider>

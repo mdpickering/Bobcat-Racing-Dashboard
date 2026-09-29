@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ListChecks } from 'lucide-react'
@@ -10,6 +11,7 @@ import Select from '@/components/ui/Select'
 import InlineDateEditor from '@/components/ui/InlineDateEditor'
 import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges'
 import AcceptTaskButton from '@/components/tasks/AcceptTaskButton'
+import TaskPreviewDrawer from '@/components/tasks/TaskPreviewDrawer'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask } from '@/lib/supabase/queries/tasks'
 import { getErrorMessage } from '@/lib/errors'
@@ -92,9 +94,21 @@ export default function TaskList({
   onToggle,
   onToggleAll,
 }: TaskListProps) {
+  const [previewId, setPreviewId] = useState<string | null>(null)
   const selectable = Boolean(selectedIds && onToggle && onToggleAll)
   const canManageTask = (task: Task) => isAdmin || ledSubsystemIds.includes(task.subsystem_id)
   const canEditStatus = (task: Task) => canManageTask(task) || Boolean(currentUserId && task.assignees?.some((a) => a.user_id === currentUserId))
+  const previewTask = previewId ? (tasks.find((t) => t.id === previewId) ?? null) : null
+
+  // A plain left-click opens the quick-view drawer instead of navigating away (closing it leaves
+  // this list exactly as it was); ctrl/cmd/shift-click and middle-click still open the real link
+  // normally (browser default, or opens a background tab), so the task remains a genuine <a href>
+  // for keyboard, screen-reader, and "open in new tab" users.
+  function handleTitleClick(e: React.MouseEvent, taskId: string) {
+    if (!currentUserId || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+    e.preventDefault()
+    setPreviewId(taskId)
+  }
 
   const columns: Column<Task>[] = [
     {
@@ -102,7 +116,7 @@ export default function TaskList({
       header: 'Task',
       cell: (task) => (
         <>
-          <Link href={`/tasks/${task.id}`} className="block max-w-[34rem] truncate font-medium text-text-primary hover:text-accent-blue">
+          <Link href={`/tasks/${task.id}`} onClick={(e) => handleTitleClick(e, task.id)} className="block max-w-[34rem] truncate font-medium text-text-primary hover:text-accent-blue">
             {task.title || 'Untitled task'}
           </Link>
           {/* the separator is drawn by CSS after the first item, so a wrapped line never starts with a stray dot */}
@@ -161,12 +175,17 @@ export default function TaskList({
   }
 
   return (
-    <DataTable
-      caption="Tasks"
-      columns={columns}
-      rows={tasks}
-      rowKey={(t) => t.id}
-      emptyState={<EmptyState icon={ListChecks} title={emptyTitle} description={emptyDescription} />}
-    />
+    <>
+      <DataTable
+        caption="Tasks"
+        columns={columns}
+        rows={tasks}
+        rowKey={(t) => t.id}
+        emptyState={<EmptyState icon={ListChecks} title={emptyTitle} description={emptyDescription} />}
+      />
+      {currentUserId && (
+        <TaskPreviewDrawer task={previewTask} open={previewTask !== null} onClose={() => setPreviewId(null)} currentUserId={currentUserId} canManage={previewTask ? canManageTask(previewTask) : false} />
+      )}
+    </>
   )
 }

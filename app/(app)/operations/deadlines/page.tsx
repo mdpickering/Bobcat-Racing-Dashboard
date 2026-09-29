@@ -1,16 +1,13 @@
-import { CalendarClock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listOpenSchedulingTasks } from '@/lib/supabase/queries/operations'
 import { listSubsystems } from '@/lib/supabase/queries/subsystems'
 import { todayDateKey } from '@/lib/deadline'
 import { bucketFor, deadlineCounts, groupDeadlines, type DeadlineBucket } from '@/lib/operationsSchedule'
 import PageHeader from '@/components/ui/PageHeader'
-import SectionHeader from '@/components/ui/SectionHeader'
 import MetricStrip from '@/components/ui/MetricStrip'
 import FilterBar from '@/components/ui/FilterBar'
-import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
-import DeadlineTable from '@/components/operations/DeadlineTable'
+import DeadlinesBoard from '@/components/operations/DeadlinesBoard'
 
 const STATUSES = ['To Do', 'In Progress', 'Blocked', 'Review']
 const RANGES: { value: string; label: string }[] = [
@@ -94,26 +91,7 @@ export default async function DeadlinesPage({ searchParams }: { searchParams: { 
         />
       </div>
 
-      {groups.length === 0 ? (
-        <EmptyState
-          icon={CalendarClock}
-          title={isFiltered ? 'No deadlines match these filters' : 'No open tasks'}
-          description={isFiltered ? 'Try adjusting or clearing your filters.' : 'When tasks are open, their deadlines appear here grouped by date.'}
-        />
-      ) : (
-        <div className="space-y-8">
-          {groups.map((g) => {
-            const shown = g.bucket === 'none' ? g.tasks.slice(0, NONE_CAP) : g.tasks
-            return (
-              <section key={g.bucket} aria-label={g.label}>
-                <SectionHeader title={`${g.label} (${g.tasks.length})`} description={g.description} />
-                <DeadlineTable tasks={shown} today={today} bucket={g.bucket} />
-                {shown.length < g.tasks.length && <p className="mt-1.5 text-xs text-text-muted">Showing {shown.length} of {g.tasks.length}. Narrow with the filters above.</p>}
-              </section>
-            )
-          })}
-        </div>
-      )}
+      <DeadlinesBoard groups={groups} isFiltered={isFiltered} noneCap={NONE_CAP} today={today} />
     </div>
   )
 }

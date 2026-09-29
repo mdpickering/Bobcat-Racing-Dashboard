@@ -89,8 +89,15 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`)
 }
 
+// A single task (/tasks/<id>) is a shared destination, not part of the Engineering-only "My Tasks"
+// board (/tasks itself): a COO clicking an overdue Engineering task from Operations, or a Business
+// user following a task link, should see the task without being dropped into a workspace they
+// weren't in. /tasks alone (the board) stays engineering-only below.
+const TASK_DETAIL_PATTERN = /^\/tasks\/[^/]+/
+
 // The workspaces a path belongs to; empty for shared chrome such as /notifications, /search, /account and /admin.
 export function workspacesForPath(pathname: string): WorkspaceId[] {
+  if (TASK_DETAIL_PATTERN.test(pathname)) return ['engineering', 'business', 'operations']
   return ROUTE_WORKSPACES.find((r) => matchesPrefix(pathname, r.prefix))?.workspaces ?? []
 }
 

@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { ChevronLeft, Pencil, Check, X, Trash2 } from 'lucide-react'
+import { Pencil, Check, X, Trash2 } from 'lucide-react'
 import Panel from '@/components/ui/Panel'
+import BackButton from '@/components/ui/BackButton'
 import Badge from '@/components/ui/Badge'
 import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
@@ -94,9 +94,9 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
 
   return (
     <Panel className="p-5">
-      <Link href="/tasks" className="mb-3 flex items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue">
-        <ChevronLeft size={13} /> Back to tasks
-      </Link>
+      {/* Prefers real back-navigation so returning lands wherever the user actually came from
+          (Operations with its filters, Business, a search result) — not always "My Tasks". */}
+      <BackButton fallbackHref="/tasks" label="Back" />
 
       {error && <p className="mb-2 text-xs text-status-danger">{error}</p>}
 

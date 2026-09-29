@@ -2,7 +2,8 @@ import type { ReactNode } from 'react'
 
 export interface Column<T> {
   key: string
-  header: string
+  // usually a plain label; a selection column passes a "select all" checkbox instead
+  header: ReactNode
   cell: (row: T) => ReactNode
   // money and counts are right-aligned so they scan in a column
   align?: 'left' | 'right'

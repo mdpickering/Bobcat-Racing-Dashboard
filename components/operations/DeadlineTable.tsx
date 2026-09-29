@@ -9,9 +9,22 @@ import type { TaskStatus, TaskPriority } from '@/types/database'
 
 const ownerName = (t: SchedulingTask) => (t.primary_owner ? t.primary_owner.display_name || t.primary_owner.email || 'Unknown' : null)
 
+interface DeadlineTableProps {
+  tasks: SchedulingTask[]
+  today: string
+  bucket: DeadlineBucket
+  compact?: boolean
+  // Optional bulk-selection column (Operations → Deadlines only; the compact dashboard view omits
+  // these three props and gets the table exactly as before).
+  selectedIds?: Set<string>
+  onToggle?: (id: string) => void
+  onToggleAll?: (ids: string[], checked: boolean) => void
+}
+
 // One group of deadlines (Overdue, Today, …). Dates use the existing date-only rules (lib/deadline.ts). The reschedule
 // control is the deadline-only edit the Operations view already had.
-export default function DeadlineTable({ tasks, today, bucket, compact = false }: { tasks: SchedulingTask[]; today: string; bucket: DeadlineBucket; compact?: boolean }) {
+export default function DeadlineTable({ tasks, today, bucket, compact = false, selectedIds, onToggle, onToggleAll }: DeadlineTableProps) {
+  const selectable = Boolean(selectedIds && onToggle && onToggleAll)
   const columns: Column<SchedulingTask>[] = [
     {
       key: 'due',
@@ -52,6 +65,23 @@ export default function DeadlineTable({ tasks, today, bucket, compact = false }:
   ]
   if (!compact) {
     columns.push({ key: 'reschedule', header: 'Reschedule', hideBelow: '2xl', cell: (t) => <RescheduleControl taskId={t.id} title={t.title} deadline={t.deadline} /> })
+  }
+  if (selectable) {
+    const ids = tasks.map((t) => t.id)
+    const allSelected = ids.length > 0 && ids.every((id) => selectedIds!.has(id))
+    columns.unshift({
+      key: 'select',
+      header: (
+        <label className="-m-2 flex cursor-pointer items-center justify-center p-2">
+          <input type="checkbox" aria-label={`Select all in ${bucket}`} checked={allSelected} onChange={(e) => onToggleAll!(ids, e.target.checked)} className="h-4 w-4 accent-accent-blue" />
+        </label>
+      ),
+      cell: (t) => (
+        <label className="-m-2 flex cursor-pointer items-center justify-center p-2">
+          <input type="checkbox" aria-label={`Select ${t.title || 'task'}`} checked={selectedIds!.has(t.id)} onChange={() => onToggle!(t.id)} className="h-4 w-4 accent-accent-blue" />
+        </label>
+      ),
+    })
   }
   return <DataTable caption="Deadlines" columns={columns} rows={tasks} rowKey={(t) => t.id} />
 }

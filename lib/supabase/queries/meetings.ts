@@ -74,7 +74,9 @@ export async function listAgendaItems(supabase: SupabaseClient, meetingId: strin
 
 export async function addAgendaItem(
   supabase: SupabaseClient,
-  input: { meeting_id: string; title: string; source_type?: MeetingAgendaSourceType; source_id?: string | null; sort_order?: number }
+  // sort_order is trigger-derived (migration 0042) — always "next slot in this meeting" —
+  // and deliberately not accepted here, so every insertion path stays consistent.
+  input: { meeting_id: string; title: string; source_type?: MeetingAgendaSourceType; source_id?: string | null }
 ): Promise<TechnicalMeetingAgendaItem> {
   const { data, error } = await supabase.from('technical_meeting_agenda_items').insert(input).select().single()
   if (error) throw error

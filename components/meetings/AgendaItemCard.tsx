@@ -8,7 +8,7 @@ import Textarea from '@/components/ui/Textarea'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
-import { deleteAgendaItem, swapAgendaItemOrder, updateAgendaItem } from '@/lib/supabase/queries/meetings'
+import { deleteAgendaItem, updateAgendaItem } from '@/lib/supabase/queries/meetings'
 import { getErrorMessage } from '@/lib/errors'
 import type { TechnicalMeetingActionItem, TechnicalMeetingAgendaItem } from '@/types/database'
 import ActionItemRow from './ActionItemRow'
@@ -19,11 +19,12 @@ interface AgendaItemCardProps {
   canManage: boolean
   canEditNow: boolean
   neighbours: { prev: TechnicalMeetingAgendaItem | null; next: TechnicalMeetingAgendaItem | null }
+  onMove: (direction: 'up' | 'down') => void
   onAddActionItem: () => void
   onEditActionItem: (item: TechnicalMeetingActionItem) => void
 }
 
-export default function AgendaItemCard({ item, actionItems, canManage, canEditNow, neighbours, onAddActionItem, onEditActionItem }: AgendaItemCardProps) {
+export default function AgendaItemCard({ item, actionItems, canManage, canEditNow, neighbours, onMove, onAddActionItem, onEditActionItem }: AgendaItemCardProps) {
   const router = useRouter()
   const toast = useToast()
   const [expanded, setExpanded] = useState(Boolean(item.discussion_notes || item.decision))
@@ -69,19 +70,6 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
     }
   }
 
-  async function move(direction: 'up' | 'down') {
-    const target = direction === 'up' ? neighbours.prev : neighbours.next
-    if (!target) return
-    setBusy(true)
-    try {
-      await swapAgendaItemOrder(createClient(), { id: item.id, sort_order: item.sort_order }, { id: target.id, sort_order: target.sort_order })
-      router.refresh()
-    } catch (err) {
-      toast.push(getErrorMessage(err, 'Could not reorder the agenda.'), 'danger')
-      setBusy(false)
-    }
-  }
-
   return (
     <div className="rounded-xl border border-border bg-surface-raised p-3.5">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -93,10 +81,10 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
           <StatusBadge domain="meetingAgendaItem" value={item.status} />
           {canManage && (
             <>
-              <Button size="sm" variant="ghost" disabled={busy || !neighbours.prev} onClick={() => move('up')}>
+              <Button size="sm" variant="ghost" disabled={!neighbours.prev} onClick={() => onMove('up')}>
                 <ArrowUp size={12} />
               </Button>
-              <Button size="sm" variant="ghost" disabled={busy || !neighbours.next} onClick={() => move('down')}>
+              <Button size="sm" variant="ghost" disabled={!neighbours.next} onClick={() => onMove('down')}>
                 <ArrowDown size={12} />
               </Button>
               <Button size="sm" variant="ghost" disabled={busy} onClick={handleDelete}>

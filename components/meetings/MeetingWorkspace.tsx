@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import Input from '@/components/ui/Input'
@@ -9,7 +9,7 @@ import SectionHeader from '@/components/ui/SectionHeader'
 import EmptyState from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
-import { addAgendaItem } from '@/lib/supabase/queries/meetings'
+import { addAgendaItem, swapAgendaItemOrder } from '@/lib/supabase/queries/meetings'
 import { getErrorMessage } from '@/lib/errors'
 import type { PreviousMeetingFollowUp } from '@/lib/supabase/queries/meetings'
 import type { Subsystem, SuggestedMeetingTopic, TechnicalMeeting, TechnicalMeetingActionItem, TechnicalMeetingAgendaItem } from '@/types/database'
@@ -60,7 +60,15 @@ export default function MeetingWorkspace({
   // on agenda/action items exactly.
   const canEditNow = canManage || (canRecord && meeting.status !== 'completed')
 
-  const agendaItems = [...initialAgendaItems].sort((a, b) => a.sort_order - b.sort_order)
+  // Held in local state (seeded from, and resynced whenever, the server-provided prop changes) so a
+  // reorder can be reflected instantly — swapping two rows used to wait on a full router.refresh(),
+  // which re-ran the whole page's data fetch (including the suggested-topics engine) just to move
+  // one item, and felt laggy for something that should be immediate.
+  const [agendaItems, setAgendaItems] = useState(() => [...initialAgendaItems].sort((a, b) => a.sort_order - b.sort_order))
+  useEffect(() => {
+    setAgendaItems([...initialAgendaItems].sort((a, b) => a.sort_order - b.sort_order))
+  }, [initialAgendaItems])
+
   const actionItemsByAgenda = new Map<string, TechnicalMeetingActionItem[]>()
   const generalActionItems: TechnicalMeetingActionItem[] = []
   for (const a of initialActionItems) {
@@ -77,13 +85,33 @@ export default function MeetingWorkspace({
     if (!manualTitle.trim()) return
     setAddingManual(true)
     try {
-      await addAgendaItem(createClient(), { meeting_id: meeting.id, title: manualTitle.trim(), sort_order: agendaItems.length })
+      await addAgendaItem(createClient(), { meeting_id: meeting.id, title: manualTitle.trim() })
       setManualTitle('')
       router.refresh()
     } catch (err) {
       toast.push(getErrorMessage(err, 'Could not add this topic.'), 'danger')
     } finally {
       setAddingManual(false)
+    }
+  }
+
+  // Optimistic: swap the two rows in local state immediately, fire the real write in the
+  // background, and only fall back to a toast + revert if it actually fails.
+  async function handleMoveAgendaItem(index: number, direction: 'up' | 'down') {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= agendaItems.length) return
+    const before = agendaItems
+    const a = before[index]
+    const b = before[targetIndex]
+    const next = [...before]
+    next[index] = { ...b, sort_order: a.sort_order }
+    next[targetIndex] = { ...a, sort_order: b.sort_order }
+    setAgendaItems(next)
+    try {
+      await swapAgendaItemOrder(createClient(), { id: a.id, sort_order: a.sort_order }, { id: b.id, sort_order: b.sort_order })
+    } catch (err) {
+      setAgendaItems(before)
+      toast.push(getErrorMessage(err, 'Could not reorder the agenda.'), 'danger')
     }
   }
 
@@ -111,6 +139,7 @@ export default function MeetingWorkspace({
                 canManage={canManage}
                 canEditNow={canEditNow}
                 neighbours={{ prev: agendaItems[idx - 1] ?? null, next: agendaItems[idx + 1] ?? null }}
+                onMove={(direction) => handleMoveAgendaItem(idx, direction)}
                 onAddActionItem={() => setModalState({ agendaItemId: item.id, editing: null })}
                 onEditActionItem={(a) => setModalState({ agendaItemId: item.id, editing: a })}
               />

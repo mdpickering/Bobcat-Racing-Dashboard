@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getPartCatalogRow, getPartsAccess, listActiveVendors, listCatalogAudit, listPartPurchaseLines, listPartVendors } from '@/lib/supabase/queries/parts'
 import { listSubsystems } from '@/lib/supabase/queries/subsystems'
 import { getBusinessAccess } from '@/lib/supabase/queries/business'
+import { getInventoryAccess, getInventoryOverviewForPart, listActiveLocations, listInventoryByLocationForPart, listRecentTransactionsForPart } from '@/lib/supabase/queries/inventory'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
 import { formatUsd } from '@/lib/parts'
 import { formatDate } from '@/lib/format'
@@ -17,6 +18,7 @@ import { EditPartButton } from '@/components/parts/PartActions'
 import PartVendorsPanel from '@/components/parts/PartVendorsPanel'
 import RelatedPurchasesPanel from '@/components/parts/RelatedPurchasesPanel'
 import CatalogAuditPanel from '@/components/parts/CatalogAuditPanel'
+import PartStockPanel from '@/components/parts/PartStockPanel'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -47,14 +49,19 @@ export default async function PartDetailPage({ params }: { params: { id: string 
   if (!part) notFound()
 
   const admin = isCtoOrAdmin(profile)
-  const [access, business, subsystems, links, lines, vendors, audit] = await Promise.all([
+  const [access, business, inventoryAccess, subsystems, links, lines, vendors, audit, stockOverview, stockByLocation, activeLocations, recentTransactions] = await Promise.all([
     getPartsAccess(supabase, profile),
     getBusinessAccess(supabase, profile),
+    getInventoryAccess(supabase, profile),
     listSubsystems(supabase),
     listPartVendors(supabase, part.id).catch(() => []),
     listPartPurchaseLines(supabase, part.id).catch(() => []),
     listActiveVendors(supabase).catch(() => []),
     admin ? listCatalogAudit(supabase, ['part', 'part_vendor'], part.id).catch(() => []) : Promise.resolve([]),
+    getInventoryOverviewForPart(supabase, part.id).catch(() => null),
+    listInventoryByLocationForPart(supabase, part.id).catch(() => []),
+    listActiveLocations(supabase).catch(() => []),
+    listRecentTransactionsForPart(supabase, part.id).catch(() => []),
   ])
   const canManage = access.canManageSubsystem(part.subsystem_id)
   const linkedIds = new Set(links.map((l) => l.vendor_id))
@@ -85,6 +92,16 @@ export default async function PartDetailPage({ params }: { params: { id: string 
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-4">
+          <PartStockPanel
+            partId={part.id}
+            partLabel={`${part.part_number} · ${part.name}`}
+            overview={stockOverview}
+            byLocation={stockByLocation}
+            transactions={recentTransactions}
+            activeLocations={activeLocations}
+            canAdjust={inventoryAccess.canAdjustSubsystem(part.subsystem_id)}
+            canManageInventory={inventoryAccess.canManageLocations}
+          />
           <PartVendorsPanel partId={part.id} links={links} availableVendors={available} canManage={canManage} canOpenVendors={business.canView} />
           <RelatedPurchasesPanel title="Purchasing activity" lines={lines} />
           {admin && <CatalogAuditPanel entries={audit} />}

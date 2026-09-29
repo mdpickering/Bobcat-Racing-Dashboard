@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getPurchaseRequestById, listPurchaseRequestItems, listPurchaseStatusHistory } from '@/lib/supabase/queries/purchasing'
 import { listSubsystemMembers } from '@/lib/supabase/queries/subsystems'
+import { getInventoryAccess, getRequestReceivingSummary, listReceivingStatusForRequest } from '@/lib/supabase/queries/inventory'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
 import { vendorName } from '@/lib/purchaseSheet/format'
 import { formatMoney } from '@/lib/sponsorships'
@@ -9,6 +10,7 @@ import type { Profile } from '@/types/user'
 import PurchaseRequestDetailHeader from '@/components/purchasing/PurchaseRequestDetailHeader'
 import PurchaseLineItemsPanel from '@/components/purchasing/PurchaseLineItemsPanel'
 import PurchaseStatusHistoryPanel from '@/components/purchasing/PurchaseStatusHistoryPanel'
+import ReceivingPanel from '@/components/purchasing/ReceivingPanel'
 import MetricStrip from '@/components/ui/MetricStrip'
 import ErrorState from '@/components/ui/ErrorState'
 
@@ -28,10 +30,13 @@ export default async function PurchaseRequestDetailPage({ params }: { params: { 
   }
   if (!request) notFound()
 
-  const [items, history, subsystemMembers] = await Promise.all([
+  const [items, history, subsystemMembers, inventoryAccess, receivingLines, receivingSummary] = await Promise.all([
     listPurchaseRequestItems(supabase, request.id).catch(() => []),
     listPurchaseStatusHistory(supabase, request.id).catch(() => []),
     listSubsystemMembers(supabase, request.subsystem_id).catch(() => []),
+    getInventoryAccess(supabase, profile),
+    listReceivingStatusForRequest(supabase, request.id).catch(() => []),
+    getRequestReceivingSummary(supabase, request.id).catch(() => null),
   ])
 
   const isLeadHere = subsystemMembers.some((m) => m.user_id === profile.id && m.is_lead)
@@ -64,6 +69,15 @@ export default async function PurchaseRequestDetailPage({ params }: { params: { 
           requestVendor={request.vendor}
           members={subsystemMembers}
           requesterName={request.requester?.display_name || request.requester?.email || ''}
+        />
+        <ReceivingPanel
+          purchaseRequestId={request.id}
+          requestTitle={request.title}
+          requestStatus={request.status}
+          lines={receivingLines}
+          summary={receivingSummary}
+          canReceive={inventoryAccess.canReceiveSubsystem(request.subsystem_id)}
+          canManage={canManage}
         />
         <PurchaseStatusHistoryPanel history={history} />
       </div>

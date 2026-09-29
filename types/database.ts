@@ -650,6 +650,138 @@ export interface SponsorshipHistoryEntry {
   author?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
 }
 
+// ---------------------------------------------------------
+// Inventory + Receiving (migration 0038)
+// ---------------------------------------------------------
+export type InventoryTransactionKind = 'opening_balance' | 'receipt' | 'receipt_reversal' | 'adjustment' | 'write_off' | 'transfer_out' | 'transfer_in'
+
+export interface InventoryLocation {
+  id: string
+  name: string
+  description: string | null
+  active: boolean
+  sort_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface InventoryStock {
+  part_id: string
+  location_id: string
+  quantity_on_hand: number
+  updated_at: string
+}
+
+export interface InventoryTransaction {
+  id: string
+  part_id: string
+  location_id: string
+  quantity_delta: number
+  kind: InventoryTransactionKind
+  reason: string | null
+  notes: string | null
+  receipt_line_id: string | null
+  transfer_group_id: string | null
+  created_by: string
+  created_at: string
+  part?: Pick<PartCatalogRow, 'id' | 'part_number' | 'name'> | null
+  location?: Pick<InventoryLocation, 'id' | 'name'> | null
+  actor?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+export interface PurchaseReceipt {
+  id: string
+  purchase_request_id: string
+  received_by: string
+  received_on: string
+  notes: string | null
+  client_token: string
+  created_at: string
+}
+
+export interface PurchaseReceiptLine {
+  id: string
+  receipt_id: string
+  purchase_request_item_id: string
+  quantity_received: number
+  quantity_rejected: number
+  rejected_reason: string | null
+  part_id: string | null
+  location_id: string | null
+  reverses_line_id: string | null
+  reason: string | null
+  notes: string | null
+  created_at: string
+}
+
+// One row of the purchase_receiving_status view: one purchase line, with what has been accepted/rejected against it.
+export interface PurchaseReceivingStatusRow {
+  item_id: string
+  purchase_request_id: string
+  subsystem_id: string
+  request_title: string
+  request_status: PurchaseStatus
+  description: string
+  part_number: string | null
+  vendor: string | null
+  part_id: string | null
+  vendor_id: string | null
+  ordered_quantity: number
+  accepted_quantity: number
+  rejected_quantity: number
+  outstanding_quantity: number
+  fully_received: boolean
+  last_received_on: string | null
+  receivable: boolean
+}
+
+// One row of the purchase_request_receiving view: the whole request's receiving summary.
+export interface PurchaseRequestReceivingRow {
+  purchase_request_id: string
+  line_count: number
+  ordered_total: number
+  accepted_total: number
+  rejected_total: number
+  outstanding_total: number
+  lines_fully_received: number
+  all_received: boolean
+  last_received_on: string | null
+}
+
+// One row of the inventory_overview view: one part's stock picture, real subsystems onward.
+export interface InventoryOverviewRow {
+  part_id: string
+  part_number: string
+  name: string
+  subsystem_id: string
+  subsystem_name: string
+  category: string | null
+  active: boolean
+  effective_unit_cost: number | null
+  missing_cost: boolean
+  on_hand: number
+  location_count: number
+  location_names: string
+  on_order: number
+  last_received_on: string | null
+  stock_value: number | null
+}
+
+// One row of the inventory_by_location view: one part, one location.
+export interface InventoryByLocationRow {
+  part_id: string
+  part_number: string
+  part_name: string
+  subsystem_id: string
+  part_active: boolean
+  location_id: string
+  location_name: string
+  location_active: boolean
+  quantity_on_hand: number
+  updated_at: string
+}
+
 // Sponsorship renewals (migration 0036)
 export type RenewalState = 'not_applicable' | 'no_date' | 'scheduled' | 'approaching' | 'overdue' | 'renewed'
 

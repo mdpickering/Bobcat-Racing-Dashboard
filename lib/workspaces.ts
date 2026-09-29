@@ -19,6 +19,7 @@ export type NavIconName =
   | 'budget'
   | 'parts'
   | 'inventory'
+  | 'receiving'
   | 'vendors'
   | 'reports'
   | 'team'
@@ -80,6 +81,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
           { label: 'Task Requests', icon: 'requests', status: 'available', href: '/tasks?tab=requests', activeWhen: isTaskRequests },
           { label: 'Purchasing', icon: 'purchasing', status: 'available', href: '/purchasing' },
           { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
+          { label: 'Inventory', icon: 'inventory', status: 'available', href: '/inventory' },
         ],
       },
       {
@@ -114,7 +116,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         items: [
           // the same read-only catalog page as Engineering's Parts (one route, one data set)
           { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
-          { label: 'Inventory', icon: 'inventory', status: 'soon' },
+          { label: 'Inventory', icon: 'inventory', status: 'available', href: '/inventory' },
           { label: 'Vendors', icon: 'vendors', status: 'available', href: '/business/vendors' },
         ],
       },
@@ -143,6 +145,15 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         items: [
           { label: 'Subsystem Schedule', icon: 'subsystems', status: 'available', href: '/operations/subsystems' },
           { label: 'Team Schedule', icon: 'schedule', status: 'soon' },
+        ],
+      },
+      {
+        label: 'Inventory',
+        items: [
+          // shared routes, not /operations/inventory or /operations/receiving — Engineering team leads need
+          // these too, and /operations/* is closed to them (see lib/workspaceAccess.ts)
+          { label: 'Inventory', icon: 'inventory', status: 'available', href: '/inventory' },
+          { label: 'Receiving', icon: 'receiving', status: 'available', href: '/receiving' },
         ],
       },
     ],

@@ -106,6 +106,21 @@ export const STATUS_REGISTRY = {
     held_by_university: 'warning',
     unknown: 'neutral',
   },
+  meeting: {
+    planned: 'neutral',
+    in_progress: 'info',
+    completed: 'success',
+  },
+  meetingAgendaItem: {
+    open: 'neutral',
+    discussed: 'success',
+    deferred: 'warning',
+  },
+  meetingActionItem: {
+    open: 'neutral',
+    complete: 'success',
+    cancelled: 'danger',
+  },
 } as const satisfies Record<string, Record<string, StatusTone>>
 
 export type StatusDomain = keyof typeof STATUS_REGISTRY

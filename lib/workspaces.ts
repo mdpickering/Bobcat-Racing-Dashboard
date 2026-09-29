@@ -12,6 +12,7 @@ export type NavIconName =
   | 'subsystems'
   | 'cad'
   | 'requests'
+  | 'meetings'
   | 'purchasing'
   | 'timeline'
   | 'milestones'
@@ -89,6 +90,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         items: [
           { label: 'Timeline', icon: 'timeline', status: 'available', href: '/timeline' },
           { label: 'Milestones', icon: 'milestones', status: 'available', href: '/milestones' },
+          { label: 'Technical Meetings', icon: 'meetings', status: 'available', href: '/meetings' },
         ],
       },
     ],
@@ -138,6 +140,9 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
           { label: 'Timeline', icon: 'timeline', status: 'available', href: '/timeline' },
           { label: 'Deadlines', icon: 'deadlines', status: 'available', href: '/operations/deadlines' },
           { label: 'Events', icon: 'events', status: 'available', href: '/operations/events' },
+          // Same route as Engineering's — the COO is the meeting recorder, not a separate view
+          // (lib/permissions/roles.ts's canManageMeetings/canRecordMeetingNotes decide what they see).
+          { label: 'Technical Meetings', icon: 'meetings', status: 'available', href: '/meetings' },
         ],
       },
       {

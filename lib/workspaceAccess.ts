@@ -66,6 +66,9 @@ const ROUTE_WORKSPACES: { prefix: string; workspaces: WorkspaceId[] }[] = [
   { prefix: '/subsystems', workspaces: ['engineering'] },
   { prefix: '/cad', workspaces: ['engineering'] },
   { prefix: '/milestones', workspaces: ['engineering'] },
+  // Technical meetings (migration 0041): the CTO/Admin run them from Engineering, the COO records
+  // them from Operations — one route, one data set, same as inventory/receiving above.
+  { prefix: '/meetings', workspaces: ['engineering', 'operations'] },
   { prefix: '/business', workspaces: ['business'] },
   { prefix: '/operations', workspaces: ['operations'] },
   // Purchasing is one system used from both sides: engineering creates and works requests, business manages,

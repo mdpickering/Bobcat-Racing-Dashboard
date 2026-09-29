@@ -837,3 +837,78 @@ export interface SponsorshipDeliverableProgress {
   completed: number
   in_progress: number
 }
+
+// Technical Meeting Agenda + COO Notes (migration 0041)
+export type MeetingStatus = 'planned' | 'in_progress' | 'completed'
+export type MeetingAgendaItemStatus = 'open' | 'discussed' | 'deferred'
+export type MeetingActionItemStatus = 'open' | 'complete' | 'cancelled'
+// A suggestion's real source table; 'manual' agenda items (and any dismissal, which only ever
+// applies to a real suggestion) never use 'manual'.
+export type MeetingAgendaSourceType = 'manual' | 'task' | 'milestone' | 'task_request' | 'purchasing' | 'cad' | 'previous_action'
+
+export interface TechnicalMeeting {
+  id: string
+  title: string
+  meeting_date: string
+  start_time: string | null
+  status: MeetingStatus
+  started_at: string | null
+  ended_at: string | null
+  created_by: string
+  summary_notes: string | null
+  created_at: string
+  updated_at: string
+  creator?: Pick<Profile, 'id' | 'display_name' | 'email'> | null
+}
+
+export interface TechnicalMeetingAgendaItem {
+  id: string
+  meeting_id: string
+  title: string
+  source_type: MeetingAgendaSourceType
+  source_id: string | null
+  sort_order: number
+  status: MeetingAgendaItemStatus
+  discussion_notes: string | null
+  decision: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TechnicalMeetingActionItem {
+  id: string
+  meeting_id: string
+  agenda_item_id: string | null
+  title: string
+  description: string | null
+  assigned_to: string | null
+  due_date: string | null
+  subsystem_id: string | null
+  linked_task_id: string | null
+  status: MeetingActionItemStatus
+  created_by: string
+  created_at: string
+  completed_at: string | null
+  assignee?: Pick<Profile, 'id' | 'display_name' | 'email' | 'avatar_url'> | null
+  subsystem?: { id: string; name: string } | null
+  linked_task?: Pick<Task, 'id' | 'title' | 'status'> | null
+}
+
+export interface TechnicalMeetingSuggestionDismissal {
+  id: string
+  meeting_id: string
+  source_type: MeetingAgendaSourceType
+  source_id: string
+  dismissed_by: string
+  dismissed_at: string
+}
+
+// A candidate topic the agenda-suggestion engine surfaces, built from a real row in another table
+// (never persisted itself — only an agenda item or a dismissal row is, once acted on).
+export interface SuggestedMeetingTopic {
+  sourceType: Exclude<MeetingAgendaSourceType, 'manual'>
+  sourceId: string
+  title: string
+  detail: string | null
+  category: 'overdue' | 'due_soon' | 'no_deadline' | 'blocked' | 'milestone' | 'task_request' | 'purchasing' | 'cad' | 'previous_action'
+}

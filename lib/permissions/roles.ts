@@ -96,6 +96,27 @@ export function canReverseReceipt(profile: Pick<Profile, 'role'> | null | undefi
   return isCtoOrAdmin(profile)
 }
 
+/**
+ * Who may manage a technical meeting: create it, build/reorder its agenda, delete an empty draft,
+ * or correct a completed one. Mirrors public.can_manage_meetings() (migration 0041) — cto/admin
+ * ONLY. This is deliberately narrower than canManageOperations(): unlike every other "operations"
+ * capability in this file, the COO is NOT included here. The COO is the meeting recorder, not its
+ * owner — see canRecordMeetingNotes() below.
+ */
+export function canManageMeetings(profile: Pick<Profile, 'role'> | null | undefined): boolean {
+  return isCtoOrAdmin(profile)
+}
+
+/**
+ * Who may act as meeting scribe: record discussion notes/decisions, create action items, and turn
+ * one into a real task. Mirrors public.can_record_meeting_notes() (migration 0041) — the COO, plus
+ * cto/admin (every manager is also a recorder). A plain team lead or member gets neither; they can
+ * only read a completed meeting's history once it exists.
+ */
+export function canRecordMeetingNotes(profile: Pick<Profile, 'role'> | null | undefined): boolean {
+  return isCoo(profile) || isCtoOrAdmin(profile)
+}
+
 export function hasRole(
   profile: Pick<Profile, 'role'> | null | undefined,
   roles: UserRole[]

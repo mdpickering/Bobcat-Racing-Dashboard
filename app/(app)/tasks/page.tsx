@@ -122,6 +122,9 @@ export default async function TasksPage({
       </div>
       <TaskList
         tasks={tasks}
+        currentUserId={profile.id}
+        isAdmin={admin}
+        ledSubsystemIds={[...ledSubsystemIds]}
         emptyTitle={filtered ? 'No tasks match these filters' : 'No tasks assigned to you'}
         emptyDescription={filtered ? 'Try adjusting or clearing your filters.' : 'Tasks you own or co-own appear here.'}
       />

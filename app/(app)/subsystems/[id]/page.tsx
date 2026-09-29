@@ -9,7 +9,7 @@ import type { Profile } from '@/types/user'
 import PageHeader from '@/components/ui/PageHeader'
 import SectionHeader from '@/components/ui/SectionHeader'
 import ErrorState from '@/components/ui/ErrorState'
-import TaskList from '@/components/tasks/TaskList'
+import TaskListBoard from '@/components/tasks/TaskListBoard'
 import SubsystemEditPanel from '@/components/subsystems/SubsystemEditPanel'
 import CategoryManagementPanel from '@/components/subsystems/CategoryManagementPanel'
 import SubsystemMembersPanel from '@/components/subsystems/SubsystemMembersPanel'
@@ -89,7 +89,7 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
 
       <div>
         <SectionHeader title={`Open tasks (${openTasks.length})`} />
-        <TaskList tasks={openTasks} canAccept={canAcceptTasks} />
+        <TaskListBoard tasks={openTasks} currentUserId={profile.id} isAdmin={admin} ledSubsystemIds={isLeadHere ? [params.id] : []} canAccept={canAcceptTasks} />
       </div>
     </div>
   )

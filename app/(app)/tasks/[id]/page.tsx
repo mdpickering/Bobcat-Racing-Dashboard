@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getTaskById, listTaskComments, listTaskAttachments } from '@/lib/supabase/queries/tasks'
 import { listSubsystemMembers, listSubsystemCategories } from '@/lib/supabase/queries/subsystems'
-import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import { canManageOperations, isCtoOrAdmin } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 import TaskDetailHeader from '@/components/tasks/TaskDetailHeader'
 import TaskAssigneesPanel from '@/components/tasks/TaskAssigneesPanel'
@@ -44,6 +44,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
         categories={categories}
         canManage={canManage}
         canChangeStatus={isAssignee}
+        canReschedule={canManageOperations(profile)}
         canDelete={canManage}
         attachmentPaths={attachments.map((a) => a.storage_path)}
       />

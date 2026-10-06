@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { listTasks, listTaskRequests } from '@/lib/supabase/queries/tasks'
 import { listSubsystems } from '@/lib/supabase/queries/subsystems'
-import { isCtoOrAdmin, canReviewTaskRequest } from '@/lib/permissions/roles'
+import { isCtoOrAdmin, canManageOperations, canReviewTaskRequest } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 import type { SubsystemCategory } from '@/types/database'
 import TaskFilters from '@/components/tasks/TaskFilters'
@@ -125,6 +125,7 @@ export default async function TasksPage({
         currentUserId={profile.id}
         isAdmin={admin}
         ledSubsystemIds={[...ledSubsystemIds]}
+        canReschedule={canManageOperations(profile)}
         emptyTitle={filtered ? 'No tasks match these filters' : 'No tasks assigned to you'}
         emptyDescription={filtered ? 'Try adjusting or clearing your filters.' : 'Tasks you own or co-own appear here.'}
       />

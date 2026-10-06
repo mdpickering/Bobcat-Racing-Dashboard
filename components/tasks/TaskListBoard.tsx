@@ -8,6 +8,7 @@ import BulkActionBar from '@/components/ui/BulkActionBar'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask } from '@/lib/supabase/queries/tasks'
+import { rescheduleTask } from '@/lib/supabase/queries/operations'
 import { getErrorMessage } from '@/lib/errors'
 import TaskList from './TaskList'
 import type { Task } from '@/types/database'
@@ -20,6 +21,8 @@ interface TaskListBoardProps {
   // Component caller cannot pass a closure to this client component).
   isAdmin?: boolean
   ledSubsystemIds?: string[]
+  // COO/CTO/admin: may change any task's due date, saved through reschedule_task() (see TaskList).
+  canReschedule?: boolean
   canAccept?: boolean
   emptyTitle?: string
   emptyDescription?: string
@@ -27,9 +30,9 @@ interface TaskListBoardProps {
 
 // Adds bulk-selection on top of the plain TaskList for a lead/admin managing many of a subsystem's
 // tasks at once ("change the deadline on 10 tasks" without opening 10 task pages) -- the same
-// pattern as Operations > Deadlines' DeadlinesBoard, using the full task-update path (updateTask)
-// since this isn't COO/CTO/Admin-only like Operations' reschedule_task().
-export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsystemIds, canAccept, emptyTitle, emptyDescription }: TaskListBoardProps) {
+// pattern as Operations > Deadlines' DeadlinesBoard. A COO/CTO/admin saves through reschedule_task() (the only
+// write the COO is allowed); a subsystem lead, who may not use that RPC, saves through the full task update.
+export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsystemIds, canReschedule = false, canAccept, emptyTitle, emptyDescription }: TaskListBoardProps) {
   const router = useRouter()
   const toast = useToast()
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -62,7 +65,7 @@ export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsys
     try {
       const supabase = createClient()
       const ids = [...selected]
-      const results = await Promise.allSettled(ids.map((id) => updateTask(supabase, id, { deadline: `${bulkDate}T00:00:00.000Z` })))
+      const results = await Promise.allSettled(ids.map((id) => (canReschedule ? rescheduleTask(supabase, id, bulkDate) : updateTask(supabase, id, { deadline: `${bulkDate}T00:00:00.000Z` }))))
       const failed = results.filter((r) => r.status === 'rejected').length
       if (failed > 0) toast.push(`${ids.length - failed} of ${ids.length} tasks updated — ${failed} failed.`, 'warning')
       else toast.push(`${ids.length} task${ids.length === 1 ? '' : 's'} rescheduled to that date.`, 'success')
@@ -83,6 +86,7 @@ export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsys
         currentUserId={currentUserId}
         isAdmin={isAdmin}
         ledSubsystemIds={ledSubsystemIds}
+        canReschedule={canReschedule}
         canAccept={canAccept}
         emptyTitle={emptyTitle}
         emptyDescription={emptyDescription}

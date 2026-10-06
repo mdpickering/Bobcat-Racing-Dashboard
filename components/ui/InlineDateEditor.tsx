@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pencil } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask } from '@/lib/supabase/queries/tasks'
+import { rescheduleTask } from '@/lib/supabase/queries/operations'
 import { deadlineDateKey, formatDeadline, isDeadlineOverdue, isDeadlineDueSoon } from '@/lib/deadline'
 import { getErrorMessage } from '@/lib/errors'
 import { useToast } from './Toast'
@@ -13,15 +14,18 @@ interface InlineDateEditorProps {
   taskId: string
   deadline: string | null
   status?: string
+  // The viewer is the COO, CTO or an admin: save through reschedule_task() (deadline-only, COO/CTO/Admin-only,
+  // the same secure path Operations uses) instead of the full task update, which the COO has no right to.
+  viaReschedule?: boolean
 }
 
 // Click the date to edit it in place: no page navigation, no separate edit screen, matching the
-// "click date -> pick date -> save -> row updates" rule. Goes through the full task-update path
-// (updateTask -> tasks RLS: cto/admin or the task's own subsystem lead), unlike Operations'
-// RescheduleControl (which deliberately uses the narrower, COO/CTO/Admin-only reschedule_task()
-// RPC) -- so only render this where the caller has already confirmed the viewer may manage that
-// specific task. The database still has final say either way.
-export default function InlineDateEditor({ taskId, deadline, status }: InlineDateEditorProps) {
+// "click date -> pick date -> save -> row updates" rule. Saves through the full task-update path
+// (updateTask -> tasks RLS: cto/admin or the task's own subsystem lead) by default, or through the
+// narrower reschedule_task() RPC when viaReschedule is set (the COO has no tasks UPDATE policy at all,
+// only that function). Only render this where the caller has already confirmed the viewer may edit
+// the date. The database still has final say either way.
+export default function InlineDateEditor({ taskId, deadline, status, viaReschedule = false }: InlineDateEditorProps) {
   const router = useRouter()
   const toast = useToast()
   const [editing, setEditing] = useState(false)
@@ -36,7 +40,8 @@ export default function InlineDateEditor({ taskId, deadline, status }: InlineDat
     setBusy(true)
     try {
       const supabase = createClient()
-      await updateTask(supabase, taskId, { deadline: next ? `${next}T00:00:00.000Z` : null })
+      if (viaReschedule) await rescheduleTask(supabase, taskId, next || null)
+      else await updateTask(supabase, taskId, { deadline: next ? `${next}T00:00:00.000Z` : null })
       setEditing(false)
       router.refresh()
     } catch (err) {

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getSubsystemById, listSubsystemCategories, listAllSubsystemCategories, listSubsystemMembers, listUnassignedApprovedProfiles } from '@/lib/supabase/queries/subsystems'
 import { listAllProfiles } from '@/lib/supabase/queries/admin'
 import { listTasks } from '@/lib/supabase/queries/tasks'
-import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import { canManageOperations, isCtoOrAdmin } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 import PageHeader from '@/components/ui/PageHeader'
 import SectionHeader from '@/components/ui/SectionHeader'
@@ -89,7 +89,7 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
 
       <div>
         <SectionHeader title={`Open tasks (${openTasks.length})`} />
-        <TaskListBoard tasks={openTasks} currentUserId={profile.id} isAdmin={admin} ledSubsystemIds={isLeadHere ? [params.id] : []} canAccept={canAcceptTasks} />
+        <TaskListBoard tasks={openTasks} currentUserId={profile.id} isAdmin={admin} ledSubsystemIds={isLeadHere ? [params.id] : []} canReschedule={canManageOperations(profile)} canAccept={canAcceptTasks} />
       </div>
     </div>
   )

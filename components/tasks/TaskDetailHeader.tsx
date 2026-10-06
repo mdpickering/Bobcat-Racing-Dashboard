@@ -11,6 +11,7 @@ import Textarea from '@/components/ui/Textarea'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import InlineDateEditor from '@/components/ui/InlineDateEditor'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask, deleteTask, removeTaskAttachmentFiles } from '@/lib/supabase/queries/tasks'
 import { getErrorMessage } from '@/lib/errors'
@@ -26,13 +27,16 @@ interface TaskDetailHeaderProps {
   categories: SubsystemCategory[]
   canManage: boolean
   canChangeStatus: boolean
+  // COO, CTO or admin (canManageOperations): may change this task's due date even without canManage, saved
+  // through reschedule_task() -- the database function the COO is allowed to use, deadline-only.
+  canReschedule: boolean
   // cto/admin, or the lead of this task's subsystem — the database enforces the same rule
   // (can_delete_task, migration 0030); this only decides whether to show the button.
   canDelete: boolean
   attachmentPaths: string[]
 }
 
-export default function TaskDetailHeader({ task, categories, canManage, canChangeStatus, canDelete, attachmentPaths }: TaskDetailHeaderProps) {
+export default function TaskDetailHeader({ task, categories, canManage, canChangeStatus, canReschedule, canDelete, attachmentPaths }: TaskDetailHeaderProps) {
   const router = useRouter()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -146,10 +150,16 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
             <Badge tone="slate">{task.subsystem?.name ?? 'Unknown subsystem'}</Badge>
             {task.category?.name && <Badge tone="slate">{task.category.name}</Badge>}
-            {task.deadline && (
-              <span className={isDeadlineOverdue(task.deadline, task.status) ? 'font-semibold text-status-danger' : 'text-text-muted'}>
-                Due {formatDeadline(task.deadline)}
+            {canReschedule ? (
+              <span className="flex items-center gap-1 text-text-muted">
+                Due <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} viaReschedule />
               </span>
+            ) : (
+              task.deadline && (
+                <span className={isDeadlineOverdue(task.deadline, task.status) ? 'font-semibold text-status-danger' : 'text-text-muted'}>
+                  Due {formatDeadline(task.deadline)}
+                </span>
+              )
             )}
           </div>
         </>

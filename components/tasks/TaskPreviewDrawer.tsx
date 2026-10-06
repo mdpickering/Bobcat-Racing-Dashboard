@@ -32,12 +32,14 @@ interface TaskPreviewDrawerProps {
   // cto/admin, or the lead of this task's own subsystem (tasks RLS is the real gate) -- gates
   // title/description/priority editing, matching the full task page's own canManage rule.
   canManage: boolean
+  // COO/CTO/admin: may change the due date of any task (saved via reschedule_task()), even without canManage.
+  canReschedule?: boolean
 }
 
 // "Simple inspection/edit -> drawer; complex task management -> full page" (assignee changes,
 // mentions, editing others' comments, attachments, delete) stays on /tasks/<id>, one click away via
 // the header link. Closing this never navigates -- whatever list opened it is untouched.
-export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, canManage }: TaskPreviewDrawerProps) {
+export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, canManage, canReschedule = false }: TaskPreviewDrawerProps) {
   const router = useRouter()
   const toast = useToast()
   const [editingDetails, setEditingDetails] = useState(false)
@@ -186,7 +188,7 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
 
         <div>
           <p className="mb-1 text-[11px] font-semibold text-text-secondary">Due date</p>
-          {canManage ? <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} /> : <p className="text-text-secondary">{task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</p>}
+          {canManage || canReschedule ? <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} viaReschedule={canReschedule} /> : <p className="text-text-secondary">{task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</p>}
         </div>
 
         <div className="border-t border-border pt-3">

@@ -30,6 +30,10 @@ interface TaskListProps {
   // previous fully read-only list.
   isAdmin?: boolean
   ledSubsystemIds?: string[]
+  // The viewer is the COO, CTO or an admin (canManageOperations): they may change ANY task's due date, saved
+  // through reschedule_task() -- deadline-only, which is all the COO is allowed. Plain boolean, for the same
+  // server-to-client-boundary reason as above.
+  canReschedule?: boolean
   // Whether the viewer may accept an unassigned task in this list for themselves (server-side
   // authorization in accept_task/migration 0024 is the real gate — this just decides whether to
   // show the button at all, e.g. the subsystem page passes true only for its own members).
@@ -87,6 +91,7 @@ export default function TaskList({
   currentUserId,
   isAdmin = false,
   ledSubsystemIds = [],
+  canReschedule = false,
   canAccept = false,
   emptyTitle = 'No tasks match these filters',
   emptyDescription = 'Try adjusting or clearing your filters.',
@@ -97,6 +102,7 @@ export default function TaskList({
   const [previewId, setPreviewId] = useState<string | null>(null)
   const selectable = Boolean(selectedIds && onToggle && onToggleAll)
   const canManageTask = (task: Task) => isAdmin || ledSubsystemIds.includes(task.subsystem_id)
+  const canEditDate = (task: Task) => canReschedule || canManageTask(task)
   const canEditStatus = (task: Task) => canManageTask(task) || Boolean(currentUserId && task.assignees?.some((a) => a.user_id === currentUserId))
   const previewTask = previewId ? (tasks.find((t) => t.id === previewId) ?? null) : null
 
@@ -125,7 +131,7 @@ export default function TaskList({
             {task.category?.name && <span className="min-w-0 max-w-full truncate">{task.category.name}</span>}
           </div>
           {/* on phones the due date and badges fold into the first column, each on its own line */}
-          <div className="mt-1 text-xs sm:hidden">{canManageTask(task) ? <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} /> : <DueCell task={task} />}</div>
+          <div className="mt-1 text-xs sm:hidden">{canEditDate(task) ? <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} viaReschedule={canReschedule} /> : <DueCell task={task} />}</div>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:hidden">
             <PriorityBadge priority={task.priority} />
             <StatusCell task={task} editable={canEditStatus(task)} />
@@ -135,7 +141,7 @@ export default function TaskList({
     },
     { key: 'priority', header: 'Priority', hideBelow: 'sm', cell: (task) => <PriorityBadge priority={task.priority} /> },
     { key: 'status', header: 'Status', hideBelow: 'sm', cell: (task) => <StatusCell task={task} editable={canEditStatus(task)} /> },
-    { key: 'due', header: 'Due', hideBelow: 'sm', cell: (task) => (canManageTask(task) ? <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} /> : <DueCell task={task} />) },
+    { key: 'due', header: 'Due', hideBelow: 'sm', cell: (task) => (canEditDate(task) ? <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} viaReschedule={canReschedule} /> : <DueCell task={task} />) },
     {
       key: 'owner',
       header: 'Owner',
@@ -155,7 +161,7 @@ export default function TaskList({
     columns.push({ key: 'accept', header: '', align: 'right', cell: (task) => (!task.primary_owner_id ? <AcceptTaskButton taskId={task.id} /> : null) })
   }
   if (selectable) {
-    const manageable = tasks.filter((t) => canManageTask(t))
+    const manageable = tasks.filter((t) => canEditDate(t))
     const ids = manageable.map((t) => t.id)
     const allSelected = ids.length > 0 && ids.every((id) => selectedIds!.has(id))
     columns.unshift({
@@ -166,7 +172,7 @@ export default function TaskList({
         </label>
       ) : null,
       cell: (task) =>
-        canManageTask(task) ? (
+        canEditDate(task) ? (
           <label className="-m-2 flex cursor-pointer items-center justify-center p-2">
             <input type="checkbox" aria-label={`Select ${task.title || 'task'}`} checked={selectedIds!.has(task.id)} onChange={() => onToggle!(task.id)} className="h-4 w-4 accent-accent-blue" />
           </label>
@@ -184,7 +190,7 @@ export default function TaskList({
         emptyState={<EmptyState icon={ListChecks} title={emptyTitle} description={emptyDescription} />}
       />
       {currentUserId && (
-        <TaskPreviewDrawer task={previewTask} open={previewTask !== null} onClose={() => setPreviewId(null)} currentUserId={currentUserId} canManage={previewTask ? canManageTask(previewTask) : false} />
+        <TaskPreviewDrawer task={previewTask} open={previewTask !== null} onClose={() => setPreviewId(null)} currentUserId={currentUserId} canManage={previewTask ? canManageTask(previewTask) : false} canReschedule={canReschedule} />
       )}
     </>
   )

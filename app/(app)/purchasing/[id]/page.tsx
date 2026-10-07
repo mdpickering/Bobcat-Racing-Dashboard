@@ -14,6 +14,8 @@ import ReceivingPanel from '@/components/purchasing/ReceivingPanel'
 import MetricStrip from '@/components/ui/MetricStrip'
 import ErrorState from '@/components/ui/ErrorState'
 
+export const metadata = { title: 'Purchase request' }
+
 export default async function PurchaseRequestDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const {

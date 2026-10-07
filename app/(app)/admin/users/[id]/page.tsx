@@ -15,6 +15,8 @@ import UserSubsystemMemberships from '@/components/admin/UserSubsystemMembership
 import { ChevronLeft } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 
+export const metadata = { title: 'User' }
+
 export default async function AdminUserDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const {

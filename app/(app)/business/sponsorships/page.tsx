@@ -20,6 +20,8 @@ import ProgramPanel from '@/components/sponsorships/ProgramPanel'
 import ProgramSetupPanel from '@/components/sponsorships/ProgramSetupPanel'
 import AddSponsorshipButton from '@/components/sponsorships/AddSponsorshipButton'
 
+export const metadata = { title: 'Sponsorships' }
+
 export default async function SponsorshipsPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
   const supabase = createClient()
   const {

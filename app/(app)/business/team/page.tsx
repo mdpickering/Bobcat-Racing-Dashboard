@@ -6,6 +6,8 @@ import type { Profile } from '@/types/user'
 import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
 import BusinessTeamPanel from '@/components/business/BusinessTeamPanel'
 
+export const metadata = { title: 'Business team' }
+
 export default async function BusinessTeamPage() {
   const supabase = createClient()
   const {

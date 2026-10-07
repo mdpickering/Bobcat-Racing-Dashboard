@@ -7,6 +7,8 @@ import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 import ReceivingTable from '@/components/receiving/ReceivingTable'
 
+export const metadata = { title: 'Receiving' }
+
 const TABS = [
   { id: 'needs', label: 'Needs Receiving' },
   { id: 'recent', label: 'Recently Received' },

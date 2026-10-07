@@ -12,6 +12,8 @@ import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 import Tabs from '@/components/ui/Tabs'
 
+export const metadata = { title: 'My tasks' }
+
 export default async function TasksPage({
   searchParams,
 }: {

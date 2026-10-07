@@ -9,6 +9,8 @@ import PurchasingToolbar from '@/components/purchasing/PurchasingToolbar'
 import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 
+export const metadata = { title: 'Purchasing' }
+
 export default async function PurchasingPage({
   searchParams,
 }: {

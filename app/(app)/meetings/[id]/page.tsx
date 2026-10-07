@@ -7,6 +7,8 @@ import type { Profile } from '@/types/user'
 import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
 import MeetingWorkspace from '@/components/meetings/MeetingWorkspace'
 
+export const metadata = { title: 'Meeting' }
+
 export default async function MeetingDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const {

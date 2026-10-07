@@ -20,6 +20,8 @@ import KpiCard from '@/components/dashboard/KpiCard'
 import SubsystemProgressGrid from '@/components/dashboard/SubsystemProgressGrid'
 import UpcomingTimeline from '@/components/dashboard/UpcomingTimeline'
 
+export const metadata = { title: 'Dashboard' }
+
 export default async function DashboardPage() {
   const supabase = createClient()
   const {

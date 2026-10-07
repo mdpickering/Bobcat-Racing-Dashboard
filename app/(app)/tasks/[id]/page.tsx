@@ -10,6 +10,8 @@ import TaskCommentsPanel from '@/components/tasks/TaskCommentsPanel'
 import TaskAttachmentsPanel from '@/components/tasks/TaskAttachmentsPanel'
 import ErrorState from '@/components/ui/ErrorState'
 
+export const metadata = { title: 'Task' }
+
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const {

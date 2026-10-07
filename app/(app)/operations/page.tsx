@@ -20,6 +20,8 @@ import AgendaList from '@/components/operations/AgendaList'
 import DeadlineTable from '@/components/operations/DeadlineTable'
 import type { SubsystemScheduleRow } from '@/lib/operationsSchedule'
 
+export const metadata = { title: 'Operations' }
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 const keyLabel = (key: string) => {

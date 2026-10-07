@@ -12,6 +12,8 @@ import ApplicationReviewPanel from '@/components/admin/ApplicationReviewPanel'
 import { ChevronLeft } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 
+export const metadata = { title: 'Application' }
+
 const STATUS_TONE: Record<string, 'amber' | 'emerald' | 'rose'> = {
   pending: 'amber',
   approved: 'emerald',

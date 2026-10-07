@@ -13,6 +13,8 @@ import CalendarToolbar from '@/components/calendar/CalendarToolbar'
 import EventsList from '@/components/operations/EventsList'
 import type { RecurringEvent } from '@/types/database'
 
+export const metadata = { title: 'Events' }
+
 const DAY_MS = 24 * 60 * 60 * 1000
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 

@@ -14,6 +14,8 @@ import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import MilestonesToolbar from '@/components/calendar/MilestonesToolbar'
 
+export const metadata = { title: 'Milestones' }
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 const keyToUtc = (key: string) => {

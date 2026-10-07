@@ -4,6 +4,8 @@ import NotificationsList from '@/components/notifications/NotificationsList'
 import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 
+export const metadata = { title: 'Notifications' }
+
 export default async function NotificationsPage() {
   const supabase = createClient()
 

@@ -16,6 +16,8 @@ import { BarList } from '@/components/ui/Charts'
 import ErrorState from '@/components/ui/ErrorState'
 import { Boxes } from 'lucide-react'
 
+export const metadata = { title: 'Subsystem schedule' }
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 const shortDate = (key: string) => {

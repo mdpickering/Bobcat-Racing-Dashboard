@@ -8,6 +8,8 @@ import TimelineToolbar from '@/components/timeline/TimelineToolbar'
 import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 
+export const metadata = { title: 'Timeline' }
+
 export default async function TimelinePage() {
   const supabase = createClient()
   const {

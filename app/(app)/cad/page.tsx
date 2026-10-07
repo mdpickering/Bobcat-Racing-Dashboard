@@ -9,6 +9,8 @@ import CadToolbar from '@/components/cad/CadToolbar'
 import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 
+export const metadata = { title: 'CAD review' }
+
 export default async function CadPage({
   searchParams,
 }: {

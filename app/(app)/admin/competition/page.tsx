@@ -7,6 +7,8 @@ import ErrorState from '@/components/ui/ErrorState'
 import AdminNav from '@/components/admin/AdminNav'
 import CompetitionSettingsForm from '@/components/admin/CompetitionSettingsForm'
 
+export const metadata = { title: 'Competition' }
+
 export default async function AdminCompetitionPage() {
   const supabase = createClient()
   const {

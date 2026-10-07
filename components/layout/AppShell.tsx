@@ -61,6 +61,13 @@ export default function AppShell({ profile, available, startWorkspace, children 
   return (
     <ToastProvider>
       <TooltipProvider delayDuration={300}>
+      {/* First tab stop on every page: lets keyboard and screen-reader users jump past the sidebar and header. */}
+      <a
+        href="#main-content"
+        className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-xl bg-qu-gold px-4 py-2 text-xs font-bold text-qu-navy shadow-panel transition-transform focus:translate-y-0"
+      >
+        Skip to main content
+      </a>
       <div data-workspace={workspace} className="flex h-screen overflow-hidden bg-bg text-text-primary">
         <div className="hidden md:block">
           <Sidebar profile={profile} workspace={workspace} available={available} showSwitcher collapsible collapsed={collapsed} onToggleCollapsed={toggleSidebar} />
@@ -90,7 +97,7 @@ export default function AppShell({ profile, available, startWorkspace, children 
               document — and on pages where html/body end up with a sliver of their own scrollable slack (e.g. tall
               two-column grids like /operations), that chaining lets you scroll into empty space below the shell
               entirely. This only stops that hand-off; it does not hide or clip any real content. */}
-          <main className="flex-1 overflow-y-auto overscroll-contain scrollbar-thin p-4 md:p-6">{children}</main>
+          <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overscroll-contain scrollbar-thin p-4 outline-none md:p-6">{children}</main>
         </div>
       </div>
       </TooltipProvider>

@@ -15,6 +15,8 @@ import CategoryManagementPanel from '@/components/subsystems/CategoryManagementP
 import SubsystemMembersPanel from '@/components/subsystems/SubsystemMembersPanel'
 import { ChevronLeft } from 'lucide-react'
 
+export const metadata = { title: 'Subsystem' }
+
 export default async function SubsystemDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const {

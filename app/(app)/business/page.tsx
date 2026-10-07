@@ -25,6 +25,8 @@ import { BarList, ProgressBar } from '@/components/ui/Charts'
 import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
 import PurchaseStatusBadge from '@/components/purchasing/PurchaseStatusBadge'
 
+export const metadata = { title: 'Business' }
+
 // Money figures that come from purchase items can be a floor when some items have no cost yet; say so.
 function ItemsWithoutCostNote({ count }: { count: number }) {
   if (count === 0) return null

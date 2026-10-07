@@ -6,6 +6,8 @@ import { listEmailPreferences } from '@/lib/supabase/queries/emailPreferences'
 import type { EmailPreferenceCategory } from '@/types/database'
 import type { Profile } from '@/types/user'
 
+export const metadata = { title: 'Account' }
+
 export default async function AccountPage() {
   const supabase = createClient()
   const {

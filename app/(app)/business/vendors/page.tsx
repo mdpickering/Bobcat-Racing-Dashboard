@@ -10,6 +10,8 @@ import VendorFilters from '@/components/vendors/VendorFilters'
 import VendorsTable from '@/components/vendors/VendorsTable'
 import { AddVendorButton } from '@/components/vendors/VendorFormModal'
 
+export const metadata = { title: 'Vendors' }
+
 export default async function VendorsPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
   const supabase = createClient()
   const {

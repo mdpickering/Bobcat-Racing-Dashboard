@@ -7,6 +7,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import StatusBadge from '@/components/ui/StatusBadge'
 import Button from '@/components/ui/Button'
 import Textarea from '@/components/ui/Textarea'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { updateMeeting, deleteMeeting } from '@/lib/supabase/queries/meetings'
@@ -25,6 +26,8 @@ export default function MeetingHeaderBar({ meeting, canManage, canRecord }: Meet
   const router = useRouter()
   const toast = useToast()
   const [busy, setBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [summaryNotes, setSummaryNotes] = useState(meeting.summary_notes ?? '')
   const [savingNotes, setSavingNotes] = useState(false)
   const [showSummaryBox, setShowSummaryBox] = useState(Boolean(meeting.summary_notes) || meeting.status === 'completed')
@@ -42,15 +45,15 @@ export default function MeetingHeaderBar({ meeting, canManage, canRecord }: Meet
   }
 
   async function handleDelete() {
-    if (!window.confirm('Delete this empty draft meeting? This only works while it has no notes, decisions or action items.')) return
     setBusy(true)
+    setDeleteError(null)
     try {
       await deleteMeeting(createClient(), meeting.id)
       toast.push('Meeting deleted.', 'success')
       router.push('/meetings')
       router.refresh()
     } catch (err) {
-      toast.push(getErrorMessage(err, 'Could not delete this meeting.'), 'danger')
+      setDeleteError(getErrorMessage(err, 'Could not delete this meeting.'))
       setBusy(false)
     }
   }
@@ -101,7 +104,7 @@ export default function MeetingHeaderBar({ meeting, canManage, canRecord }: Meet
               </Button>
             )}
             {canManage && meeting.status === 'planned' && (
-              <Button aria-label="Delete this draft meeting" size="sm" variant="danger" disabled={busy} onClick={handleDelete}>
+              <Button aria-label="Delete this draft meeting" size="sm" variant="danger" disabled={busy} onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
                 <Trash2 size={12} />
               </Button>
             )}
@@ -130,6 +133,16 @@ export default function MeetingHeaderBar({ meeting, canManage, canRecord }: Meet
           + Add a meeting summary
         </button>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete this draft meeting?"
+        busy={busy}
+        error={deleteError}
+        description={<p>This only works while the meeting has no notes, decisions or action items. A meeting with content is kept as history.</p>}
+      />
     </div>
   )
 }

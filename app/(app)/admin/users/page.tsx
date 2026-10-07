@@ -8,6 +8,8 @@ import AdminNav from '@/components/admin/AdminNav'
 import UserFilters from '@/components/admin/UserFilters'
 import UserList from '@/components/admin/UserList'
 
+export const metadata = { title: 'Users' }
+
 export default async function AdminUsersPage({
   searchParams,
 }: {

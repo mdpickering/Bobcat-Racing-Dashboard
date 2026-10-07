@@ -14,6 +14,8 @@ import ContactsPanel from '@/components/sponsorships/ContactsPanel'
 import RenewalPanel from '@/components/sponsorships/RenewalPanel'
 import HistoryPanel from '@/components/sponsorships/HistoryPanel'
 
+export const metadata = { title: 'Sponsorship' }
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export default async function SponsorshipDetailPage({ params }: { params: { id: string } }) {

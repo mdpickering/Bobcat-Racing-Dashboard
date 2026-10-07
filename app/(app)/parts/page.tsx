@@ -11,6 +11,8 @@ import PartsFilters from '@/components/parts/PartsFilters'
 import PartsTable from '@/components/parts/PartsTable'
 import { AddPartButton } from '@/components/parts/PartActions'
 
+export const metadata = { title: 'Parts' }
+
 export default async function PartsPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
   const supabase = createClient()
   const {

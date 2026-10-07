@@ -20,6 +20,8 @@ import RelatedPurchasesPanel from '@/components/parts/RelatedPurchasesPanel'
 import CatalogAuditPanel from '@/components/parts/CatalogAuditPanel'
 import PartStockPanel from '@/components/parts/PartStockPanel'
 
+export const metadata = { title: 'Part' }
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (

@@ -7,6 +7,8 @@ import ErrorState, { PermissionDeniedState } from '@/components/ui/ErrorState'
 import MeetingListPanel from '@/components/meetings/MeetingListPanel'
 import NewMeetingButton from '@/components/meetings/NewMeetingButton'
 
+export const metadata = { title: 'Technical meetings' }
+
 export default async function MeetingsPage() {
   const supabase = createClient()
   const {

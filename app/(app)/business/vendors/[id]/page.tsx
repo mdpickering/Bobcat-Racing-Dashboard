@@ -17,6 +17,8 @@ import VendorPartsPanel from '@/components/vendors/VendorPartsPanel'
 import RelatedPurchasesPanel from '@/components/parts/RelatedPurchasesPanel'
 import CatalogAuditPanel from '@/components/parts/CatalogAuditPanel'
 
+export const metadata = { title: 'Vendor' }
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export default async function VendorDetailPage({ params }: { params: { id: string } }) {

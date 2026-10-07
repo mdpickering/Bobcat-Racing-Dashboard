@@ -9,6 +9,8 @@ import FilterBar from '@/components/ui/FilterBar'
 import ErrorState from '@/components/ui/ErrorState'
 import DeadlinesBoard from '@/components/operations/DeadlinesBoard'
 
+export const metadata = { title: 'Deadlines' }
+
 const STATUSES = ['To Do', 'In Progress', 'Blocked', 'Review']
 const RANGES: { value: string; label: string }[] = [
   { value: 'overdue', label: 'Overdue' },

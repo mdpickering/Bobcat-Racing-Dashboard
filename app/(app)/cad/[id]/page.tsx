@@ -9,6 +9,8 @@ import CadReviewVersionsPanel from '@/components/cad/CadReviewVersionsPanel'
 import CadReviewCommentsPanel from '@/components/cad/CadReviewCommentsPanel'
 import ErrorState from '@/components/ui/ErrorState'
 
+export const metadata = { title: 'CAD review' }
+
 export default async function CadReviewDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const {

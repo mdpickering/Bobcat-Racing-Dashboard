@@ -95,35 +95,23 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
           </button>
         )}
 
-        {def.groups.map((group) => (
+        {/* Planned-but-unbuilt items ('soon' in lib/workspaces.ts) are not shown: a nav full of disabled entries makes
+            the app look unfinished. A group left with nothing to show is dropped too; flipping an item to 'available'
+            brings it (and its group) back. */}
+        {def.groups
+          .map((group) => ({ group, items: group.items.filter((i) => i.status === 'available' && i.href) }))
+          .filter(({ items }) => items.length > 0)
+          .map(({ group, items }) => (
           <div key={group.label} className="sidebar-group">
             <div className="sidebar-group-label px-3 pb-1 pt-3 text-2xs font-medium text-text-muted">{group.label}</div>
             <div className="space-y-0.5">
-              {group.items.map((item) => {
+              {items.map((item) => {
                 const Icon = NAV_ICONS[item.icon]
-                if (item.status === 'soon' || !item.href) {
-                  // planned, not built: listed so the structure is visible, but not a link and it has no route
-                  return (
-                    <div
-                      key={item.label}
-                      aria-disabled="true"
-                      tabIndex={-1}
-                      className="sidebar-link flex cursor-default items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium text-text-muted/70"
-                      {...tipHandlers(`${item.label} — coming soon`)}
-                    >
-                      <Icon size={16} className="flex-shrink-0" aria-hidden="true" />
-                      <span className="sidebar-label flex flex-1 items-center justify-between gap-2">
-                        {item.label}
-                        <span className="rounded-full border border-border px-1.5 text-2xs font-normal text-text-muted">Soon</span>
-                      </span>
-                    </div>
-                  )
-                }
                 const active = isNavItemActive(item, pathname, params)
                 return (
                   <Link
                     key={item.label}
-                    href={item.href}
+                    href={item.href ?? '/'}
                     onClick={onNavigate}
                     aria-current={active ? 'page' : undefined}
                     className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-xl px-3 py-2 text-xs font-medium transition-colors ${

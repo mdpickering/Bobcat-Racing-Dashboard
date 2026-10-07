@@ -5,6 +5,8 @@ import ErrorState from '@/components/ui/ErrorState'
 import EmptyState from '@/components/ui/EmptyState'
 import { Search } from 'lucide-react'
 
+export const metadata = { title: 'Search' }
+
 export default async function SearchPage({
   searchParams,
 }: {

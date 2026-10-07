@@ -11,6 +11,8 @@ import MigrationExceptionsPanel from '@/components/admin/MigrationExceptionsPane
 import { formatDateTime } from '@/lib/format'
 import { History, FileClock } from 'lucide-react'
 
+export const metadata = { title: 'Audit log' }
+
 export default async function AdminAuditPage() {
   const supabase = createClient()
   const {

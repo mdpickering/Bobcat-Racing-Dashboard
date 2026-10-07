@@ -11,7 +11,8 @@ const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-int
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-mono' })
 
 export const metadata: Metadata = {
-  title: 'Bobcat Racing',
+  // each page sets its own short title ("Deadlines | Bobcat Racing"); pages that don't fall back to the default
+  title: { default: 'Bobcat Racing', template: '%s | Bobcat Racing' },
   description: 'Baja SAE team operations platform',
 }
 

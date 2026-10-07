@@ -9,6 +9,8 @@ import CalendarToolbar from '@/components/calendar/CalendarToolbar'
 import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 
+export const metadata = { title: 'Calendar' }
+
 export default async function CalendarPage({
   searchParams,
 }: {

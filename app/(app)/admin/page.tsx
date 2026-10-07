@@ -9,6 +9,8 @@ import AdminStatCard from '@/components/admin/AdminStatCard'
 import RecentActivityPanel from '@/components/admin/RecentActivityPanel'
 import { UserCheck, Inbox, ListChecks, ShoppingCart, Ruler } from 'lucide-react'
 
+export const metadata = { title: 'Administration' }
+
 export default async function AdminPage() {
   const supabase = createClient()
   const {

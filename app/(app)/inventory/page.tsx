@@ -11,6 +11,8 @@ import InventoryFilters from '@/components/inventory/InventoryFilters'
 import InventoryTable from '@/components/inventory/InventoryTable'
 import ManageLocationsButton from '@/components/inventory/ManageLocationsButton'
 
+export const metadata = { title: 'Inventory' }
+
 export default async function InventoryPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
   const supabase = createClient()
   const {

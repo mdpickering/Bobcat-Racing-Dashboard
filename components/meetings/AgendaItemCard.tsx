@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, ArrowDown, ArrowUp, Trash2, Plus } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Textarea from '@/components/ui/Textarea'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
@@ -31,6 +32,8 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
   const [notes, setNotes] = useState(item.discussion_notes ?? '')
   const [decision, setDecision] = useState(item.decision ?? '')
   const [busy, setBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const dirty = notes !== (item.discussion_notes ?? '') || decision !== (item.decision ?? '')
 
@@ -59,13 +62,14 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Remove the agenda topic "${item.title}"?`)) return
     setBusy(true)
+    setDeleteError(null)
     try {
       await deleteAgendaItem(createClient(), item.id)
+      setConfirmOpen(false)
       router.refresh()
     } catch (err) {
-      toast.push(getErrorMessage(err, 'Could not remove this topic.'), 'danger')
+      setDeleteError(getErrorMessage(err, 'Could not remove this topic.'))
       setBusy(false)
     }
   }
@@ -87,7 +91,7 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
               <Button aria-label={`Move ${item.title} down`} size="sm" variant="ghost" disabled={!neighbours.next} onClick={() => onMove('down')}>
                 <ArrowDown size={12} />
               </Button>
-              <Button aria-label={`Remove topic ${item.title}`} size="sm" variant="ghost" disabled={busy} onClick={handleDelete}>
+              <Button aria-label={`Remove topic ${item.title}`} size="sm" variant="ghost" disabled={busy} onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
                 <Trash2 size={12} />
               </Button>
             </>
@@ -153,6 +157,18 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Remove agenda topic?"
+        confirmLabel="Remove"
+        busyLabel="Removing…"
+        busy={busy}
+        error={deleteError}
+        description={<p>&ldquo;{item.title}&rdquo; and any notes recorded under it will be removed from this agenda.</p>}
+      />
     </div>
   )
 }

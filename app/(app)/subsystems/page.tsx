@@ -5,6 +5,8 @@ import type { Profile } from '@/types/user'
 import SubsystemsPageClient from '@/components/subsystems/SubsystemsPageClient'
 import ErrorState from '@/components/ui/ErrorState'
 
+export const metadata = { title: 'Subsystems' }
+
 export default async function SubsystemsPage() {
   const supabase = createClient()
   const {

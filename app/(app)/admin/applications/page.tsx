@@ -8,6 +8,8 @@ import ErrorState from '@/components/ui/ErrorState'
 import AdminNav from '@/components/admin/AdminNav'
 import ApplicationList from '@/components/admin/ApplicationList'
 
+export const metadata = { title: 'Applications' }
+
 export default async function AdminApplicationsPage({
   searchParams,
 }: {

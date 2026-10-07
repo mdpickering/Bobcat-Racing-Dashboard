@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Pencil, Trash2, ArrowUpRight } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { createTaskFromMeetingAction, deleteActionItem, updateActionItem } from '@/lib/supabase/queries/meetings'
@@ -26,6 +27,8 @@ export default function ActionItemRow({ item, canEditNow, canManage, onEdit }: A
   const router = useRouter()
   const toast = useToast()
   const [busy, setBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   async function handleStatusChange(status: string) {
     setBusy(true)
@@ -53,13 +56,14 @@ export default function ActionItemRow({ item, canEditNow, canManage, onEdit }: A
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Remove the action item "${item.title}"?`)) return
     setBusy(true)
+    setDeleteError(null)
     try {
       await deleteActionItem(createClient(), item.id)
+      setConfirmOpen(false)
       router.refresh()
     } catch (err) {
-      toast.push(getErrorMessage(err, 'Could not remove this action item.'), 'danger')
+      setDeleteError(getErrorMessage(err, 'Could not remove this action item.'))
       setBusy(false)
     }
   }
@@ -95,7 +99,7 @@ export default function ActionItemRow({ item, canEditNow, canManage, onEdit }: A
             <Pencil size={12} />
           </Button>
           {canManage && (
-            <Button aria-label={`Delete action item ${item.title}`} size="sm" variant="ghost" disabled={busy} onClick={handleDelete}>
+            <Button aria-label={`Delete action item ${item.title}`} size="sm" variant="ghost" disabled={busy} onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>
               <Trash2 size={12} />
             </Button>
           )}
@@ -103,6 +107,17 @@ export default function ActionItemRow({ item, canEditNow, canManage, onEdit }: A
       ) : (
         <span className="flex-shrink-0 text-2xs font-semibold uppercase tracking-wide text-text-muted">{item.status}</span>
       )}
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleDelete}
+        title="Remove action item?"
+        confirmLabel="Remove"
+        busyLabel="Removing…"
+        busy={busy}
+        error={deleteError}
+        description={<p>"{item.title}" will be removed from this meeting.</p>}
+      />
     </div>
   )
 }

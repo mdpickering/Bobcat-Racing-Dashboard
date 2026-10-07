@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Bell, CheckCheck } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
 import { createClient } from '@/lib/supabase/client'
 import { listNotifications, countUnreadNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/supabase/queries/notifications'
 import type { AppNotification } from '@/types/database'
@@ -93,19 +94,24 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={handleOpen}
-        aria-label="Notifications"
-        className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary"
-      >
-        <Bell size={16} />
-        {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-qu-gold px-1 text-2xs font-bold text-qu-navy">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={handleOpen}
+            aria-label="Notifications"
+            className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-qu-gold px-1 text-2xs font-bold text-qu-navy">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}</TooltipContent>
+      </Tooltip>
 
       {open && (
         // fixed + viewport-relative insets on mobile: an absolute w-80 panel

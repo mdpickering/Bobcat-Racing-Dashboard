@@ -8,6 +8,7 @@ import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/sidebarPrefer
 import { resolveShellWorkspace, workspaceToRemember, type WorkspaceId } from '@/lib/workspaceAccess'
 import { rememberWorkspace } from '@/lib/workspacePreference'
 import { ToastProvider } from '@/components/ui/Toast'
+import { TooltipProvider } from '@/components/shadcn/tooltip'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
@@ -59,6 +60,7 @@ export default function AppShell({ profile, available, startWorkspace, children 
 
   return (
     <ToastProvider>
+      <TooltipProvider delayDuration={300}>
       <div data-workspace={workspace} className="flex h-screen overflow-hidden bg-bg text-text-primary">
         <div className="hidden md:block">
           <Sidebar profile={profile} workspace={workspace} available={available} showSwitcher collapsible collapsed={collapsed} onToggleCollapsed={toggleSidebar} />
@@ -91,6 +93,7 @@ export default function AppShell({ profile, available, startWorkspace, children 
           <main className="flex-1 overflow-y-auto overscroll-contain scrollbar-thin p-4 md:p-6">{children}</main>
         </div>
       </div>
+      </TooltipProvider>
     </ToastProvider>
   )
 }

@@ -1,7 +1,12 @@
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider, THEME_BLOCKING_SCRIPT } from '@/components/theme/ThemeProvider'
 import { SIDEBAR_BLOCKING_SCRIPT } from '@/lib/sidebarPreference'
+
+// Inter: the neutral, highly legible sans recommended for dashboards/admin tools; self-hosted by Next at build
+// time (no runtime request to Google, no layout shift). Exposed as --font-inter and picked up by Tailwind's font-sans.
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: 'Bobcat Racing',
@@ -16,7 +21,7 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning: the blocking scripts below set data-theme / data-sidebar
     // on <html> before React hydrates, which React would otherwise flag as extra attributes.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
       <head>
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BLOCKING_SCRIPT }} />

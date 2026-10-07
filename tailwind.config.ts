@@ -40,17 +40,33 @@ const config: Config = {
         // set per workspace on the shell root (data-workspace)
         ws: 'rgb(var(--ws-accent) / <alpha-value>)',
         'accent-blue': 'rgb(var(--accent-blue) / <alpha-value>)',
+        // shadcn/ui vocabulary (components in components/shadcn) mapped onto the tokens above, so a component
+        // added with `npx shadcn@latest add` follows the app's theme instead of bringing its own palette.
+        // NOTE: shadcn's `accent` (a hover background) is deliberately NOT mapped -- here `accent` is the gold
+        // text colour. After adding a component, replace any bg-accent / text-accent-foreground in it with
+        // bg-surface-raised / text-text-primary.
+        background: 'rgb(var(--bg) / <alpha-value>)',
+        foreground: 'rgb(var(--text-primary) / <alpha-value>)',
+        card: { DEFAULT: 'rgb(var(--surface) / <alpha-value>)', foreground: 'rgb(var(--text-primary) / <alpha-value>)' },
+        popover: { DEFAULT: 'rgb(var(--surface-raised) / <alpha-value>)', foreground: 'rgb(var(--text-primary) / <alpha-value>)' },
+        primary: { DEFAULT: '#FFC72C', foreground: '#0C2340' },
+        secondary: { DEFAULT: 'rgb(var(--surface-raised) / <alpha-value>)', foreground: 'rgb(var(--text-primary) / <alpha-value>)' },
+        muted: { DEFAULT: 'rgb(var(--surface) / <alpha-value>)', foreground: 'rgb(var(--text-muted) / <alpha-value>)' },
+        destructive: { DEFAULT: 'rgb(var(--status-danger) / <alpha-value>)', foreground: 'rgb(var(--bg) / <alpha-value>)' },
+        input: 'rgb(var(--border) / <alpha-value>)',
+        ring: 'rgb(var(--accent-blue) / <alpha-value>)',
       },
       boxShadow: {
         glow: '0 0 20px -3px rgba(255, 199, 44, 0.2)',
         panel: '0 8px 30px -4px rgba(0, 0, 0, 0.55)',
       },
       fontFamily: {
+        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
     },
   },
-  plugins: [],
+  plugins: [require('tailwindcss-animate')],
 }
 
 export default config

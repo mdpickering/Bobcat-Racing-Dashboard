@@ -164,6 +164,19 @@ button:has(> svg:only-child) {
   }
 }
 
+/* Respect the OS "reduce motion" setting everywhere (skeleton pulses, spinners, tooltip/drawer animations,
+   hover transitions), not just the sidebar. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sidebar-collapsible,
   .sidebar-label,

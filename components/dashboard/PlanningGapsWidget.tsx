@@ -31,7 +31,7 @@ export default function PlanningGapsWidget({ rows, scopeLabel }: { rows: GapRow[
                 <span className="text-text-primary">{r.label}</span>
                 <span className="flex items-center gap-2">
                   <span className={`font-mono text-sm font-semibold tabular-nums ${STATUS_TEXT_CLASSES[r.tone]}`}>{r.count}</span>
-                  <span className="text-accent-blue">Fix</span>
+                  <span className="text-accent-blue">Review</span>
                 </span>
               </Link>
             </li>

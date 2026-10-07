@@ -15,7 +15,8 @@ import EmptyState from '@/components/ui/EmptyState'
 import InlineDateEditor from '@/components/ui/InlineDateEditor'
 import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges'
 import { createClient } from '@/lib/supabase/client'
-import { updateTask, listTaskComments, addTaskComment } from '@/lib/supabase/queries/tasks'
+import { updateTask, listTaskComments, addTaskComment, setTaskAssignee } from '@/lib/supabase/queries/tasks'
+import { listSubsystemMembers } from '@/lib/supabase/queries/subsystems'
 import { getErrorMessage } from '@/lib/errors'
 import { planningGaps, startNudge } from '@/lib/taskGuards'
 import { useToast } from '@/components/ui/Toast'
@@ -24,6 +25,11 @@ import type { Task, TaskComment, TaskStatus, TaskPriority } from '@/types/databa
 
 const STATUSES: TaskStatus[] = ['To Do', 'In Progress', 'Blocked', 'Review', 'Complete']
 const PRIORITIES: TaskPriority[] = ['Critical', 'High', 'Medium', 'Low']
+
+interface OwnerOption {
+  id: string
+  name: string
+}
 
 interface TaskPreviewDrawerProps {
   task: Task | null
@@ -51,16 +57,42 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
   const [commentText, setCommentText] = useState('')
   const [postingComment, setPostingComment] = useState(false)
 
+  const [members, setMembers] = useState<OwnerOption[]>([])
+  const [ownerPick, setOwnerPick] = useState('')
+  const [assigning, setAssigning] = useState(false)
+
   const taskId = task?.id ?? null
+  const subsystemId = task?.subsystem_id ?? null
 
   useEffect(() => {
     if (!open || !taskId) return
     setEditingDetails(false)
     setComments(null)
+    setOwnerPick('')
     listTaskComments(createClient(), taskId)
       .then(setComments)
       .catch(() => setComments([]))
   }, [open, taskId])
+
+  // Who the task could be assigned to: the members of its own subsystem. Only fetched for a viewer who may assign
+  // (the database enforces that too: only admin, CTO or the subsystem's lead can add an owner).
+  useEffect(() => {
+    if (!open || !subsystemId || !canManage) {
+      setMembers([])
+      return
+    }
+    let cancelled = false
+    listSubsystemMembers(createClient(), subsystemId)
+      .then((rows) => {
+        if (!cancelled) setMembers(rows.map((m) => ({ id: m.user_id, name: m.profile?.display_name || m.profile?.email || 'Unnamed member' })))
+      })
+      .catch(() => {
+        if (!cancelled) setMembers([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open, subsystemId, canManage])
 
   if (!task) return null
 
@@ -81,6 +113,28 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
       toast.push(getErrorMessage(err, 'Could not save that change.'), 'danger')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const hasPrimary = Boolean(task.primary_owner_id)
+  const assignedIds = new Set((task.assignees ?? []).map((a) => a.user_id))
+  const assignable = members.filter((m) => !assignedIds.has(m.id))
+
+  async function handleAssign() {
+    if (!task || !ownerPick) return
+    const chosen = members.find((m) => m.id === ownerPick)
+    setAssigning(true)
+    try {
+      // The first person added to an unowned task becomes its primary owner; anyone after that is a co-owner (the
+      // same rule the full task page uses). A database trigger keeps tasks.primary_owner_id in step.
+      await setTaskAssignee(createClient(), task.id, ownerPick, hasPrimary ? 'co_owner' : 'primary')
+      toast.push(`${hasPrimary ? 'Added' : 'Assigned to'} ${chosen?.name ?? 'that member'}.`, 'success')
+      setOwnerPick('')
+      router.refresh()
+    } catch (err) {
+      toast.push(getErrorMessage(err, 'Could not assign this task.'), 'danger')
+    } finally {
+      setAssigning(false)
     }
   }
 
@@ -216,9 +270,24 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
           ) : (
             <p className="text-text-muted">Unassigned</p>
           )}
+          {canManage && assignable.length > 0 && (
+            <div className="mt-2 flex items-center gap-2">
+              <Select aria-label={hasPrimary ? 'Add a co-owner' : 'Assign an owner'} value={ownerPick} onChange={(e) => setOwnerPick(e.target.value)} disabled={assigning} className="flex-1">
+                <option value="">{hasPrimary ? 'Add a co-owner…' : 'Assign an owner…'}</option>
+                {assignable.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </Select>
+              <Button size="sm" disabled={!ownerPick || assigning} onClick={handleAssign}>
+                {assigning ? 'Saving…' : hasPrimary ? 'Add' : 'Assign'}
+              </Button>
+            </div>
+          )}
           {canManage && (
             <Link href={`/tasks/${task.id}`} className="mt-1.5 inline-block text-2xs text-accent-blue hover:underline">
-              Manage owners on the full page →
+              {assignable.length > 0 ? 'Remove or change owners on the full page →' : 'Manage owners on the full page →'}
             </Link>
           )}
         </div>

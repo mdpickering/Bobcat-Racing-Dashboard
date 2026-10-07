@@ -91,7 +91,7 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
 
       <div>
         <SectionHeader title={`Open tasks (${openTasks.length})`} />
-        <TaskListBoard tasks={openTasks} currentUserId={profile.id} isAdmin={admin} ledSubsystemIds={isLeadHere ? [params.id] : []} canReschedule={canManageOperations(profile)} canAccept={canAcceptTasks} />
+        <TaskListBoard tasks={openTasks} currentUserId={profile.id} isAdmin={admin} ledSubsystemIds={isLeadHere ? [params.id] : []} canReschedule={canManageOperations(profile)} canAssign={admin || isLeadHere} owners={members.map((m) => ({ id: m.user_id, name: m.profile?.display_name || m.profile?.email || 'Unnamed member' }))} canAccept={canAcceptTasks} />
       </div>
     </div>
   )

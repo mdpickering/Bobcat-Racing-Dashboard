@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --bg: 4 8 17;
-  --surface: 10 21 38;
-  --surface-raised: 14 28 48;
-  --border: 30 48 71;
+  --bg: 7 13 23;
+  --surface: 11 27 47;
+  --surface-raised: 15 36 62;
+  --border: 33 55 84;
   --text-primary: 241 245 249;
   --text-secondary: 148 163 184;
   /* muted text and accent-blue links are 4.75:1+ on every dark surface (were 3.6:1 and 3.9:1) */
-  --text-muted: 120 136 160;
+  --text-muted: 128 144 168;
   --accent: 255 199 44;
   --accent-blue: 90 150 205;
   /* status colours: one meaning each, everywhere (see lib/status.ts) */
@@ -89,7 +89,7 @@ body {
   transition: opacity 150ms ease;
 }
 .sidebar-footer {
-  max-height: 8rem;
+  max-height: 10rem;
   overflow: hidden;
   transition: max-height 200ms ease, padding 200ms ease, opacity 150ms ease;
 }

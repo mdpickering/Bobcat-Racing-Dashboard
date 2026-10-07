@@ -13,6 +13,7 @@ import ThemeToggle from '@/components/theme/ThemeToggle'
 import NotificationBell from '@/components/notifications/NotificationBell'
 import SearchAutocomplete from '@/components/search/SearchAutocomplete'
 import WorkspaceSwitcher from './WorkspaceSwitcher'
+import Breadcrumb from './Breadcrumb'
 
 interface HeaderProps {
   profile: Profile
@@ -33,7 +34,7 @@ export default function Header({ profile, workspace, available, onOpenMobileNav 
   }
 
   return (
-    <header className="relative flex h-16 flex-shrink-0 items-center gap-2 border-b border-border bg-surface px-3 md:gap-3 md:px-6">
+    <header className="relative z-30 flex h-16 flex-shrink-0 items-center gap-2 border-b border-border bg-surface px-3 md:gap-3 md:px-6">
       <button
         type="button"
         onClick={onOpenMobileNav}
@@ -48,9 +49,9 @@ export default function Header({ profile, workspace, available, onOpenMobileNav 
         <WorkspaceSwitcher current={workspace} available={available} variant="header" />
       </div>
 
-      <SearchAutocomplete className="hidden max-w-sm flex-1 sm:block" />
+      <Breadcrumb workspace={workspace} className="hidden min-w-0 flex-1 md:block" />
 
-      <div className="flex-1 sm:hidden" />
+      <div className="flex-1 md:hidden" />
 
       <button
         type="button"
@@ -79,6 +80,7 @@ export default function Header({ profile, workspace, available, onOpenMobileNav 
 
       {/* ml-auto pins the theme/notification/account controls to the far right edge. */}
       <div className="ml-auto flex flex-shrink-0 items-center gap-1.5 md:gap-2">
+        <SearchAutocomplete className="hidden w-60 sm:block lg:w-80" />
         <ThemeToggle />
         <NotificationBell />
 

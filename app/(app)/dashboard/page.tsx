@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getDashboardData } from '@/lib/supabase/queries/dashboard'
-import { isCtoOrAdmin, isTeamLead } from '@/lib/permissions/roles'
+import { getTeamOverview, type TeamOverview } from '@/lib/supabase/queries/overview'
+import { canManageOperations, isCtoOrAdmin, isTeamLead } from '@/lib/permissions/roles'
+import { daysUntil } from '@/lib/format'
 import type { Profile } from '@/types/user'
 import PageHeader from '@/components/ui/PageHeader'
 import SectionHeader from '@/components/ui/SectionHeader'
-import MetricStrip from '@/components/ui/MetricStrip'
 import Panel from '@/components/ui/Panel'
 import ErrorState from '@/components/ui/ErrorState'
 import TaskGroup from '@/components/dashboard/TaskListWidget'
@@ -15,6 +16,9 @@ import NotificationsWidget from '@/components/dashboard/NotificationsWidget'
 import PendingRequestsWidget from '@/components/dashboard/PendingRequestsWidget'
 import OrgPendingWidget from '@/components/dashboard/OrgPendingWidget'
 import PurchasingWidget from '@/components/dashboard/PurchasingWidget'
+import KpiCard from '@/components/dashboard/KpiCard'
+import SubsystemProgressGrid from '@/components/dashboard/SubsystemProgressGrid'
+import UpcomingTimeline from '@/components/dashboard/UpcomingTimeline'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -35,6 +39,16 @@ export default async function DashboardPage() {
   const p = profile as Profile
   const lead = isTeamLead(p)
   const admin = isCtoOrAdmin(p)
+  // Admin, CTO and COO run the whole team, so their headline figures are the team's; everyone else sees their own.
+  const teamWide = canManageOperations(p)
+
+  // The team widgets are an extra, not the page: if they fail to load the rest of the dashboard still renders.
+  let overview: TeamOverview | null = null
+  try {
+    overview = await getTeamOverview(supabase, teamWide ? {} : { restrictToTaskIds: new Set(data.assignedTasks.map((t) => t.id)) })
+  } catch {
+    overview = null
+  }
 
   // a task is shown once, in its most urgent group
   const overdueIds = new Set(data.overdueTasks.map((t) => t.id))
@@ -45,30 +59,106 @@ export default async function DashboardPage() {
   const inReview = data.reviewTasks.filter((t) => !shown.has(t.id))
   const attentionCount = data.overdueTasks.length + dueSoon.length + blocked.length + inReview.length
 
+  const daysToCompetition = daysUntil(data.competition?.competition_date)
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl">
       <PageHeader
         title={`Welcome back, ${p.display_name || p.email?.split('@')[0]}`}
         description={admin ? 'Full operational overview' : lead ? 'Your tasks and subsystem overview' : "Here's what's on your plate"}
       />
 
-      <MetricStrip
-        className="mb-6"
-        metrics={[
-          { label: 'Assigned to me', value: String(data.assignedTasks.length), hint: data.coOwnedTasks.length > 0 ? `${data.coOwnedTasks.length} co-owned` : undefined, href: '/tasks' },
-          { label: 'Overdue', value: String(data.overdueTasks.length), tone: data.overdueTasks.length > 0 ? 'danger' : undefined, href: '/tasks' },
-          { label: 'Due in 7 days', value: String(data.dueSoonTasks.length), tone: data.dueSoonTasks.length > 0 ? 'warning' : undefined, href: '/tasks' },
-          { label: 'Blocked', value: String(data.blockedTasks.length), tone: data.blockedTasks.length > 0 ? 'danger' : undefined, href: '/tasks' },
-        ]}
-      />
+      <section aria-label="Key figures" className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        {teamWide && overview ? (
+          <>
+            <KpiCard
+              label="Overdue tasks"
+              value={String(overview.counts.overdue)}
+              tone={overview.counts.overdue > 0 ? 'danger' : undefined}
+              hint={overview.counts.overdue > 0 ? `In ${plural(overview.counts.overdueSubsystems, 'subsystem')}` : 'Everything on time'}
+              hintTone={overview.counts.overdue > 0 ? 'danger' : 'success'}
+              href="/operations/deadlines"
+            />
+            <KpiCard
+              label="Due in 7 days"
+              value={String(overview.counts.dueSoon)}
+              tone={overview.counts.dueSoon > 0 ? 'warning' : undefined}
+              hint={`${overview.counts.noDeadline} undated task${overview.counts.noDeadline === 1 ? '' : 's'}`}
+              hintTone={overview.counts.noDeadline > 0 ? 'warning' : 'neutral'}
+              href="/operations/deadlines"
+            />
+            <KpiCard
+              label="Blocked"
+              value={String(overview.counts.blocked)}
+              tone={overview.counts.blocked > 0 ? 'danger' : undefined}
+              hint={overview.counts.blocked > 0 ? 'Needs unblocking' : 'Nothing blocked'}
+              hintTone={overview.counts.blocked > 0 ? 'danger' : 'success'}
+            />
+            <KpiCard
+              label="Days to competition"
+              value={daysToCompetition !== null ? String(Math.max(daysToCompetition, 0)) : '—'}
+              hint={data.competition?.competition_name || (data.competition ? `${data.competition.season} competition` : 'Not configured')}
+              hintTone="brand"
+            />
+          </>
+        ) : (
+          <>
+            <KpiCard
+              label="Assigned to me"
+              value={String(data.assignedTasks.length)}
+              hint={data.coOwnedTasks.length > 0 ? `${data.coOwnedTasks.length} co-owned` : undefined}
+              href="/tasks"
+            />
+            <KpiCard
+              label="Overdue"
+              value={String(data.overdueTasks.length)}
+              tone={data.overdueTasks.length > 0 ? 'danger' : undefined}
+              hint={data.overdueTasks.length > 0 ? 'Needs your attention' : 'Nothing overdue'}
+              hintTone={data.overdueTasks.length > 0 ? 'danger' : 'success'}
+              href="/tasks"
+            />
+            <KpiCard
+              label="Due in 7 days"
+              value={String(data.dueSoonTasks.length)}
+              tone={data.dueSoonTasks.length > 0 ? 'warning' : undefined}
+              hint="Next 7 days"
+              href="/tasks"
+            />
+            <KpiCard
+              label="Blocked"
+              value={String(data.blockedTasks.length)}
+              tone={data.blockedTasks.length > 0 ? 'danger' : undefined}
+              hint={data.blockedTasks.length > 0 ? 'Needs unblocking' : 'Nothing blocked'}
+              hintTone={data.blockedTasks.length > 0 ? 'danger' : 'success'}
+              href="/tasks"
+            />
+          </>
+        )}
+      </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          {overview && (
+            <section aria-label="Subsystem progress">
+              <SectionHeader
+                title="Subsystem progress"
+                description="Finished tasks out of all tasks, with what needs action."
+                actions={
+                  <Link href="/subsystems" className="touch-target inline-flex items-center text-xs text-accent-blue hover:underline">
+                    All subsystems
+                  </Link>
+                }
+              />
+              <SubsystemProgressGrid subsystems={overview.subsystems} />
+            </section>
+          )}
+
           <section aria-label="Needs attention">
             <SectionHeader
               title="Needs your attention"
               actions={
-                <Link href="/tasks" className="text-xs text-accent-blue hover:underline">
+                <Link href="/tasks" className="touch-target inline-flex items-center text-xs text-accent-blue hover:underline">
                   All my tasks
                 </Link>
               }
@@ -101,7 +191,21 @@ export default async function DashboardPage() {
           {admin && data.orgPendingCounts && <OrgPendingWidget counts={data.orgPendingCounts} />}
         </div>
 
-        <aside aria-label="Season and activity">
+        <aside aria-label="Upcoming, season and activity" className="space-y-6">
+          {overview && (
+            <Panel className="p-4">
+              <SectionHeader
+                title="Upcoming"
+                actions={
+                  <Link href="/calendar" className="touch-target inline-flex items-center text-xs text-accent-blue hover:underline">
+                    Calendar
+                  </Link>
+                }
+              />
+              <UpcomingTimeline items={overview.upcoming} />
+            </Panel>
+          )}
+
           <Panel className="divide-y divide-border">
             <div className="p-4">
               <SectionHeader title="Season" />

@@ -8,7 +8,9 @@ import { ADMIN_LINK, WORKSPACES, isNavItemActive } from '@/lib/workspaces'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
 import type { WorkspaceId } from '@/lib/workspaceAccess'
 import type { Profile } from '@/types/user'
+import Avatar from '@/components/ui/Avatar'
 import { NAV_ICONS } from './navIcons'
+import ConnectionStatus from './ConnectionStatus'
 import WorkspaceSwitcher from './WorkspaceSwitcher'
 
 interface SidebarProps {
@@ -51,11 +53,17 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
   return (
     <aside
       data-workspace={workspace}
-      className={`flex h-full w-64 flex-shrink-0 flex-col overflow-hidden border-r border-border bg-surface ${collapsible ? 'sidebar-collapsible' : ''}`}
+      className={`flex h-full w-[260px] flex-shrink-0 flex-col overflow-hidden border-r border-border bg-surface ${collapsible ? 'sidebar-collapsible' : ''}`}
     >
-      <div className="flex h-16 flex-shrink-0 items-center gap-2.5 overflow-hidden border-b border-border pl-4 pr-5">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-qu-gold text-sm font-black text-qu-navy">B</div>
-        <div className="sidebar-label text-sm font-bold tracking-wide text-text-primary">BOBCAT RACING</div>
+      <div className="flex h-16 flex-shrink-0 items-center gap-3 overflow-hidden border-b border-border pl-3.5 pr-4">
+        <div className="relative flex-shrink-0">
+          <div className="absolute inset-0 rounded-xl bg-qu-gold/40 blur-md" aria-hidden="true" />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-qu-gold text-base font-black text-qu-navy">B</div>
+        </div>
+        <div className="sidebar-label min-w-0">
+          <div className="text-sm font-bold leading-4 tracking-wide text-text-primary">BOBCAT RACING</div>
+          <div className="mt-0.5 text-2xs leading-4 tracking-[0.14em] text-text-muted">BAJA SAE WORKSPACE</div>
+        </div>
       </div>
 
       {showSwitcher ? (
@@ -118,14 +126,14 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
                     href={item.href}
                     onClick={onNavigate}
                     aria-current={active ? 'page' : undefined}
-                    className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
                       active
-                        ? 'bg-surface-raised text-text-primary shadow-[inset_2px_0_0_rgb(var(--ws-accent))]'
+                        ? 'bg-accent/15 font-semibold text-accent shadow-[inset_3px_0_0_rgb(var(--accent))]'
                         : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
                     }`}
                     {...tipHandlers(item.label)}
                   >
-                    <Icon size={16} className={`flex-shrink-0 ${active ? 'text-ws' : 'text-text-muted'}`} aria-hidden="true" />
+                    <Icon size={16} className={`flex-shrink-0 ${active ? 'text-accent' : 'text-text-muted'}`} aria-hidden="true" />
                     <span className="sidebar-label">{item.label}</span>
                   </Link>
                 )
@@ -141,19 +149,24 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
             href={ADMIN_LINK.href}
             onClick={onNavigate}
             aria-current={adminActive ? 'page' : undefined}
-            className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              adminActive ? 'bg-surface-raised text-text-primary shadow-[inset_2px_0_0_rgb(var(--ws-accent))]' : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
+            className={`sidebar-link flex items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+              adminActive ? 'bg-accent/15 font-semibold text-accent shadow-[inset_3px_0_0_rgb(var(--accent))]' : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'
             }`}
             {...tipHandlers(ADMIN_LINK.label)}
           >
-            <ShieldCheck size={16} className={`flex-shrink-0 ${adminActive ? 'text-ws' : 'text-text-muted'}`} aria-hidden="true" />
+            <ShieldCheck size={16} className={`flex-shrink-0 ${adminActive ? 'text-accent' : 'text-text-muted'}`} aria-hidden="true" />
             <span className="sidebar-label">{ADMIN_LINK.label}</span>
           </Link>
         )}
-        <div className="sidebar-footer px-3 pt-2">
-          <div className="text-2xs text-text-muted">Signed in as</div>
-          <div className="mt-0.5 truncate text-xs font-semibold text-text-primary">{profile.display_name || profile.email}</div>
-          <div className="text-2xs text-text-secondary">{profile.role.replace('_', ' ')}</div>
+        <div className="sidebar-footer space-y-2.5 pt-3">
+          <ConnectionStatus />
+          <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-raised p-2.5">
+            <Avatar name={profile.display_name || profile.email} src={profile.avatar_url} size={32} />
+            <div className="min-w-0">
+              <div className="truncate text-xs font-semibold text-text-primary">{profile.display_name || profile.email}</div>
+              <div className="text-2xs capitalize text-text-secondary">{profile.role.replace('_', ' ')}</div>
+            </div>
+          </div>
         </div>
       </div>
 

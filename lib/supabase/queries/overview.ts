@@ -13,6 +13,8 @@ export interface SubsystemProgress {
   overdue: number
   noDeadline: number
   blocked: number
+  unassigned: number
+  overdueUnassigned: number
   leads: { id: string; name: string; avatarUrl: string | null }[]
 }
 
@@ -32,6 +34,8 @@ export interface TeamCounts {
   dueSoon: number
   blocked: number
   noDeadline: number
+  unassigned: number
+  overdueUnassigned: number
   overdueSubsystems: number
 }
 
@@ -41,7 +45,7 @@ export interface TeamOverview {
   upcoming: UpcomingItem[]
 }
 
-type TaskRow = { id: string; title: string; status: string; deadline: string | null; subsystem_id: string }
+type TaskRow = { id: string; title: string; status: string; deadline: string | null; subsystem_id: string; primary_owner_id: string | null }
 type LeadRow = { subsystem_id: string; user: { id: string; display_name: string | null; email: string | null; avatar_url: string | null } | null }
 
 const UPCOMING_DAYS = 14
@@ -66,7 +70,7 @@ export async function getTeamOverview(supabase: SupabaseClient, opts: { restrict
 
   const [subsystems, tasksRes, leadsRes, events, milestones] = await Promise.all([
     listSubsystems(supabase),
-    supabase.from('tasks').select('id, title, status, deadline, subsystem_id').limit(TASK_LIMIT),
+    supabase.from('tasks').select('id, title, status, deadline, subsystem_id, primary_owner_id').limit(TASK_LIMIT),
     supabase.from('subsystem_members').select('subsystem_id, user:profiles(id, display_name, email, avatar_url)').eq('is_lead', true),
     listCalendarEventsInRange(supabase, startIso, endIso).catch(() => []),
     listMilestonesInRange(supabase, today, horizon).catch(() => []),
@@ -78,14 +82,14 @@ export async function getTeamOverview(supabase: SupabaseClient, opts: { restrict
 
   const bySubsystem = new Map<string, SubsystemProgress>()
   for (const s of subsystems) {
-    bySubsystem.set(s.id, { id: s.id, name: s.name, total: 0, complete: 0, open: 0, overdue: 0, noDeadline: 0, blocked: 0, leads: [] })
+    bySubsystem.set(s.id, { id: s.id, name: s.name, total: 0, complete: 0, open: 0, overdue: 0, noDeadline: 0, blocked: 0, unassigned: 0, overdueUnassigned: 0, leads: [] })
   }
   for (const l of leadRows) {
     const entry = bySubsystem.get(l.subsystem_id)
     if (entry && l.user) entry.leads.push({ id: l.user.id, name: l.user.display_name || l.user.email || 'Lead', avatarUrl: l.user.avatar_url })
   }
 
-  const counts: TeamCounts = { open: 0, complete: 0, overdue: 0, dueSoon: 0, blocked: 0, noDeadline: 0, overdueSubsystems: 0 }
+  const counts: TeamCounts = { open: 0, complete: 0, overdue: 0, dueSoon: 0, blocked: 0, noDeadline: 0, unassigned: 0, overdueUnassigned: 0, overdueSubsystems: 0 }
   for (const t of tasks) {
     const entry = bySubsystem.get(t.subsystem_id)
     if (entry) entry.total += 1
@@ -100,12 +104,21 @@ export async function getTeamOverview(supabase: SupabaseClient, opts: { restrict
       counts.blocked += 1
       if (entry) entry.blocked += 1
     }
+    const unowned = !t.primary_owner_id
+    if (unowned) {
+      counts.unassigned += 1
+      if (entry) entry.unassigned += 1
+    }
     if (!deadlineDateKey(t.deadline)) {
       counts.noDeadline += 1
       if (entry) entry.noDeadline += 1
     } else if (isDeadlineOverdue(t.deadline, t.status)) {
       counts.overdue += 1
       if (entry) entry.overdue += 1
+      if (unowned) {
+        counts.overdueUnassigned += 1
+        if (entry) entry.overdueUnassigned += 1
+      }
     } else if (isDeadlineDueSoon(t.deadline, t.status, 7)) {
       counts.dueSoon += 1
     }

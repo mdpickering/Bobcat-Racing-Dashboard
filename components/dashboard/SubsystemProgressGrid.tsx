@@ -39,6 +39,7 @@ export default function SubsystemProgressGrid({ subsystems }: { subsystems: Subs
                       <span className="text-text-secondary">{s.open} open</span>
                       {s.overdue > 0 && <span className="font-medium text-status-danger">{` · ${s.overdue} overdue`}</span>}
                       {s.noDeadline > 0 && <span>{` · ${s.noDeadline} no deadline`}</span>}
+                      {s.unassigned > 0 && <span>{` · ${s.unassigned} no owner`}</span>}
                     </>
                   )}
                 </div>

@@ -8,6 +8,7 @@ import { updateTask } from '@/lib/supabase/queries/tasks'
 import { rescheduleTask } from '@/lib/supabase/queries/operations'
 import { deadlineDateKey, formatDeadline, isDeadlineOverdue, isDeadlineDueSoon } from '@/lib/deadline'
 import { getErrorMessage } from '@/lib/errors'
+import { pastDateNote } from '@/lib/taskGuards'
 import { useToast } from './Toast'
 
 interface InlineDateEditorProps {
@@ -43,6 +44,8 @@ export default function InlineDateEditor({ taskId, deadline, status, viaReschedu
       if (viaReschedule) await rescheduleTask(supabase, taskId, next || null)
       else await updateTask(supabase, taskId, { deadline: next ? `${next}T00:00:00.000Z` : null })
       setEditing(false)
+      const note = pastDateNote(next || null, status ?? '')
+      if (note) toast.push(note, 'warning')
       router.refresh()
     } catch (err) {
       toast.push(getErrorMessage(err, 'Could not update this deadline.'), 'danger')

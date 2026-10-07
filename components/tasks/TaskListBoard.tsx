@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { updateTask } from '@/lib/supabase/queries/tasks'
 import { rescheduleTask } from '@/lib/supabase/queries/operations'
 import { getErrorMessage } from '@/lib/errors'
+import { pastDateNote } from '@/lib/taskGuards'
 import TaskList from './TaskList'
 import type { Task } from '@/types/database'
 
@@ -69,6 +70,8 @@ export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsys
       const failed = results.filter((r) => r.status === 'rejected').length
       if (failed > 0) toast.push(`${ids.length - failed} of ${ids.length} tasks updated — ${failed} failed.`, 'warning')
       else toast.push(`${ids.length} task${ids.length === 1 ? '' : 's'} rescheduled to that date.`, 'success')
+      const pastNote = failed < ids.length ? pastDateNote(bulkDate, 'To Do') : null
+      if (pastNote) toast.push(pastNote, 'warning')
       setSelected(new Set())
       setBulkDate('')
       router.refresh()

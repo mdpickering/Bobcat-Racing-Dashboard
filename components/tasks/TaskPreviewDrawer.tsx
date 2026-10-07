@@ -17,6 +17,7 @@ import { StatusBadge, PriorityBadge } from '@/components/tasks/TaskBadges'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask, listTaskComments, addTaskComment } from '@/lib/supabase/queries/tasks'
 import { getErrorMessage } from '@/lib/errors'
+import { planningGaps, startNudge } from '@/lib/taskGuards'
 import { useToast } from '@/components/ui/Toast'
 import { timeAgo } from '@/lib/format'
 import type { Task, TaskComment, TaskStatus, TaskPriority } from '@/types/database'
@@ -71,6 +72,10 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
     setSaving(true)
     try {
       await updateTask(createClient(), task.id, patch)
+      if (typeof patch.status === 'string') {
+        const nudge = startNudge(task, patch.status)
+        if (nudge) toast.push(nudge, 'warning')
+      }
       router.refresh()
     } catch (err) {
       toast.push(getErrorMessage(err, 'Could not save that change.'), 'danger')
@@ -153,6 +158,11 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge tone="slate">{task.subsystem?.name ?? 'Unknown subsystem'}</Badge>
           {task.category?.name && <Badge tone="slate">{task.category.name}</Badge>}
+          {planningGaps(task).map((gap) => (
+            <Badge key={gap} tone="amber">
+              {gap}
+            </Badge>
+          ))}
         </div>
 
         <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">

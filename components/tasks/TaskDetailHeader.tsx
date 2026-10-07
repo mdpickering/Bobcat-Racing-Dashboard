@@ -16,6 +16,8 @@ import { createClient } from '@/lib/supabase/client'
 import { updateTask, deleteTask, removeTaskAttachmentFiles } from '@/lib/supabase/queries/tasks'
 import { getErrorMessage } from '@/lib/errors'
 import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
+import { useToast } from '@/components/ui/Toast'
+import { planningGaps, startNudge } from '@/lib/taskGuards'
 import { deadlineDateKey, formatDeadline, isDeadlineOverdue } from '@/lib/deadline'
 import type { Task, SubsystemCategory } from '@/types/database'
 
@@ -38,6 +40,7 @@ interface TaskDetailHeaderProps {
 
 export default function TaskDetailHeader({ task, categories, canManage, canChangeStatus, canReschedule, canDelete, attachmentPaths }: TaskDetailHeaderProps) {
   const router = useRouter()
+  const toast = useToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -50,15 +53,17 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function persist(patch: Record<string, unknown>) {
+  async function persist(patch: Record<string, unknown>): Promise<boolean> {
     setSaving(true)
     setError(null)
     try {
       const supabase = createClient()
       await updateTask(supabase, task.id, patch)
       router.refresh()
+      return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save changes.')
+      return false
     } finally {
       setSaving(false)
     }
@@ -82,7 +87,9 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
   }
 
   async function handleStatusChange(status: string) {
-    await persist({ status })
+    if (!(await persist({ status }))) return
+    const nudge = startNudge(task, status)
+    if (nudge) toast.push(nudge, 'warning')
   }
 
   async function handleSaveDetails() {
@@ -161,6 +168,13 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
                 </span>
               )
             )}
+            {planningGaps(task)
+              .filter((gap) => !(canReschedule && gap === 'No deadline'))
+              .map((gap) => (
+                <Badge key={gap} tone="amber">
+                  {gap}
+                </Badge>
+              ))}
           </div>
         </>
       )}

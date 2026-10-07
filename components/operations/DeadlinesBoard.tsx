@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { rescheduleTask, type SchedulingTask } from '@/lib/supabase/queries/operations'
 import { getErrorMessage } from '@/lib/errors'
+import { pastDateNote } from '@/lib/taskGuards'
 import type { DeadlineBucket } from '@/lib/operationsSchedule'
 import DeadlineTable from './DeadlineTable'
 
@@ -65,6 +66,8 @@ export default function DeadlinesBoard({ groups, isFiltered, noneCap, today }: {
       const failed = results.filter((r) => r.status === 'rejected').length
       if (failed > 0) toast.push(`${ids.length - failed} of ${ids.length} tasks rescheduled — ${failed} failed.`, 'warning')
       else toast.push(`${ids.length} task${ids.length === 1 ? '' : 's'} rescheduled to that date.`, 'success')
+      const pastNote = failed < ids.length ? pastDateNote(bulkDate, 'To Do') : null
+      if (pastNote) toast.push(pastNote, 'warning')
       setSelected(new Set())
       setBulkDate('')
       router.refresh()

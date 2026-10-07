@@ -15,6 +15,7 @@ import TaskPreviewDrawer from '@/components/tasks/TaskPreviewDrawer'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask } from '@/lib/supabase/queries/tasks'
 import { getErrorMessage } from '@/lib/errors'
+import { startNudge } from '@/lib/taskGuards'
 import { useToast } from '@/components/ui/Toast'
 import { formatDeadline, isDeadlineDueSoon, isDeadlineOverdue } from '@/lib/deadline'
 import type { Task, TaskStatus } from '@/types/database'
@@ -70,7 +71,10 @@ function StatusCell({ task, editable }: { task: Task; editable: boolean }) {
       className="w-auto min-w-[7.5rem] py-1"
       onChange={async (e) => {
         try {
-          await updateTask(createClient(), task.id, { status: e.target.value })
+          const nextStatus = e.target.value
+          await updateTask(createClient(), task.id, { status: nextStatus })
+          const nudge = startNudge(task, nextStatus)
+          if (nudge) toast.push(nudge, 'warning')
           router.refresh()
         } catch (err) {
           toast.push(getErrorMessage(err, 'Could not update status.'), 'danger')

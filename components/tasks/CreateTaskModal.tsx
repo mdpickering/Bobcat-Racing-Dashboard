@@ -9,6 +9,7 @@ import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase/client'
 import { createTask } from '@/lib/supabase/queries/tasks'
+import { pastDateNote } from '@/lib/taskGuards'
 import type { Subsystem, SubsystemCategory } from '@/types/database'
 
 interface CreateTaskModalProps {
@@ -27,6 +28,8 @@ export default function CreateTaskModal({ open, onClose, subsystems, categories,
   const [categoryId, setCategoryId] = useState('')
   const [priority, setPriority] = useState('Medium')
   const [deadline, setDeadline] = useState('')
+  // Leaving the deadline off must be a choice, not the default: 55 of the team's 60 open tasks were created without one.
+  const [deadlineLater, setDeadlineLater] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,7 +47,7 @@ export default function CreateTaskModal({ open, onClose, subsystems, categories,
         subsystem_id: subsystemId,
         category_id: categoryId || null,
         priority,
-        deadline: deadline ? new Date(deadline).toISOString() : null,
+        deadline: !deadlineLater && deadline ? new Date(deadline).toISOString() : null,
       })
       onClose()
       router.refresh()
@@ -102,9 +105,22 @@ export default function CreateTaskModal({ open, onClose, subsystems, categories,
             </Select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-text-secondary">Deadline</label>
-            <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+            <label htmlFor="new-task-deadline" className="mb-1 block text-xs text-text-secondary">
+              Deadline
+            </label>
+            <Input id="new-task-deadline" type="date" value={deadlineLater ? '' : deadline} onChange={(e) => setDeadline(e.target.value)} required={!deadlineLater} disabled={deadlineLater} />
           </div>
+        </div>
+        <div>
+          <label className="flex items-center gap-2 text-text-secondary">
+            <input type="checkbox" checked={deadlineLater} onChange={(e) => setDeadlineLater(e.target.checked)} className="h-4 w-4 accent-accent-blue" />
+            I will set the deadline later
+          </label>
+          <p className="mt-1 text-2xs text-text-muted">
+            {deadlineLater
+              ? 'A task without a deadline will not appear in Upcoming or trigger overdue warnings until one is set.'
+              : pastDateNote(deadline || null, 'To Do') ?? 'Tasks with a deadline appear in Upcoming and are flagged when late.'}
+          </p>
         </div>
         {error && <p className="text-status-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-1">

@@ -17,6 +17,7 @@ import PendingRequestsWidget from '@/components/dashboard/PendingRequestsWidget'
 import OrgPendingWidget from '@/components/dashboard/OrgPendingWidget'
 import PurchasingWidget from '@/components/dashboard/PurchasingWidget'
 import KpiCard from '@/components/dashboard/KpiCard'
+import PlanningGapsWidget from '@/components/dashboard/PlanningGapsWidget'
 import SubsystemProgressGrid from '@/components/dashboard/SubsystemProgressGrid'
 import UpcomingTimeline from '@/components/dashboard/UpcomingTimeline'
 
@@ -60,6 +61,24 @@ export default async function DashboardPage() {
   blocked.forEach((t) => shown.add(t.id))
   const inReview = data.reviewTasks.filter((t) => !shown.has(t.id))
   const attentionCount = data.overdueTasks.length + dueSoon.length + blocked.length + inReview.length
+
+  // Who can act on planning gaps: the team-wide roles (for every subsystem, via the Deadlines page) and a lead (for
+  // their own subsystem). Everyone else is not shown the card, since they could not fix anything it lists.
+  const ledIds = new Set(data.mySubsystems.filter((m) => m.is_lead).map((m) => m.subsystem_id))
+  let planning: { rows: { label: string; count: number; href: string; tone: 'warning' | 'danger' }[]; scopeLabel: string } | null = null
+  if (overview && (teamWide || ledIds.size > 0)) {
+    const scope = teamWide ? overview.subsystems : overview.subsystems.filter((s) => ledIds.has(s.id))
+    const sum = (pick: (s: (typeof scope)[number]) => number) => scope.reduce((n, s) => n + pick(s), 0)
+    const leadHref = ledIds.size === 1 ? `/subsystems/${[...ledIds][0]}` : '/subsystems'
+    planning = {
+      scopeLabel: teamWide ? 'Across every subsystem.' : ledIds.size === 1 ? 'In the subsystem you lead.' : 'In the subsystems you lead.',
+      rows: [
+        { label: 'Overdue and nobody owns them', count: sum((s) => s.overdueUnassigned), href: teamWide ? '/operations/deadlines?range=overdue&owner=none' : leadHref, tone: 'danger' },
+        { label: 'Open tasks with no owner', count: sum((s) => s.unassigned), href: teamWide ? '/operations/deadlines?owner=none' : leadHref, tone: 'warning' },
+        { label: 'Open tasks with no deadline', count: sum((s) => s.noDeadline), href: teamWide ? '/operations/deadlines?range=none' : leadHref, tone: 'warning' },
+      ],
+    }
+  }
 
   const daysToCompetition = daysUntil(data.competition?.competition_date)
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
@@ -155,6 +174,8 @@ export default async function DashboardPage() {
               <SubsystemProgressGrid subsystems={overview.subsystems} />
             </section>
           )}
+
+          {planning && <PlanningGapsWidget rows={planning.rows} scopeLabel={planning.scopeLabel} />}
 
           <section aria-label="Needs attention">
             <SectionHeader

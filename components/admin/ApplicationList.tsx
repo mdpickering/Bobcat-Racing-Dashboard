@@ -25,7 +25,7 @@ export default function ApplicationList({ applications }: { applications: Member
             <Link href={`/admin/applications/${a.id}`} className="flex items-center gap-3 px-4 py-3 text-xs transition-colors hover:bg-surface-raised">
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium text-text-primary">{a.name}</div>
-                <div className="mt-0.5 truncate text-[11px] text-text-muted">
+                <div className="mt-0.5 truncate text-2xs text-text-muted">
                   {a.email} · Submitted {formatDate(a.submitted_at)}
                 </div>
               </div>

@@ -137,14 +137,14 @@ export default function CadReviewDetailHeader({
           <div className="flex items-start justify-between gap-3">
             <h1 className="text-base font-bold text-text-primary">{review.title}</h1>
             {canEditDetails && (
-              <button type="button" onClick={() => setEditing(true)} className="flex-shrink-0 text-text-muted hover:text-accent-blue">
+              <button aria-label="Edit review details" type="button" onClick={() => setEditing(true)} className="flex-shrink-0 text-text-muted hover:text-accent-blue">
                 <Pencil size={14} />
               </button>
             )}
           </div>
           {review.description && <p className="mt-2 whitespace-pre-wrap text-xs text-text-secondary">{review.description}</p>}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-2xs">
             <Badge tone="slate">{review.subsystem?.name ?? 'Unknown subsystem'}</Badge>
             <Badge tone="slate">Rev {review.current_revision}</Badge>
             {review.task?.title && <Badge tone="slate">{review.task.title}</Badge>}

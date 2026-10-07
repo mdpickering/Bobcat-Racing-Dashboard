@@ -84,10 +84,10 @@ export default function LocationManagerModal({ open, onClose, locations }: { ope
                         <span className="font-medium text-text-primary">{loc.name}</span>
                         {!loc.active && <Badge tone="neutral">Inactive</Badge>}
                       </div>
-                      {loc.description && <div className="mt-0.5 text-[11px] text-text-muted">{loc.description}</div>}
+                      {loc.description && <div className="mt-0.5 text-2xs text-text-muted">{loc.description}</div>}
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-2">
-                      <button type="button" title="Edit" disabled={busy} onClick={() => startEdit(loc)} className="text-text-muted hover:text-text-primary">
+                      <button type="button" title="Edit" aria-label="Edit" disabled={busy} onClick={() => startEdit(loc)} className="text-text-muted hover:text-text-primary">
                         <Pencil size={13} />
                       </button>
                       <Button size="sm" variant="ghost" disabled={busy} onClick={() => toggleActive(loc)}>

@@ -35,7 +35,7 @@ export default function CatalogAuditPanel({ entries }: { entries: CatalogAuditEn
   return (
     <Panel className="p-4">
       <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-text-primary">
-        <History size={13} className="text-accent-blue" /> Change history <span className="text-[11px] font-normal text-text-muted">(admins only)</span>
+        <History size={13} className="text-accent-blue" /> Change history <span className="text-2xs font-normal text-text-muted">(admins only)</span>
       </h2>
       {entries.length === 0 ? (
         <p className="text-[12px] text-text-muted">No changes recorded yet.</p>
@@ -44,8 +44,8 @@ export default function CatalogAuditPanel({ entries }: { entries: CatalogAuditEn
           {entries.map((e) => (
             <li key={e.id} className="py-2 first:pt-0 last:pb-0">
               <div className="font-medium text-text-primary">{ACTION_LABEL[e.action] ?? e.action}</div>
-              {summarize(e) && <div className="mt-0.5 break-words text-[11px] text-text-secondary">{summarize(e)}</div>}
-              <div className="mt-0.5 text-[11px] text-text-muted">
+              {summarize(e) && <div className="mt-0.5 break-words text-2xs text-text-secondary">{summarize(e)}</div>}
+              <div className="mt-0.5 text-2xs text-text-muted">
                 {formatDateTime(e.created_at)} · {e.actor?.display_name || e.actor?.email || 'system'}
               </div>
             </li>

@@ -101,7 +101,7 @@ export default function NotificationBell() {
       >
         <Bell size={16} />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-qu-gold px-1 text-[9px] font-bold text-qu-navy">
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-qu-gold px-1 text-2xs font-bold text-qu-navy">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -119,7 +119,7 @@ export default function NotificationBell() {
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="flex items-center gap-1 text-[11px] font-mono uppercase tracking-wide text-text-muted hover:text-accent-blue"
+              className="flex items-center gap-1 text-2xs text-text-muted hover:text-accent-blue"
             >
               <CheckCheck size={12} /> Mark all read
             </button>
@@ -137,13 +137,13 @@ export default function NotificationBell() {
                       <button type="button" onClick={() => handleNotificationClick(n)} className="min-w-0 flex-1 text-left">
                         <div className="truncate font-semibold text-text-primary">{n.title}</div>
                         {n.message && <div className="mt-0.5 line-clamp-2 whitespace-pre-line text-[12px] text-text-secondary">{n.message}</div>}
-                        <div className="mt-1 text-[11px] text-text-muted">{timeAgo(n.created_at)}</div>
+                        <div className="mt-1 text-2xs text-text-muted">{timeAgo(n.created_at)}</div>
                       </button>
                       {!n.read_at && (
                         <button
                           type="button"
                           onClick={() => handleMarkRead(n.id)}
-                          className="shrink-0 text-[11px] font-mono uppercase text-accent-blue hover:underline"
+                          className="shrink-0 text-2xs text-accent-blue hover:underline"
                         >
                           Read
                         </button>
@@ -158,7 +158,7 @@ export default function NotificationBell() {
             <Link
               href="/notifications"
               onClick={() => setOpen(false)}
-              className="block rounded-lg px-3 py-1.5 text-center text-[11px] font-mono uppercase tracking-wide text-accent-blue hover:bg-surface"
+              className="block rounded-lg px-3 py-1.5 text-center text-2xs text-accent-blue hover:bg-surface"
             >
               View all
             </Link>

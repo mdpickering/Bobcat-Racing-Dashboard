@@ -34,7 +34,7 @@ export default function RelatedPurchasesPanel({ title, lines }: { title: string;
                 ) : (
                   <span className="font-medium text-text-primary">Purchase request</span>
                 )}
-                <div className="text-[11px] text-text-muted">
+                <div className="text-2xs text-text-muted">
                   {l.description} · {l.request?.status ?? ''} {l.request ? `· ${formatDate(l.request.created_at)}` : ''}
                 </div>
               </div>

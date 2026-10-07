@@ -37,26 +37,26 @@ export default function PartStockPanel({ partId, partLabel, overview, byLocation
         <h2 className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
           <Warehouse size={13} className="text-accent-blue" /> Stock
         </h2>
-        <Link href="/inventory" className="inline-flex items-center gap-1 text-[11px] text-accent-blue hover:underline">
+        <Link href="/inventory" className="inline-flex items-center gap-1 text-2xs text-accent-blue hover:underline">
           View inventory <ArrowRight size={11} aria-hidden="true" />
         </Link>
       </div>
 
       <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
-          <div className="text-[11px] uppercase tracking-wide text-text-muted">On hand</div>
+          <div className="text-2xs text-text-muted">On hand</div>
           <div className="text-xl font-semibold tabular-nums text-text-primary">{onHand}</div>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-wide text-text-muted">On order</div>
+          <div className="text-2xs text-text-muted">On order</div>
           <div className={`text-xl font-semibold tabular-nums ${onOrder > 0 ? 'text-status-info' : 'text-text-muted'}`}>{onOrder}</div>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-wide text-text-muted">Stock value</div>
+          <div className="text-2xs text-text-muted">Stock value</div>
           <div className="text-xl font-semibold tabular-nums text-text-primary">{overview?.stock_value === null || overview?.stock_value === undefined ? '—' : formatUsd(overview.stock_value)}</div>
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-wide text-text-muted">Last received</div>
+          <div className="text-2xs text-text-muted">Last received</div>
           <div className="text-xs font-medium text-text-primary">{formatDate(overview?.last_received_on ?? null)}</div>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function PartStockPanel({ partId, partLabel, overview, byLocation
         </div>
       )}
 
-      <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-text-muted">Recent transactions</h3>
+      <h3 className="mb-2 text-2xs font-medium text-text-muted">Recent transactions</h3>
       {transactions.length === 0 ? (
         <p className="text-[12px] text-text-muted">No inventory transactions yet.</p>
       ) : (
@@ -114,7 +114,7 @@ export default function PartStockPanel({ partId, partLabel, overview, byLocation
                 </div>
                 {t.reason && <div className="mt-0.5 text-text-secondary">{t.reason}</div>}
                 {t.notes && <div className="mt-0.5 text-text-muted">{t.notes}</div>}
-                <div className="mt-0.5 text-[11px] text-text-muted">
+                <div className="mt-0.5 text-2xs text-text-muted">
                   {formatDateTime(t.created_at)} · {t.actor?.display_name || t.actor?.email || 'Unknown'}
                 </div>
               </div>

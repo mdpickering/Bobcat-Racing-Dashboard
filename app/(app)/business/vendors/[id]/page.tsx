@@ -113,7 +113,7 @@ export default async function VendorDetailPage({ params }: { params: { id: strin
             ) : (
               <p className="text-[12px] text-text-muted">No contact details recorded.</p>
             )}
-            <p className="mt-3 text-[11px] text-text-muted">Visible to every signed-in team member, so engineers can order.</p>
+            <p className="mt-3 text-2xs text-text-muted">Visible to every signed-in team member, so engineers can order.</p>
           </Panel>
 
           {vendor.notes && (

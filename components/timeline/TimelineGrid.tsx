@@ -64,11 +64,11 @@ export default function TimelineGrid({ columns, subsystems, milestones, canEditS
       <table className="w-full min-w-[900px] border-collapse text-xs">
         <thead>
           <tr>
-            <th className="sticky left-0 z-10 bg-surface p-2.5 text-left text-[11px] font-mono uppercase text-text-muted">Subsystem</th>
+            <th className="sticky left-0 z-10 bg-surface p-2.5 text-left text-2xs text-text-muted">Subsystem</th>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`min-w-[110px] border-l border-border p-2.5 text-left text-[11px] font-mono uppercase ${col.highlight ? 'bg-qu-gold/10 text-qu-gold' : 'text-text-muted'}`}
+                className={`min-w-[110px] border-l border-border p-2.5 text-left text-2xs ${col.highlight ? 'bg-qu-gold/10 text-accent' : 'text-text-muted'}`}
               >
                 {col.label}
               </th>

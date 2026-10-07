@@ -108,7 +108,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
         {error && <p className="text-status-danger">{error}</p>}
 
         <div>
-          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-mono uppercase text-text-muted">
+          <h4 className="mb-2 flex items-center gap-1.5 text-2xs text-text-muted">
             <Clock size={11} /> Events
           </h4>
           {events.length === 0 ? (
@@ -138,7 +138,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                           <span className="font-medium text-text-primary">{ev.title}</span>
                           {editable && (
                             <div className="flex flex-shrink-0 gap-2">
-                              <button
+                              <button aria-label="Edit event"
                                 type="button"
                                 onClick={() => {
                                   setEditingEventId(ev.id)
@@ -149,13 +149,13 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                               >
                                 <Pencil size={12} />
                               </button>
-                              <button type="button" disabled={busy} onClick={() => handleArchiveEvent(ev.id)} className="text-text-muted hover:text-status-danger">
+                              <button aria-label="Archive event" type="button" disabled={busy} onClick={() => handleArchiveEvent(ev.id)} className="text-text-muted hover:text-status-danger">
                                 <Archive size={12} />
                               </button>
                             </div>
                           )}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-text-muted">
+                        <p className="mt-0.5 text-2xs text-text-muted">
                           {formatDateTime(ev.start_time)} – {formatDateTime(ev.end_time)}
                           {ev.subsystem?.name ? ` · ${ev.subsystem.name}` : ' · Team-wide'}
                         </p>
@@ -170,7 +170,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
         </div>
 
         <div>
-          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-mono uppercase text-text-muted">
+          <h4 className="mb-2 flex items-center gap-1.5 text-2xs text-text-muted">
             <Flag size={11} /> Milestones
           </h4>
           {milestones.length === 0 ? (
@@ -200,7 +200,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                           <span className="font-medium text-text-primary">{m.name}</span>
                           {editable && (
                             <div className="flex flex-shrink-0 gap-2">
-                              <button
+                              <button aria-label="Edit milestone"
                                 type="button"
                                 onClick={() => {
                                   setEditingMilestoneId(m.id)
@@ -211,13 +211,13 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
                               >
                                 <Pencil size={12} />
                               </button>
-                              <button type="button" disabled={busy} onClick={() => handleArchiveMilestone(m.id)} className="text-text-muted hover:text-status-danger">
+                              <button aria-label="Archive milestone" type="button" disabled={busy} onClick={() => handleArchiveMilestone(m.id)} className="text-text-muted hover:text-status-danger">
                                 <Archive size={12} />
                               </button>
                             </div>
                           )}
                         </div>
-                        <p className="mt-0.5 text-[11px] text-text-muted">{formatDate(m.date)}{m.subsystem?.name ? ` · ${m.subsystem.name}` : ' · Team-wide'}</p>
+                        <p className="mt-0.5 text-2xs text-text-muted">{formatDate(m.date)}{m.subsystem?.name ? ` · ${m.subsystem.name}` : ' · Team-wide'}</p>
                         {m.description && <p className="mt-1 whitespace-pre-wrap text-text-secondary">{m.description}</p>}
                       </>
                     )}
@@ -229,7 +229,7 @@ export default function DayDetailPanel({ open, onClose, date, events, milestones
         </div>
 
         <div>
-          <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-mono uppercase text-text-muted">
+          <h4 className="mb-2 flex items-center gap-1.5 text-2xs text-text-muted">
             <ListChecks size={11} /> Task Deadlines
           </h4>
           {taskDeadlines.length === 0 ? (

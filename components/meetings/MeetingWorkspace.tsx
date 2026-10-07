@@ -176,7 +176,7 @@ export default function MeetingWorkspace({
             <button
               type="button"
               onClick={() => setModalState({ agendaItemId: null, editing: null })}
-              className="flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue"
+              className="flex items-center gap-1 text-2xs text-text-muted hover:text-accent-blue"
             >
               <Plus size={11} /> Add action item
             </button>

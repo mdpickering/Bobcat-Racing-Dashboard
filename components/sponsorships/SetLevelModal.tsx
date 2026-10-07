@@ -67,7 +67,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
     <Modal open={open} onClose={busy ? () => {} : onClose} title="Set the sponsorship level" maxWidthClassName="max-w-lg">
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="rounded-lg border border-border p-3">
-          <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Qualifying value</div>
+          <div className="text-2xs font-medium text-text-muted">Qualifying value</div>
           <div className="mt-1.5 space-y-1">
             <div className="flex justify-between text-text-secondary">
               <span>Cash committed</span>
@@ -82,7 +82,7 @@ export default function SetLevelModal({ open, onClose, sponsorshipId, levels, cu
               <span className="tabular-nums">{formatMoney(q.total)}</span>
             </div>
           </div>
-          <p className="mt-2 text-[11px] text-text-muted">Withdrawn contributions are not counted. The database recalculates this itself when you save.</p>
+          <p className="mt-2 text-2xs text-text-muted">Withdrawn contributions are not counted. The database recalculates this itself when you save.</p>
         </div>
 
         <div>

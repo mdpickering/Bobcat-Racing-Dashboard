@@ -27,7 +27,7 @@ interface SponsorshipHeaderProps {
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">{label}</div>
+    <div className="text-2xs font-medium text-text-muted">{label}</div>
     <div className="mt-1 text-xs text-text-primary">{children}</div>
   </div>
 )
@@ -110,7 +110,7 @@ export default function SponsorshipHeader({ sponsorship, eventName, businessMemb
         {!canManage && <div className="mb-4"><ReadOnlyNotice>You can view this sponsorship. The Sponsorship Lead, Business Lead or an admin makes changes.</ReadOnlyNotice></div>}
         <div className="flex flex-wrap items-end gap-x-8 gap-y-4 border-b border-border pb-5">
           <div>
-            <label htmlFor="stage" className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
+            <label htmlFor="stage" className="text-2xs font-medium text-text-muted">
               Stage
             </label>
             <div className="mt-1">
@@ -150,7 +150,7 @@ export default function SponsorshipHeader({ sponsorship, eventName, businessMemb
         {canManage && s.stage !== 'committed' && <p className="mt-2 text-xs text-text-muted">A sponsorship can be marked Committed once it has an active contribution and a level decision.</p>}
         {s.notes && (
           <div className="mt-4">
-            <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Notes</div>
+            <div className="text-2xs font-medium text-text-muted">Notes</div>
             <p className="mt-1 max-w-3xl whitespace-pre-wrap text-xs text-text-secondary">{s.notes}</p>
           </div>
         )}

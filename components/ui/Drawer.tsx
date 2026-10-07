@@ -84,7 +84,7 @@ export default function Drawer({ open, onClose, title, children, headerActions, 
           </h2>
           <div className="flex flex-shrink-0 items-center gap-1">
             {headerActions}
-            <button type="button" onClick={onClose} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary">
+            <button type="button" onClick={onClose} aria-label="Close" className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary">
               <X size={16} />
             </button>
           </div>

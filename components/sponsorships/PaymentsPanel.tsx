@@ -127,7 +127,7 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full min-w-[520px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border text-[11px] font-medium uppercase tracking-wide text-text-muted">
+              <tr className="border-b border-border text-2xs font-medium text-text-muted">
                 <th className="py-2 pr-2 font-medium">Received</th>
                 
                 <th className="px-2 py-2 text-right font-medium">Amount</th>
@@ -142,23 +142,23 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
                 <tr key={p.id}>
                   <td className="py-2 pr-2 align-top">
                     <div className="text-text-primary">{formatContributionDate(p.received_on, p.received_on_precision)}</div>
-                    <div className="text-[11px] text-text-muted">{nameOf(p.recorder) ? `by ${nameOf(p.recorder)}` : 'imported'}</div>
+                    <div className="text-2xs text-text-muted">{nameOf(p.recorder) ? `by ${nameOf(p.recorder)}` : 'imported'}</div>
                   </td>
                   <td className={`px-2 py-2 text-right align-top tabular-nums ${p.entry_type === 'refund' ? 'text-status-danger' : 'text-text-primary'}`}>
                     {p.entry_type === 'refund' ? '−' : ''}
                     {formatMoney(p.amount)}
-                    {p.entry_type === 'refund' && <span className="mt-0.5 block text-[11px] font-normal uppercase tracking-wide">Refund</span>}
+                    {p.entry_type === 'refund' && <span className="mt-0.5 block text-2xs font-normal uppercase tracking-wide">Refund</span>}
                   </td>
                   <td className="px-2 py-2 align-top text-text-secondary">
                     {PAYMENT_METHOD_LABEL[p.method]}
-                    {p.reference && <div className="text-[11px] text-text-muted">{p.reference}</div>}
+                    {p.reference && <div className="text-2xs text-text-muted">{p.reference}</div>}
                   </td>
                   <td className="px-2 py-2 align-top text-text-secondary">{RECEIVED_BY_LABEL[p.received_by]}</td>
                   <td className="px-2 py-2 align-top">
                     {p.entry_type === 'payment' ? (
                       <>
                         <Badge tone={AVAILABILITY_TONE[p.availability]}>{AVAILABILITY_LABEL[p.availability]}</Badge>
-                        {p.availability === 'available' && p.available_on && <div className="mt-0.5 text-[11px] text-text-muted">since {formatContributionDate(p.available_on)}</div>}
+                        {p.availability === 'available' && p.available_on && <div className="mt-0.5 text-2xs text-text-muted">since {formatContributionDate(p.available_on)}</div>}
                       </>
                     ) : (
                       <span className="text-text-muted">—</span>
@@ -177,7 +177,7 @@ export default function PaymentsPanel({ contributions, payments, canManage }: Pa
           </table>
         </div>
       )}
-      <p className="mt-3 text-[11px] text-text-muted">Entries are permanent. To correct a mistake, record a refund and a new payment.</p>
+      <p className="mt-3 text-2xs text-text-muted">Entries are permanent. To correct a mistake, record a refund and a new payment.</p>
 
       <Modal open={open} onClose={busy ? () => {} : () => setOpen(false)} title={entryType === 'refund' ? 'Record a refund' : 'Record a payment'} maxWidthClassName="max-w-md">
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">

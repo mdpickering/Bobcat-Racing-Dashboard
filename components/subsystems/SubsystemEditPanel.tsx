@@ -69,7 +69,7 @@ export default function SubsystemEditPanel({ subsystem, leads }: { subsystem: Su
               {!subsystem.active && <Badge tone="rose">Archived</Badge>}
             </div>
             <div className="flex flex-shrink-0 gap-2">
-              <button type="button" onClick={() => setEditing(true)} className="text-text-muted hover:text-accent-blue">
+              <button aria-label="Edit subsystem details" type="button" onClick={() => setEditing(true)} className="text-text-muted hover:text-accent-blue">
                 <Pencil size={14} />
               </button>
               <button type="button" disabled={busy} onClick={handleArchiveToggle} className="text-text-muted hover:text-status-danger" title={subsystem.active ? 'Archive' : 'Restore'}>
@@ -83,9 +83,9 @@ export default function SubsystemEditPanel({ subsystem, leads }: { subsystem: Su
 
       {leads.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-mono uppercase text-text-muted">Led by</span>
+          <span className="text-2xs text-text-muted">Led by</span>
           {leads.map((l) => (
-            <span key={l.user_id} className="flex items-center gap-1.5 rounded-full border border-qu-gold/30 bg-qu-gold/10 px-2 py-0.5 text-[12px] text-qu-gold">
+            <span key={l.user_id} className="flex items-center gap-1.5 rounded-full border border-qu-gold/30 bg-qu-gold/10 px-2 py-0.5 text-[12px] text-accent">
               <Avatar name={l.profile?.display_name || l.profile?.email} src={l.profile?.avatar_url} size={16} />
               {l.profile?.display_name || l.profile?.email}
             </span>

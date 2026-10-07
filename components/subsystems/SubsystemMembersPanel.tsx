@@ -102,7 +102,7 @@ export default function SubsystemMembersPanel({
           <h2 className="text-sm font-semibold text-text-primary">Members ({members.length})</h2>
         </div>
         {canManage && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-2xs text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
@@ -119,7 +119,7 @@ export default function SubsystemMembersPanel({
               {/* Only cto/admin can reach the admin user-detail page — a lead managing their
                   own subsystem's roster has no route to link to, so their row stays plain text. */}
               {canRemoveOrPromote ? (
-                <Link href={`/admin/users/${m.user_id}`} className="flex min-w-0 items-center gap-2 hover:text-accent-blue">
+                <Link href={`/admin/users/${m.user_id}`} className="touch-target flex min-w-0 items-center gap-2 hover:text-accent-blue">
                   <Avatar name={m.profile?.display_name || m.profile?.email} src={m.profile?.avatar_url} size={22} />
                   <span className="truncate">{m.profile?.display_name || m.profile?.email}</span>
                 </Link>
@@ -137,12 +137,12 @@ export default function SubsystemMembersPanel({
                       type="button"
                       disabled={busy}
                       onClick={() => handleToggleLead(m.user_id, m.is_lead)}
-                      title={m.is_lead ? 'Remove lead' : 'Make lead'}
-                      className={m.is_lead ? 'text-qu-gold' : 'text-text-muted hover:text-qu-gold'}
+                      title={m.is_lead ? 'Remove lead' : 'Make lead'} aria-label={m.is_lead ? 'Remove lead' : 'Make lead'}
+                      className={m.is_lead ? 'text-accent' : 'text-text-muted hover:text-accent'}
                     >
                       <Star size={13} />
                     </button>
-                    <button type="button" disabled={busy} onClick={() => handleRemove(m.user_id)} className="text-text-muted hover:text-status-danger">
+                    <button aria-label="Remove member" type="button" disabled={busy} onClick={() => handleRemove(m.user_id)} className="text-text-muted hover:text-status-danger">
                       <X size={13} />
                     </button>
                   </>
@@ -159,7 +159,7 @@ export default function SubsystemMembersPanel({
             <p className="text-[12px] text-text-muted">No eligible members to add right now.</p>
           ) : (
             <>
-              <p className="text-[11px] font-mono uppercase tracking-wide text-text-muted">
+              <p className="text-2xs text-text-muted">
                 Assigning to <span className="text-text-secondary">{subsystemName}</span>
               </p>
               <div className="flex items-center gap-2">

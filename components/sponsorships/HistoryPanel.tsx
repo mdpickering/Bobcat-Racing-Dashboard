@@ -57,7 +57,7 @@ export default function HistoryPanel({ sponsorshipId, history, canManage }: { sp
         <form onSubmit={handleAdd} className="mb-4 space-y-2">
           <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a note (call, email, agreement…)" disabled={busy} />
           <div className="flex items-center justify-between gap-2">
-            {error ? <p className="text-xs text-status-danger">{error}</p> : <span className="text-[11px] text-text-muted">Notes are permanent.</span>}
+            {error ? <p className="text-xs text-status-danger">{error}</p> : <span className="text-2xs text-text-muted">Notes are permanent.</span>}
             <Button size="sm" type="submit" disabled={busy || !note.trim()}>
               {busy ? 'Adding…' : 'Add note'}
             </Button>
@@ -74,7 +74,7 @@ export default function HistoryPanel({ sponsorshipId, history, canManage }: { sp
                 <Badge tone={h.kind === 'note' ? 'sky' : 'slate'}>{KIND_LABEL[h.kind]}</Badge>
                 <span className="whitespace-pre-wrap text-text-primary">{h.body}</span>
               </div>
-              <div className="mt-0.5 text-[11px] text-text-muted">
+              <div className="mt-0.5 text-2xs text-text-muted">
                 {formatDateTime(h.created_at)}
                 {h.author ? ` · ${h.author.display_name || h.author.email}` : ' · system'}
               </div>

@@ -17,7 +17,7 @@ export default function ProgramPanel({ season, levels }: { season: string; level
               <div className="flex items-baseline justify-between gap-2 text-xs">
                 <span className="font-semibold text-text-primary">
                   {level.name}
-                  {!level.active && <span className="ml-1.5 text-[11px] font-normal text-text-muted">(inactive)</span>}
+                  {!level.active && <span className="ml-1.5 text-2xs font-normal text-text-muted">(inactive)</span>}
                 </span>
                 <span className="text-xs tabular-nums text-text-secondary">{formatMoney(level.min_amount)}+</span>
               </div>

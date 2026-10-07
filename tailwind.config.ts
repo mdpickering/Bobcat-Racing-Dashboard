@@ -9,7 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       // 13px is the minimum body size (was 12px); title/section sizes come from the standard scale
+      // 2xs (12px) is the smallest text the app uses: captions, meta lines, table headers
       fontSize: {
+        '2xs': ['0.75rem', { lineHeight: '1rem' }],
         xs: ['0.8125rem', { lineHeight: '1.25rem' }],
       },
       colors: {
@@ -18,6 +20,7 @@ const config: Config = {
           surface: '#0A1526',
           navy: '#0C2340',
           gold: '#FFC72C',
+          goldHover: '#FBBF24',
           steel: '#5B7285',
           blue: '#3E7CB1',
         },

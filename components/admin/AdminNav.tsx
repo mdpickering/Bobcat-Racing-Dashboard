@@ -23,7 +23,7 @@ export default function AdminNav() {
             key={tab.href}
             href={tab.href}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-              active ? 'bg-qu-gold/15 text-qu-gold' : 'text-text-secondary hover:text-text-primary'
+              active ? 'bg-qu-gold/15 text-accent' : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}

@@ -28,7 +28,7 @@ export default function PartsTable({ rows, filtered, canAdd }: { rows: PartCatal
           <div className="mt-0.5 text-text-secondary md:hidden">{r.name}</div>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 md:hidden">
             <CatalogStatusBadge active={r.active} />
-            <span className="text-[11px] text-text-muted">{r.subsystem_name}</span>
+            <span className="text-2xs text-text-muted">{r.subsystem_name}</span>
           </div>
         </>
       ),
@@ -43,7 +43,7 @@ export default function PartsTable({ rows, filtered, canAdd }: { rows: PartCatal
         r.manufacturer || r.manufacturer_part_number ? (
           <span className="text-text-secondary">
             {r.manufacturer ?? '—'}
-            {r.manufacturer_part_number && <span className="ml-1 font-mono text-[11px] text-text-muted">{r.manufacturer_part_number}</span>}
+            {r.manufacturer_part_number && <span className="ml-1 font-mono text-2xs text-text-muted">{r.manufacturer_part_number}</span>}
           </span>
         ) : (
           <span className="text-text-muted">—</span>
@@ -59,7 +59,7 @@ export default function PartsTable({ rows, filtered, canAdd }: { rows: PartCatal
         ) : (
           <span className="text-text-secondary">
             {r.preferred_vendor_name ?? `${r.vendor_count} vendor${r.vendor_count === 1 ? '' : 's'}`}
-            {r.preferred_vendor_name && r.vendor_count > 1 && <span className="ml-1 text-[11px] text-text-muted">+{r.vendor_count - 1}</span>}
+            {r.preferred_vendor_name && r.vendor_count > 1 && <span className="ml-1 text-2xs text-text-muted">+{r.vendor_count - 1}</span>}
           </span>
         ),
     },

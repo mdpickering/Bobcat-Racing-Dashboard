@@ -68,13 +68,13 @@ export default function ActionItemRow({ item, canEditNow, canManage, onEdit }: A
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         <p className="font-medium text-text-primary">{item.title}</p>
-        <p className="mt-0.5 text-[11px] text-text-muted">
+        <p className="mt-0.5 text-2xs text-text-muted">
           {item.assignee?.display_name || item.assignee?.email || 'Unassigned'}
           {item.due_date ? ` · due ${formatDeadline(item.due_date)}` : ''}
           {item.subsystem ? ` · ${item.subsystem.name}` : ''}
         </p>
         {item.linked_task && (
-          <Link href={`/tasks/${item.linked_task.id}`} className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-accent-blue hover:underline">
+          <Link href={`/tasks/${item.linked_task.id}`} className="mt-0.5 inline-flex items-center gap-1 text-2xs text-accent-blue hover:underline">
             Linked task: {item.linked_task.title} <ArrowUpRight size={10} />
           </Link>
         )}
@@ -91,17 +91,17 @@ export default function ActionItemRow({ item, canEditNow, canManage, onEdit }: A
               Create task
             </Button>
           )}
-          <Button size="sm" variant="ghost" disabled={busy} onClick={onEdit}>
+          <Button aria-label={`Edit action item ${item.title}`} size="sm" variant="ghost" disabled={busy} onClick={onEdit}>
             <Pencil size={12} />
           </Button>
           {canManage && (
-            <Button size="sm" variant="ghost" disabled={busy} onClick={handleDelete}>
+            <Button aria-label={`Delete action item ${item.title}`} size="sm" variant="ghost" disabled={busy} onClick={handleDelete}>
               <Trash2 size={12} />
             </Button>
           )}
         </div>
       ) : (
-        <span className="flex-shrink-0 text-[11px] font-semibold uppercase tracking-wide text-text-muted">{item.status}</span>
+        <span className="flex-shrink-0 text-2xs font-semibold uppercase tracking-wide text-text-muted">{item.status}</span>
       )}
     </div>
   )

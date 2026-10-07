@@ -16,9 +16,9 @@ export default function DeactivatedPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-qu-obsidian px-4">
-      <Panel className="w-full max-w-sm p-6 text-xs text-slate-300 space-y-4">
-        <h1 className="text-sm font-bold text-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
+      <Panel className="w-full max-w-sm p-6 text-xs text-text-secondary space-y-4">
+        <h1 className="text-sm font-bold text-text-primary">
           Account Deactivated
         </h1>
         <p>

@@ -30,7 +30,7 @@ export default function SearchResultsList({ results }: { results: SearchResult[]
                 <Icon size={15} className="flex-shrink-0 text-text-muted" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium text-text-primary">{r.title}</div>
-                  {r.subtitle && <div className="truncate text-[11px] text-text-muted">{r.subtitle}</div>}
+                  {r.subtitle && <div className="truncate text-2xs text-text-muted">{r.subtitle}</div>}
                 </div>
                 <Badge tone="slate">{meta.label}</Badge>
               </Link>

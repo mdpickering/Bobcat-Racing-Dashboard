@@ -38,7 +38,7 @@ export default function Header({ profile, workspace, available, onOpenMobileNav 
         type="button"
         onClick={onOpenMobileNav}
         aria-label="Open navigation"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised md:hidden"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised md:hidden"
       >
         <MenuIcon size={18} />
       </button>
@@ -56,7 +56,7 @@ export default function Header({ profile, workspace, available, onOpenMobileNav 
         type="button"
         onClick={() => setMobileSearchOpen(true)}
         aria-label="Search"
-        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised sm:hidden"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised sm:hidden"
       >
         <Search size={16} />
       </button>
@@ -70,7 +70,7 @@ export default function Header({ profile, workspace, available, onOpenMobileNav 
             type="button"
             onClick={() => setMobileSearchOpen(false)}
             aria-label="Close search"
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-raised"
           >
             <X size={16} />
           </button>
@@ -87,7 +87,7 @@ export default function Header({ profile, workspace, available, onOpenMobileNav 
           placement="bottom-end"
           panelClassName="w-52"
           trigger={({ triggerProps }) => (
-            <button type="button" {...triggerProps} aria-label="Account menu" className="flex items-center gap-2 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-surface-raised md:px-2">
+            <button type="button" {...triggerProps} aria-label="Account menu" className="flex min-w-[44px] items-center justify-center gap-2 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-surface-raised md:px-2">
               <Avatar name={profile.display_name || profile.email} src={profile.avatar_url} size={24} />
               <span className="hidden max-w-[9rem] truncate font-medium text-text-primary md:inline">{profile.display_name || profile.email}</span>
               <ChevronDown size={12} className="hidden text-text-muted md:block" aria-hidden="true" />

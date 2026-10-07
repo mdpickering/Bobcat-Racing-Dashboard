@@ -71,7 +71,7 @@ function CategoryRow({ category, canManage, onChanged }: { category: SubsystemCa
         </div>
         {canManage && (
           <div className="flex flex-shrink-0 gap-2">
-            <button type="button" onClick={() => setEditing(true)} className="text-text-muted hover:text-accent-blue">
+            <button aria-label="Edit category" type="button" onClick={() => setEditing(true)} className="text-text-muted hover:text-accent-blue">
               <Pencil size={12} />
             </button>
             <button type="button" disabled={busy} onClick={() => persist({ active: !category.active })} className="text-text-muted hover:text-status-danger" title={category.active ? 'Archive' : 'Restore'}>
@@ -124,7 +124,7 @@ export default function CategoryManagementPanel({ subsystemId, categories, canMa
           <h2 className="text-sm font-semibold text-text-primary">Categories &amp; Engineering Rules</h2>
         </div>
         {canManage && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-2xs text-accent-blue hover:underline">
             <Plus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}

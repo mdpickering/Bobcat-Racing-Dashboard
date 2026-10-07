@@ -121,7 +121,7 @@ function SearchSelect<T extends { id: string }>({ label, placeholder, selected, 
                 }}
               >
                 <span className="block text-text-primary">{title(i)}</span>
-                <span className="block text-[11px] text-text-muted">{detail(i)}</span>
+                <span className="block text-2xs text-text-muted">{detail(i)}</span>
               </button>
             </li>
           ))}

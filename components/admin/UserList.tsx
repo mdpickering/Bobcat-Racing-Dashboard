@@ -28,7 +28,7 @@ export default function UserList({ users }: { users: Profile[] }) {
               <Avatar name={u.display_name || u.email} src={u.avatar_url} size={28} />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium text-text-primary">{u.display_name || 'Unnamed'}</div>
-                <div className="truncate text-[11px] text-text-muted">{u.email}</div>
+                <div className="truncate text-2xs text-text-muted">{u.email}</div>
               </div>
               <div className="flex flex-shrink-0 items-center gap-1.5">
                 {!u.approved && <Badge tone="amber">Pending</Badge>}

@@ -31,7 +31,7 @@ export default function LevelDecisionsPanel({ decisions, currentDecisionId }: { 
                 {d.threshold != null && <> · minimum {formatMoney(d.threshold)}</>}
               </div>
               {d.reason && <p className="mt-1 whitespace-pre-wrap text-[12px] text-text-secondary">“{d.reason}”</p>}
-              <div className="mt-1 text-[11px] text-text-muted">
+              <div className="mt-1 text-2xs text-text-muted">
                 {formatDateTime(d.decided_at)}
                 {d.decider ? ` · ${d.decider.display_name || d.decider.email}` : ' · imported'}
               </div>

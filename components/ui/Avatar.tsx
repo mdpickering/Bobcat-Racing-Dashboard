@@ -20,8 +20,8 @@ export default function Avatar({ name, src, size = 28 }: AvatarProps) {
 
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-accent-blue/20 font-mono font-bold text-accent-blue"
-      style={{ width: size, height: size, fontSize: size * 0.38 }}
+      className="flex flex-shrink-0 items-center justify-center rounded-full bg-accent-blue/20 font-bold text-accent-blue"
+      style={{ width: size, height: size, fontSize: Math.max(12, size * 0.38) }}
     >
       {initials || '?'}
     </div>

@@ -111,7 +111,7 @@ export default function PartFormModal({ open, onClose, part, subsystemOptions, c
               Part number <span className="text-status-danger">*</span>
             </label>
             <Input id="part-number" value={partNumber} maxLength={60} onChange={(e) => setPartNumber(e.target.value)} disabled={busy} placeholder="e.g. FS-0012" autoFocus={!editing} />
-            <p className="mt-1 text-[11px] text-text-muted">The team&apos;s own number. Unique; letter case and spaces are ignored.</p>
+            <p className="mt-1 text-2xs text-text-muted">The team&apos;s own number. Unique; letter case and spaces are ignored.</p>
           </div>
           <div>
             <label htmlFor="part-name" className={LABEL}>
@@ -132,7 +132,7 @@ export default function PartFormModal({ open, onClose, part, subsystemOptions, c
                 </option>
               ))}
             </Select>
-            {editing && !canMoveSubsystem && <p className="mt-1 text-[11px] text-text-muted">Only the CTO or an admin can move a part to another subsystem.</p>}
+            {editing && !canMoveSubsystem && <p className="mt-1 text-2xs text-text-muted">Only the CTO or an admin can move a part to another subsystem.</p>}
           </div>
           <div>
             <label htmlFor="part-category" className={LABEL}>Category</label>
@@ -153,12 +153,12 @@ export default function PartFormModal({ open, onClose, part, subsystemOptions, c
           <div>
             <label htmlFor="part-cost" className={LABEL}>Reference unit cost ($)</label>
             <Input id="part-cost" type="number" min={0} step="0.01" inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} disabled={busy} placeholder="Optional" aria-invalid={costCheck.error !== null} />
-            {costCheck.error ? <p className="mt-1 text-[11px] text-status-danger">{costCheck.error}</p> : <p className="mt-1 text-[11px] text-text-muted">A vendor&apos;s own price is set on the vendor link.</p>}
+            {costCheck.error ? <p className="mt-1 text-2xs text-status-danger">{costCheck.error}</p> : <p className="mt-1 text-2xs text-text-muted">A vendor&apos;s own price is set on the vendor link.</p>}
           </div>
           <div>
             <label htmlFor="part-source" className={LABEL}>Source link</label>
             <Input id="part-source" type="url" inputMode="url" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} disabled={busy} placeholder="https://… (optional)" aria-invalid={urlError !== null} className={urlError ? 'border-status-danger/60 focus:border-status-danger' : ''} />
-            {urlError && <p className="mt-1 text-[11px] text-status-danger">{urlError}</p>}
+            {urlError && <p className="mt-1 text-2xs text-status-danger">{urlError}</p>}
           </div>
         </div>
         <div>
@@ -187,7 +187,7 @@ export default function PartFormModal({ open, onClose, part, subsystemOptions, c
             </Button>
           </div>
         </div>
-        {editing && part?.active && <p className="text-[11px] text-text-muted">Deactivating keeps the part and its history. It disappears from the pickers but past purchases are untouched.</p>}
+        {editing && part?.active && <p className="text-2xs text-text-muted">Deactivating keeps the part and its history. It disappears from the pickers but past purchases are untouched.</p>}
       </form>
     </Modal>
   )

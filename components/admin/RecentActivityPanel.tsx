@@ -26,7 +26,7 @@ export default function RecentActivityPanel({ items }: { items: RecentActivityIt
               <Link href={item.href} className="flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-xs transition-colors hover:bg-surface-raised">
                 <div className="min-w-0">
                   <span className="truncate font-medium text-text-primary">{item.title}</span>
-                  <div className="mt-0.5 text-[11px] text-text-muted">
+                  <div className="mt-0.5 text-2xs text-text-muted">
                     {TYPE_LABEL[item.type]} · {timeAgo(item.createdAt)}
                   </div>
                 </div>

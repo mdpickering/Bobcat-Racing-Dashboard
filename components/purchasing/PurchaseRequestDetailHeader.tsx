@@ -218,7 +218,7 @@ export default function PurchaseRequestDetailHeader({ request, canManage, canApp
       {/* status and the next-step actions; approval and the purchase sheet are explicit buttons, exactly as before */}
       <div className="mb-6 flex flex-wrap items-center gap-3 border-y border-border py-3">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Status</span>
+          <span className="text-2xs font-medium text-text-muted">Status</span>
           <PurchaseStatusBadge status={request.status} />
         </div>
         {actions.map((action) => (

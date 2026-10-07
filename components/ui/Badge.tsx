@@ -24,7 +24,7 @@ export default function Badge({ tone = 'neutral', children, className = '' }: Ba
   const resolved: StatusTone = tone in LEGACY ? LEGACY[tone as LegacyTone] : (tone as StatusTone)
   return (
     <span
-      className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${STATUS_TONE_CLASSES[resolved]} ${className}`}
+      className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide ${STATUS_TONE_CLASSES[resolved]} ${className}`}
     >
       {children}
     </span>

@@ -53,8 +53,8 @@ function DueCell({ task }: { task: Task }) {
   return (
     <span className={overdue ? 'font-medium text-status-danger' : soon ? 'font-medium text-status-warning' : 'text-text-secondary'}>
       {formatDeadline(task.deadline)}
-      {overdue && <span className="ml-1.5 text-[11px] uppercase tracking-wide">overdue</span>}
-      {soon && <span className="ml-1.5 text-[11px] uppercase tracking-wide">soon</span>}
+      {overdue && <span className="ml-1.5 text-2xs uppercase tracking-wide">overdue</span>}
+      {soon && <span className="ml-1.5 text-2xs uppercase tracking-wide">soon</span>}
     </span>
   )
 }
@@ -67,7 +67,7 @@ function StatusCell({ task, editable }: { task: Task; editable: boolean }) {
     <Select
       aria-label={`Status for ${task.title}`}
       value={task.status}
-      className="w-auto py-1"
+      className="w-auto min-w-[7.5rem] py-1"
       onChange={async (e) => {
         try {
           await updateTask(createClient(), task.id, { status: e.target.value })
@@ -122,7 +122,7 @@ export default function TaskList({
       header: 'Task',
       cell: (task) => (
         <>
-          <Link href={`/tasks/${task.id}`} onClick={(e) => handleTitleClick(e, task.id)} className="block max-w-[34rem] truncate font-medium text-text-primary hover:text-accent-blue">
+          <Link href={`/tasks/${task.id}`} onClick={(e) => handleTitleClick(e, task.id)} className="-my-3 block max-w-[20rem] truncate py-3 font-medium text-text-primary hover:text-accent-blue md:my-0 md:py-0 2xl:max-w-[34rem]">
             {task.title || 'Untitled task'}
           </Link>
           {/* the separator is drawn by CSS after the first item, so a wrapped line never starts with a stray dot */}
@@ -167,13 +167,13 @@ export default function TaskList({
     columns.unshift({
       key: 'select',
       header: ids.length > 0 ? (
-        <label className="-m-2 flex cursor-pointer items-center justify-center p-2">
+        <label className="-m-3.5 flex cursor-pointer items-center justify-center p-3.5">
           <input type="checkbox" aria-label="Select all manageable tasks" checked={allSelected} onChange={(e) => onToggleAll!(ids, e.target.checked)} className="h-4 w-4 accent-accent-blue" />
         </label>
       ) : null,
       cell: (task) =>
         canEditDate(task) ? (
-          <label className="-m-2 flex cursor-pointer items-center justify-center p-2">
+          <label className="-m-3.5 flex cursor-pointer items-center justify-center p-3.5">
             <input type="checkbox" aria-label={`Select ${task.title || 'task'}`} checked={selectedIds!.has(task.id)} onChange={() => onToggle!(task.id)} className="h-4 w-4 accent-accent-blue" />
           </label>
         ) : null,

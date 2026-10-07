@@ -101,7 +101,7 @@ export default function MeetingHeaderBar({ meeting, canManage, canRecord }: Meet
               </Button>
             )}
             {canManage && meeting.status === 'planned' && (
-              <Button size="sm" variant="danger" disabled={busy} onClick={handleDelete}>
+              <Button aria-label="Delete this draft meeting" size="sm" variant="danger" disabled={busy} onClick={handleDelete}>
                 <Trash2 size={12} />
               </Button>
             )}
@@ -126,7 +126,7 @@ export default function MeetingHeaderBar({ meeting, canManage, canRecord }: Meet
           )}
         </div>
       ) : canRecord ? (
-        <button type="button" onClick={() => setShowSummaryBox(true)} className="text-[11px] text-text-muted hover:text-accent-blue">
+        <button type="button" onClick={() => setShowSummaryBox(true)} className="text-2xs text-text-muted hover:text-accent-blue">
           + Add a meeting summary
         </button>
       ) : null}

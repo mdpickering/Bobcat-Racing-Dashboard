@@ -142,7 +142,7 @@ export default function CreatePurchaseRequestModal({ open, onClose, subsystems, 
         </div>
 
         <div className="border-t border-border pt-3">
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-text-muted">First item — add more items, from any vendor, on the next page</p>
+          <p className="mb-2 font-mono text-2xs text-text-muted">First item — add more items, from any vendor, on the next page</p>
           <div className="space-y-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <CatalogPartPicker selected={pickedPart} onChange={handlePickPart} disabled={submitting} />

@@ -53,20 +53,20 @@ export default function MigrationExceptionsPanel({ exceptions }: { exceptions: M
                 <Badge tone={STATUS_TONE[e.resolution_status]}>{e.resolution_status}</Badge>
               </div>
               {e.raw_value && <div className="mt-0.5 truncate text-[12px] text-text-secondary">{e.raw_value}</div>}
-              <div className="mt-1 text-[11px] text-text-muted">{formatDateTime(e.created_at)}</div>
+              <div className="mt-1 text-2xs text-text-muted">{formatDateTime(e.created_at)}</div>
             </div>
             {e.resolution_status === 'unresolved' && (
               <div className="flex flex-shrink-0 gap-2">
-                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'resolved')} title="Mark resolved" className="text-text-muted hover:text-status-success">
+                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'resolved')} title="Mark resolved" aria-label="Mark resolved" className="text-text-muted hover:text-status-success">
                   <Check size={14} />
                 </button>
-                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'ignored')} title="Ignore" className="text-text-muted hover:text-status-danger">
+                <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'ignored')} title="Ignore" aria-label="Ignore" className="text-text-muted hover:text-status-danger">
                   <X size={14} />
                 </button>
               </div>
             )}
             {e.resolution_status !== 'unresolved' && (
-              <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'unresolved')} title="Reopen" className="flex-shrink-0 text-text-muted hover:text-accent-blue">
+              <button type="button" disabled={busyId === e.id} onClick={() => handleResolve(e.id, 'unresolved')} title="Reopen" aria-label="Reopen" className="flex-shrink-0 text-text-muted hover:text-accent-blue">
                 <RotateCcw size={13} />
               </button>
             )}

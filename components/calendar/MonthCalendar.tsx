@@ -115,7 +115,7 @@ export default function MonthCalendar({ year, month, events, milestones, taskDea
 
       <div className="grid grid-cols-7 gap-1">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="pb-1 text-center text-[11px] font-mono uppercase text-text-muted">
+          <div key={w} className="pb-1 text-center text-2xs text-text-muted">
             {w}
           </div>
         ))}
@@ -135,13 +135,13 @@ export default function MonthCalendar({ year, month, events, milestones, taskDea
                 inMonth ? 'border-border bg-surface hover:bg-surface-raised' : 'border-transparent bg-transparent opacity-40 hover:opacity-70'
               } ${isToday ? 'ring-1 ring-qu-gold' : ''}`}
             >
-              <span className={`text-[12px] ${isToday ? 'font-bold text-qu-gold' : 'text-text-secondary'}`}>{date.getDate()}</span>
+              <span className={`text-[12px] ${isToday ? 'font-bold text-accent' : 'text-text-secondary'}`}>{date.getDate()}</span>
               <div className="flex w-full flex-wrap gap-0.5">
                 {dayMilestones.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-qu-gold" title="Milestone" />}
                 {dayEvents.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-accent-blue" title="Event" />}
                 {dayTasks.length > 0 && <span className="h-1.5 w-1.5 rounded-full bg-status-danger" title="Task deadline" />}
               </div>
-              {total > 0 && <span className="text-[9px] text-text-muted">{total} item{total === 1 ? '' : 's'}</span>}
+              {total > 0 && <span className="text-2xs text-text-muted">{total} item{total === 1 ? '' : 's'}</span>}
             </button>
           )
         })}

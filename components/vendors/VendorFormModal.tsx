@@ -91,7 +91,7 @@ function VendorForm({ vendor, onClose }: { vendor: Vendor | null; onClose: () =>
         <div>
           <label htmlFor="vendor-website" className={LABEL}>Website</label>
           <Input id="vendor-website" type="url" inputMode="url" value={website} onChange={(e) => setWebsite(e.target.value)} disabled={busy} placeholder="https://… (optional)" aria-invalid={urlError !== null} className={urlError ? 'border-status-danger/60 focus:border-status-danger' : ''} />
-          {urlError && <p className="mt-1 text-[11px] text-status-danger">{urlError}</p>}
+          {urlError && <p className="mt-1 text-2xs text-status-danger">{urlError}</p>}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
@@ -106,7 +106,7 @@ function VendorForm({ vendor, onClose }: { vendor: Vendor | null; onClose: () =>
         <div>
           <label htmlFor="vendor-email" className={LABEL}>Contact email</label>
           <Input id="vendor-email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} disabled={busy} aria-invalid={emailError !== null} className={emailError ? 'border-status-danger/60 focus:border-status-danger' : ''} />
-          {emailError && <p className="mt-1 text-[11px] text-status-danger">{emailError}</p>}
+          {emailError && <p className="mt-1 text-2xs text-status-danger">{emailError}</p>}
         </div>
         <div>
           <label htmlFor="vendor-address" className={LABEL}>Address</label>
@@ -116,7 +116,7 @@ function VendorForm({ vendor, onClose }: { vendor: Vendor | null; onClose: () =>
           <label htmlFor="vendor-notes" className={LABEL}>Notes</label>
           <Textarea id="vendor-notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} disabled={busy} placeholder="Ordering rules, account numbers to ask about, shipping…" />
         </div>
-        <p className="text-[11px] text-text-muted">Vendor contact details are visible to every signed-in team member so engineers can order.</p>
+        <p className="text-2xs text-text-muted">Vendor contact details are visible to every signed-in team member so engineers can order.</p>
         {error && <p className="text-status-danger">{error}</p>}
         <div className="flex items-center justify-between gap-2 pt-1">
           <div>
@@ -135,7 +135,7 @@ function VendorForm({ vendor, onClose }: { vendor: Vendor | null; onClose: () =>
             </Button>
           </div>
         </div>
-        {editing && vendor?.active && <p className="text-[11px] text-text-muted">Deactivating keeps the vendor, its parts and every past purchase. It just stops appearing in the pickers.</p>}
+        {editing && vendor?.active && <p className="text-2xs text-text-muted">Deactivating keeps the vendor, its parts and every past purchase. It just stops appearing in the pickers.</p>}
       </form>
     </Modal>
   )

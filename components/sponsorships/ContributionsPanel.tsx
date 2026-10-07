@@ -32,12 +32,12 @@ function ContributionRow({ c, canManage, onToggle, busy }: { c: SponsorshipContr
           {c.kind === 'in_kind' && c.in_kind_type && <Badge tone="sky">{IN_KIND_TYPE_LABEL[c.in_kind_type]}</Badge>}
           {c.withdrawn && <Badge tone="rose">Withdrawn</Badge>}
         </div>
-        <div className="mt-0.5 text-[11px] text-text-muted">
+        <div className="mt-0.5 text-2xs text-text-muted">
           {c.description ? `${c.description} · ` : ''}
           {c.kind === 'cash' ? 'Committed' : 'Contributed'} {formatContributionDate(c.contributed_on, c.contributed_on_precision)}
           {c.kind === 'in_kind' && c.received_on ? ` · Received ${formatContributionDate(c.received_on, c.received_on_precision)}` : ''}
         </div>
-        {c.notes && <div className="mt-0.5 text-[11px] text-text-muted">{c.notes}</div>}
+        {c.notes && <div className="mt-0.5 text-2xs text-text-muted">{c.notes}</div>}
       </div>
       {canManage && (
         <Button size="sm" variant="ghost" disabled={busy} onClick={() => onToggle(c)}>
@@ -131,11 +131,11 @@ export default function ContributionsPanel({ sponsorshipId, contributions, canMa
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
-            <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-text-muted">Cash</div>
+            <div className="mb-1.5 text-2xs font-medium text-text-muted">Cash</div>
             {cash.length === 0 ? <p className="text-[12px] text-text-muted">None</p> : <ul className="divide-y divide-border">{cash.map((c) => <ContributionRow key={c.id} c={c} canManage={canManage} onToggle={handleToggle} busy={toggling} />)}</ul>}
           </div>
           <div>
-            <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-text-muted">In-kind (estimated value)</div>
+            <div className="mb-1.5 text-2xs font-medium text-text-muted">In-kind (estimated value)</div>
             {inKind.length === 0 ? <p className="text-[12px] text-text-muted">None</p> : <ul className="divide-y divide-border">{inKind.map((c) => <ContributionRow key={c.id} c={c} canManage={canManage} onToggle={handleToggle} busy={toggling} />)}</ul>}
           </div>
         </div>

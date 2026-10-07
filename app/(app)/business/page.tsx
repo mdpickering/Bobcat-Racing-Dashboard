@@ -140,12 +140,12 @@ export default async function BusinessPage() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Committed sponsors</div>
+                      <div className="text-2xs font-medium text-text-muted">Committed sponsors</div>
                       <div className="mt-1 text-2xl font-semibold tabular-nums leading-8 text-text-primary">{sponsorship.committed.length}</div>
                       {sponsorship.rows.length > sponsorship.committed.length && <div className="text-xs text-text-muted">{sponsorship.rows.length - sponsorship.committed.length} more in progress</div>}
                     </div>
                     <div>
-                      <div className="text-[11px] font-medium uppercase tracking-wide text-text-muted">In-kind value</div>
+                      <div className="text-2xs font-medium text-text-muted">In-kind value</div>
                       <div className="mt-1 text-2xl font-semibold tabular-nums leading-8 text-text-primary">{formatMoney(sponsorship.inKindValue)}</div>
                       <div className="text-xs text-text-muted">Estimated, not cash</div>
                     </div>

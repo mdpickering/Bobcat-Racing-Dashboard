@@ -81,7 +81,7 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-text-primary">Subsystem Memberships</h3>
         {!adding && available.length > 0 && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-2xs text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
@@ -102,12 +102,12 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
                   type="button"
                   disabled={busy}
                   onClick={() => handleToggleLead(m.subsystem_id, m.is_lead)}
-                  title={m.is_lead ? 'Remove lead' : 'Make lead'}
-                  className={m.is_lead ? 'text-qu-gold' : 'text-text-muted hover:text-qu-gold'}
+                  title={m.is_lead ? 'Remove lead' : 'Make lead'} aria-label={m.is_lead ? 'Remove lead' : 'Make lead'}
+                  className={m.is_lead ? 'text-accent' : 'text-text-muted hover:text-accent'}
                 >
                   <Star size={13} />
                 </button>
-                <button type="button" disabled={busy} onClick={() => handleRemove(m.subsystem_id)} className="text-text-muted hover:text-status-danger">
+                <button aria-label="Remove from this subsystem" type="button" disabled={busy} onClick={() => handleRemove(m.subsystem_id)} className="text-text-muted hover:text-status-danger">
                   <X size={13} />
                 </button>
               </div>
@@ -126,7 +126,7 @@ export default function UserSubsystemMemberships({ userId, memberships, allSubsy
               </option>
             ))}
           </Select>
-          <label className="flex items-center gap-1.5 text-[11px] text-text-muted">
+          <label className="flex items-center gap-1.5 text-2xs text-text-muted">
             <input type="checkbox" checked={asLead} onChange={(e) => setAsLead(e.target.checked)} /> As lead
           </label>
           <Button size="sm" disabled={!selected || busy} onClick={handleAdd}>

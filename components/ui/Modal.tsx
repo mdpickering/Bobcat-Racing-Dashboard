@@ -80,7 +80,7 @@ export default function Modal({ open, onClose, title, children, maxWidthClassNam
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary"
           >
             <X size={16} />
           </button>

@@ -41,7 +41,7 @@ export default function DeadlineTable({ tasks, today, bucket, compact = false, s
       header: 'Task',
       cell: (t) => (
         <>
-          <Link href={`/tasks/${t.id}`} className={`block truncate font-medium text-text-primary hover:text-accent-blue ${compact ? 'max-w-[11rem] sm:max-w-[22rem]' : 'max-w-[11rem] sm:max-w-[28rem]'}`}>
+          <Link href={`/tasks/${t.id}`} className={`-my-3 block truncate py-3 font-medium text-text-primary hover:text-accent-blue md:my-0 md:py-0 ${compact ? 'max-w-[11rem] sm:max-w-[22rem]' : 'max-w-[11rem] sm:max-w-[28rem]'}`}>
             {t.title || 'Untitled task'}
           </Link>
           <div className={`mt-0.5 text-xs text-text-muted ${compact ? '' : 'md:hidden'}`}>
@@ -72,12 +72,12 @@ export default function DeadlineTable({ tasks, today, bucket, compact = false, s
     columns.unshift({
       key: 'select',
       header: (
-        <label className="-m-2 flex cursor-pointer items-center justify-center p-2">
+        <label className="-m-3.5 flex cursor-pointer items-center justify-center p-3.5">
           <input type="checkbox" aria-label={`Select all in ${bucket}`} checked={allSelected} onChange={(e) => onToggleAll!(ids, e.target.checked)} className="h-4 w-4 accent-accent-blue" />
         </label>
       ),
       cell: (t) => (
-        <label className="-m-2 flex cursor-pointer items-center justify-center p-2">
+        <label className="-m-3.5 flex cursor-pointer items-center justify-center p-3.5">
           <input type="checkbox" aria-label={`Select ${t.title || 'task'}`} checked={selectedIds!.has(t.id)} onChange={() => onToggle!(t.id)} className="h-4 w-4 accent-accent-blue" />
         </label>
       ),

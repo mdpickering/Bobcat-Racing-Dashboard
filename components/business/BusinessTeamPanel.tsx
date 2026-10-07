@@ -135,9 +135,9 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
                   <div className="min-w-0">
                     <div className="truncate text-xs font-medium text-text-primary">
                       {nameOf(m.profile)}
-                      {m.user_id === currentUserId && <span className="ml-1.5 text-[11px] text-text-muted">(you)</span>}
+                      {m.user_id === currentUserId && <span className="ml-1.5 text-2xs text-text-muted">(you)</span>}
                     </div>
-                    {m.profile?.display_name && <div className="truncate text-[11px] text-text-muted">{m.profile.email}</div>}
+                    {m.profile?.display_name && <div className="truncate text-2xs text-text-muted">{m.profile.email}</div>}
                   </div>
                 </div>
 
@@ -164,9 +164,9 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
                     <button
                       type="button"
                       disabled={busy}
-                      title={m.is_lead ? 'Remove Business Lead' : 'Make Business Lead'}
+                      title={m.is_lead ? 'Remove Business Lead' : 'Make Business Lead'} aria-label={m.is_lead ? 'Remove Business Lead' : 'Make Business Lead'}
                       onClick={() => run(() => setBusinessLead(createClient(), m.user_id, !m.is_lead), 'Could not change the Business Lead.')}
-                      className={m.is_lead ? 'text-qu-gold' : 'text-text-muted hover:text-qu-gold'}
+                      className={m.is_lead ? 'text-accent' : 'text-text-muted hover:text-accent'}
                     >
                       <Star size={14} />
                     </button>
@@ -175,7 +175,7 @@ export default function BusinessTeamPanel({ members, candidates, currentUserId, 
                     <button
                       type="button"
                       disabled={busy}
-                      title={m.user_id === currentUserId ? 'Leave the Business team' : 'Remove from the Business team'}
+                      title={m.user_id === currentUserId ? 'Leave the Business team' : 'Remove from the Business team'} aria-label={m.user_id === currentUserId ? 'Leave the Business team' : 'Remove from the Business team'}
                       onClick={() => setRemoving(m)}
                       className="text-text-muted hover:text-status-danger"
                     >

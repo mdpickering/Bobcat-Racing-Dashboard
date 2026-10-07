@@ -21,7 +21,7 @@ export default function InventoryTable({ rows, filtered, hasLocations }: { rows:
           <div className="mt-0.5 text-text-secondary md:hidden">{r.name}</div>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 md:hidden">
             <CatalogStatusBadge active={r.active} />
-            <span className="text-[11px] text-text-muted">{r.subsystem_name}</span>
+            <span className="text-2xs text-text-muted">{r.subsystem_name}</span>
           </div>
         </>
       ),

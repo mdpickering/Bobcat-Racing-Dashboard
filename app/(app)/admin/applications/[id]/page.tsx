@@ -54,25 +54,25 @@ export default async function AdminApplicationDetailPage({ params }: { params: {
 
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-xs sm:grid-cols-3">
           <div>
-            <div className="font-mono text-[11px] uppercase text-text-muted">Year</div>
+            <div className="font-mono text-2xs text-text-muted">Year</div>
             <div className="mt-0.5 text-text-primary">{application.year || '—'}</div>
           </div>
           <div>
-            <div className="font-mono text-[11px] uppercase text-text-muted">Experience</div>
+            <div className="font-mono text-2xs text-text-muted">Experience</div>
             <div className="mt-0.5 text-text-primary">{application.experience_level || '—'}</div>
           </div>
           <div>
-            <div className="font-mono text-[11px] uppercase text-text-muted">Weekly Hours</div>
+            <div className="font-mono text-2xs text-text-muted">Weekly Hours</div>
             <div className="mt-0.5 text-text-primary">{application.weekly_hours ?? '—'}</div>
           </div>
           <div>
-            <div className="font-mono text-[11px] uppercase text-text-muted">Submitted</div>
+            <div className="font-mono text-2xs text-text-muted">Submitted</div>
             <div className="mt-0.5 text-text-primary">{formatDate(application.submitted_at)}</div>
           </div>
         </div>
 
         <div className="mt-4 border-t border-border pt-4 text-xs">
-          <div className="font-mono text-[11px] uppercase text-text-muted">Skills</div>
+          <div className="font-mono text-2xs text-text-muted">Skills</div>
           <div className="mt-1 flex flex-wrap gap-1">
             {application.skills && application.skills.length > 0 ? (
               application.skills.map((s) => (
@@ -88,7 +88,7 @@ export default async function AdminApplicationDetailPage({ params }: { params: {
 
         {application.goals && (
           <div className="mt-4 border-t border-border pt-4 text-xs">
-            <div className="font-mono text-[11px] uppercase text-text-muted">Goals</div>
+            <div className="font-mono text-2xs text-text-muted">Goals</div>
             <p className="mt-1 whitespace-pre-wrap text-text-secondary">{application.goals}</p>
           </div>
         )}

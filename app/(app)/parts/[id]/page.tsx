@@ -24,7 +24,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">{label}</dt>
+    <dt className="text-2xs font-medium text-text-muted">{label}</dt>
     <dd className="mt-1 text-xs text-text-primary">{children}</dd>
   </div>
 )
@@ -113,7 +113,7 @@ export default async function PartDetailPage({ params }: { params: { id: string 
             <dl className="space-y-3">
               <Field label="Unit cost">
                 {part.missing_cost ? <span className="text-status-warning">Not recorded</span> : <span className="text-base font-semibold tabular-nums">{formatUsd(part.effective_unit_cost)}</span>}
-                {!part.missing_cost && preferred?.unit_cost != null && <span className="ml-1 text-[11px] text-text-muted">from {preferred.vendor?.name ?? 'the preferred vendor'}</span>}
+                {!part.missing_cost && preferred?.unit_cost != null && <span className="ml-1 text-2xs text-text-muted">from {preferred.vendor?.name ?? 'the preferred vendor'}</span>}
               </Field>
               <Field label="Preferred vendor">{part.preferred_vendor_name ?? (part.vendor_count > 0 ? <span className="text-text-muted">None chosen ({part.vendor_count} linked)</span> : dash)}</Field>
               <Field label="Order this number">

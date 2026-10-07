@@ -9,9 +9,10 @@
   --border: 30 48 71;
   --text-primary: 241 245 249;
   --text-secondary: 148 163 184;
-  --text-muted: 100 116 139;
+  /* muted text and accent-blue links are 4.75:1+ on every dark surface (were 3.6:1 and 3.9:1) */
+  --text-muted: 120 136 160;
   --accent: 255 199 44;
-  --accent-blue: 62 124 177;
+  --accent-blue: 90 150 205;
   /* status colours: one meaning each, everywhere (see lib/status.ts) */
   --status-success: 74 222 128;
   --status-warning: 251 191 36;
@@ -27,8 +28,9 @@
   --border: 222 227 233;
   --text-primary: 15 23 42;
   --text-secondary: 71 85 105;
-  --text-muted: 100 116 139;
-  --accent: 191 138 5;
+  --text-muted: 92 106 128;
+  /* deep gold: readable as text on white (5:1); the bright brand gold stays on buttons/backgrounds only */
+  --accent: 146 100 0;
   --accent-blue: 40 96 145;
   --status-success: 21 128 61;
   --status-warning: 161 98 7;
@@ -127,6 +129,38 @@ body {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
     border-top: 1px solid rgb(var(--border));
+  }
+}
+
+button:has(> svg:only-child) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+/* Touch targets: phones and touch screens get a 44x44px minimum on controls (WCAG 2.5.5 / Apple HIG);
+   mouse layouts on md+ keep their denser sizing. Min-height only ever grows a control, never shrinks it. */
+@media (max-width: 767px), (pointer: coarse) {
+  button,
+  [role='button'],
+  select,
+  textarea,
+  input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+  .sidebar-link,
+  a:has(> .lucide-chevron-left),
+  .touch-target {
+    min-height: 44px;
+  }
+  button:has(> svg:only-child),
+  .touch-target-square {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  label:has(> input[type='checkbox']),
+  label:has(> input[type='radio']) {
+    min-height: 44px;
   }
 }
 

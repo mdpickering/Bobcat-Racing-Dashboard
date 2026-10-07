@@ -82,7 +82,7 @@ export default function RenewalPanel({ sponsorshipId, renewalDate, responsibleNa
 
           {renewalDate && (status.renewal_state === 'scheduled' || status.renewal_state === 'approaching' || reminders.length > 0) && (
             <div>
-              <div className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-text-muted">Reminders for this date</div>
+              <div className="mb-1.5 text-2xs font-medium text-text-muted">Reminders for this date</div>
               <ul className="space-y-1 text-xs">
                 {RENEWAL_THRESHOLDS.map((t) => {
                   const sent = sentByThreshold.get(t)
@@ -94,7 +94,7 @@ export default function RenewalPanel({ sponsorshipId, renewalDate, responsibleNa
                   )
                 })}
               </ul>
-              <p className="mt-2 text-[11px] text-text-muted">If the worker misses a threshold, only the tightest one that has passed is sent. A new renewal date starts a fresh set.</p>
+              <p className="mt-2 text-2xs text-text-muted">If the worker misses a threshold, only the tightest one that has passed is sent. A new renewal date starts a fresh set.</p>
             </div>
           )}
 

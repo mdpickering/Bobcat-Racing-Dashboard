@@ -125,7 +125,7 @@ export default function StockActionModal({ open, onClose, mode, partId, partLabe
                   </option>
                 ))}
               </Select>
-              {sameLocation && <p className="mt-1 text-[11px] text-status-danger">Choose two different locations.</p>}
+              {sameLocation && <p className="mt-1 text-2xs text-status-danger">Choose two different locations.</p>}
             </div>
           </>
         ) : (
@@ -144,7 +144,7 @@ export default function StockActionModal({ open, onClose, mode, partId, partLabe
         <div>
           <label className={LABEL}>{mode === 'adjust' ? 'Change (+ to add, − to remove)' : 'Quantity'}</label>
           <Input type="number" step={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={busy || !hasLocations} placeholder={mode === 'adjust' ? 'e.g. -2 or 5' : 'e.g. 5'} aria-invalid={qtyCheck.error !== null} />
-          {qtyCheck.error && <p className="mt-1 text-[11px] text-status-danger">{qtyCheck.error}</p>}
+          {qtyCheck.error && <p className="mt-1 text-2xs text-status-danger">{qtyCheck.error}</p>}
         </div>
 
         {mode !== 'transfer' && (
@@ -161,8 +161,8 @@ export default function StockActionModal({ open, onClose, mode, partId, partLabe
           <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} disabled={busy || !hasLocations} placeholder="Optional" />
         </div>
 
-        {mode === 'opening_balance' && <p className="text-[11px] text-text-muted">This records stock the team already physically has — it does not create a purchase.</p>}
-        {mode === 'write_off' && <p className="text-[11px] text-text-muted">A write-off permanently removes this quantity and stays in the ledger; it cannot be edited or deleted later.</p>}
+        {mode === 'opening_balance' && <p className="text-2xs text-text-muted">This records stock the team already physically has — it does not create a purchase.</p>}
+        {mode === 'write_off' && <p className="text-2xs text-text-muted">A write-off permanently removes this quantity and stays in the ledger; it cannot be edited or deleted later.</p>}
 
         {error && <p className="text-status-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-1">

@@ -122,7 +122,7 @@ export default function DeliverablesPanel({ sponsorshipId, level, decisionMethod
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full min-w-[720px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border text-[11px] font-medium uppercase tracking-wide text-text-muted">
+              <tr className="border-b border-border text-2xs font-medium text-text-muted">
                 <th scope="col" className="py-2 pr-2 font-medium">Deliverable</th>
                 <th scope="col" className="px-2 py-2 font-medium">Status</th>
                 <th scope="col" className="px-2 py-2 font-medium">Assigned to</th>
@@ -140,8 +140,8 @@ export default function DeliverablesPanel({ sponsorshipId, level, decisionMethod
                   <tr key={d.id} className="align-top">
                     <td className="py-2.5 pr-2">
                       <div className="font-medium text-text-primary">{d.title}</div>
-                      {d.source === 'custom' && <div className="text-[11px] text-text-muted">Custom</div>}
-                      {d.notes && <div className="mt-0.5 max-w-xs whitespace-pre-wrap text-[11px] text-text-muted">{d.notes}</div>}
+                      {d.source === 'custom' && <div className="text-2xs text-text-muted">Custom</div>}
+                      {d.notes && <div className="mt-0.5 max-w-xs whitespace-pre-wrap text-2xs text-text-muted">{d.notes}</div>}
                     </td>
                     <td className="px-2 py-2.5">
                       {canEditStatus ? (
@@ -164,13 +164,13 @@ export default function DeliverablesPanel({ sponsorshipId, level, decisionMethod
                     </td>
                     <td className="px-2 py-2.5 text-text-secondary">
                       {personName(d.assignee) ?? <span className="text-text-muted">Unassigned</span>}
-                      {isMine && <span className="ml-1 text-[11px] text-text-muted">(you)</span>}
+                      {isMine && <span className="ml-1 text-2xs text-text-muted">(you)</span>}
                     </td>
                     <td className="px-2 py-2.5">
                       {d.due_date ? (
                         <span className={overdue ? 'font-medium text-status-danger' : 'text-text-secondary'}>
                           {formatContributionDate(d.due_date, 'day')}
-                          {overdue && <span className="ml-1 text-[11px]">Overdue</span>}
+                          {overdue && <span className="ml-1 text-2xs">Overdue</span>}
                         </span>
                       ) : (
                         <span className="text-text-muted">—</span>
@@ -180,7 +180,7 @@ export default function DeliverablesPanel({ sponsorshipId, level, decisionMethod
                       {d.status === 'complete' && d.completed_at ? (
                         <>
                           {formatDate(d.completed_at)}
-                          {personName(d.completer) && <div className="text-[11px] text-text-muted">by {personName(d.completer)}</div>}
+                          {personName(d.completer) && <div className="text-2xs text-text-muted">by {personName(d.completer)}</div>}
                         </>
                       ) : (
                         <span className="text-text-muted">—</span>

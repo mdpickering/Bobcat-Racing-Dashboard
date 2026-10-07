@@ -13,7 +13,7 @@ export default function FeatureSoon({ icon: Icon, title, description }: FeatureS
       <Icon size={22} className="text-text-muted" aria-hidden="true" />
       <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
       <p className="text-xs text-text-secondary">{description}</p>
-      <span className="rounded-full border border-border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-text-muted">Not built yet</span>
+      <span className="rounded-full border border-border px-2.5 py-0.5 text-2xs font-medium uppercase tracking-wide text-text-muted">Not built yet</span>
     </div>
   )
 }

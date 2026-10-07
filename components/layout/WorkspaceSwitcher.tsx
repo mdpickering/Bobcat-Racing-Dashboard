@@ -59,7 +59,7 @@ export default function WorkspaceSwitcher({ current, available, variant, railMod
     >
       {({ close }) => (
         <>
-          <div className="px-2.5 pb-1.5 pt-1 text-[11px] font-medium uppercase tracking-wider text-text-muted">Workspace</div>
+          <div className="px-2.5 pb-1.5 pt-1 text-2xs font-medium text-text-muted">Workspace</div>
           {available.map((id) => {
             const w = WORKSPACES[id]
             const active = id === current

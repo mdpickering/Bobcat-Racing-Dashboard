@@ -19,7 +19,7 @@ export default function VendorPartsPanel({ links }: { links: PartVendorLink[] })
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full min-w-[560px] text-left text-xs">
             <thead>
-              <tr className="border-b border-border text-[11px] font-medium uppercase tracking-wide text-text-muted">
+              <tr className="border-b border-border text-2xs font-medium text-text-muted">
                 <th scope="col" className="py-2 pr-2 font-medium">Part</th>
                 <th scope="col" className="px-2 py-2 font-medium">Vendor order #</th>
                 <th scope="col" className="px-2 py-2 text-right font-medium">Unit cost</th>
@@ -43,7 +43,7 @@ export default function VendorPartsPanel({ links }: { links: PartVendorLink[] })
                       )}
                       {l.part && !l.part.active && <Badge tone="slate">Inactive</Badge>}
                     </div>
-                    {l.availability_notes && <div className="mt-0.5 text-[11px] text-text-muted">{l.availability_notes}</div>}
+                    {l.availability_notes && <div className="mt-0.5 text-2xs text-text-muted">{l.availability_notes}</div>}
                   </td>
                   <td className="px-2 py-2.5 font-mono text-[12px] text-text-secondary">{l.vendor_part_number ?? '—'}</td>
                   <td className="px-2 py-2.5 text-right tabular-nums text-text-primary">{formatUsd(l.unit_cost)}</td>

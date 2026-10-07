@@ -81,13 +81,13 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
           <StatusBadge domain="meetingAgendaItem" value={item.status} />
           {canManage && (
             <>
-              <Button size="sm" variant="ghost" disabled={!neighbours.prev} onClick={() => onMove('up')}>
+              <Button aria-label={`Move ${item.title} up`} size="sm" variant="ghost" disabled={!neighbours.prev} onClick={() => onMove('up')}>
                 <ArrowUp size={12} />
               </Button>
-              <Button size="sm" variant="ghost" disabled={!neighbours.next} onClick={() => onMove('down')}>
+              <Button aria-label={`Move ${item.title} down`} size="sm" variant="ghost" disabled={!neighbours.next} onClick={() => onMove('down')}>
                 <ArrowDown size={12} />
               </Button>
-              <Button size="sm" variant="ghost" disabled={busy} onClick={handleDelete}>
+              <Button aria-label={`Remove topic ${item.title}`} size="sm" variant="ghost" disabled={busy} onClick={handleDelete}>
                 <Trash2 size={12} />
               </Button>
             </>
@@ -107,11 +107,11 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
                 ))}
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-semibold text-text-secondary">Discussion notes</label>
+                <label className="mb-1 block text-2xs font-semibold text-text-secondary">Discussion notes</label>
                 <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What was discussed…" />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-semibold text-text-secondary">Decision</label>
+                <label className="mb-1 block text-2xs font-semibold text-text-secondary">Decision</label>
                 <Textarea rows={2} value={decision} onChange={(e) => setDecision(e.target.value)} placeholder="What was decided…" />
               </div>
               {dirty && (
@@ -126,13 +126,13 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
             <>
               {item.discussion_notes && (
                 <div>
-                  <p className="mb-0.5 text-[11px] font-semibold text-text-secondary">Discussion notes</p>
+                  <p className="mb-0.5 text-2xs font-semibold text-text-secondary">Discussion notes</p>
                   <p className="whitespace-pre-wrap text-xs text-text-primary">{item.discussion_notes}</p>
                 </div>
               )}
               {item.decision && (
                 <div>
-                  <p className="mb-0.5 text-[11px] font-semibold text-text-secondary">Decision</p>
+                  <p className="mb-0.5 text-2xs font-semibold text-text-secondary">Decision</p>
                   <p className="whitespace-pre-wrap text-xs text-text-primary">{item.decision}</p>
                 </div>
               )}
@@ -147,7 +147,7 @@ export default function AgendaItemCard({ item, actionItems, canManage, canEditNo
             </div>
           )}
           {canEditNow && (
-            <button type="button" onClick={onAddActionItem} className="flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue">
+            <button type="button" onClick={onAddActionItem} className="flex items-center gap-1 text-2xs text-text-muted hover:text-accent-blue">
               <Plus size={11} /> Add action item
             </button>
           )}

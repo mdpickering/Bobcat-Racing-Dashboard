@@ -233,7 +233,7 @@ export default function SearchAutocomplete({ className = '', autoFocus, onDone, 
             const Icon = group.icon
             return (
               <div key={group.type} role="presentation">
-                <div role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-mono uppercase tracking-wide text-text-muted">
+                <div role="presentation" className="px-2.5 pb-1 pt-2 text-2xs text-text-muted">
                   {group.label}
                 </div>
                 {group.items.map((r) => {
@@ -255,7 +255,7 @@ export default function SearchAutocomplete({ className = '', autoFocus, onDone, 
                         <div className="truncate font-medium text-text-primary">
                           <Highlight text={r.title} query={trimmed} />
                         </div>
-                        {r.subtitle && <div className="truncate text-[11px] text-text-muted">{r.subtitle}</div>}
+                        {r.subtitle && <div className="truncate text-2xs text-text-muted">{r.subtitle}</div>}
                       </div>
                     </div>
                   )

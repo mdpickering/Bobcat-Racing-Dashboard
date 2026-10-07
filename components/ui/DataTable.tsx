@@ -42,7 +42,7 @@ export default function DataTable<T>({ columns, rows, rowKey, caption, density =
               <th
                 key={c.key}
                 scope="col"
-                className={`px-3 py-2.5 text-[11px] font-medium uppercase tracking-wide text-text-muted first:pl-4 last:pr-4 ${c.align === 'right' ? 'text-right' : ''} ${c.hideBelow ? HIDE[c.hideBelow] : ''}`}
+                className={`px-3 py-2.5 text-2xs font-medium text-text-muted first:pl-4 last:pr-4 ${c.align === 'right' ? 'text-right' : ''} ${c.hideBelow ? HIDE[c.hideBelow] : ''}`}
               >
                 {c.header}
               </th>

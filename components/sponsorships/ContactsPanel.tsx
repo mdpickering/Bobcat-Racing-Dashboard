@@ -80,7 +80,7 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
                   {c.is_primary && <Badge tone="gold">Primary</Badge>}
                   {!c.active && <Badge tone="slate">Inactive</Badge>}
                 </div>
-                {c.title && <div className="text-[11px] text-text-muted">{c.title}</div>}
+                {c.title && <div className="text-2xs text-text-muted">{c.title}</div>}
                 <div className="mt-0.5 flex flex-wrap gap-x-3 text-[12px] text-text-secondary">
                   {c.email && (
                     <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-accent-blue">
@@ -97,7 +97,7 @@ export default function ContactsPanel({ sponsorId, contacts, canManage }: Contac
               {canManage && (
                 <button
                   type="button"
-                  title="Remove this contact"
+                  title="Remove this contact" aria-label="Remove this contact"
                   disabled={busy}
                   onClick={() => run(() => removeSponsorContact(createClient(), c.id), 'Could not remove this contact.')}
                   className="flex-shrink-0 text-text-muted hover:text-status-danger"

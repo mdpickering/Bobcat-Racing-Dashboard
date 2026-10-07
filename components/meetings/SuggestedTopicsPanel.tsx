@@ -75,13 +75,13 @@ export default function SuggestedTopicsPanel({ meetingId, topics }: SuggestedTop
           <div className="space-y-4">
             {grouped.map(({ category, items }) => (
               <div key={category}>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted">{CATEGORY_LABEL[category]}</p>
+                <p className="mb-1.5 text-2xs font-semibold text-text-muted">{CATEGORY_LABEL[category]}</p>
                 <ul className="space-y-1.5">
                   {items.map((t) => (
                     <li key={key(t)} className="flex items-center justify-between gap-3 text-xs">
                       <div className="min-w-0">
                         <p className="truncate text-text-primary">{t.title}</p>
-                        {t.detail && <p className="text-[11px] text-text-muted">{t.detail}</p>}
+                        {t.detail && <p className="text-2xs text-text-muted">{t.detail}</p>}
                       </div>
                       <div className="flex flex-shrink-0 gap-1.5">
                         <Button size="sm" variant="secondary" disabled={busyKey === key(t)} onClick={() => handleDismiss(t)}>

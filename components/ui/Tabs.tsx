@@ -16,12 +16,12 @@ export default function Tabs({ tabs, label }: { tabs: TabItem[]; label: string }
           key={t.label}
           href={t.href}
           aria-current={t.active ? 'page' : undefined}
-          className={`-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+          className={`touch-target -mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
             t.active ? 'border-ws text-text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'
           }`}
         >
           {t.label}
-          {t.count !== undefined && <span className="rounded-full bg-surface-raised px-1.5 text-[11px] text-text-muted">{t.count}</span>}
+          {t.count !== undefined && <span className="rounded-full bg-surface-raised px-1.5 text-2xs text-text-muted">{t.count}</span>}
         </Link>
       ))}
     </nav>

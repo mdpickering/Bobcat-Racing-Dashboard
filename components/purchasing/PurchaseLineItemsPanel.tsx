@@ -201,7 +201,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full min-w-[820px] text-xs">
             <thead>
-              <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-text-muted">
+              <tr className="border-b border-border text-left text-2xs text-text-muted">
                 <th className="pb-2 font-medium">Description</th>
                 <th className="pb-2 font-medium">Vendor</th>
                 <th className="pb-2 font-medium">Part #</th>
@@ -219,9 +219,9 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                 <tr key={item.id}>
                   <td className="py-2 pr-2 text-text-primary">
                     {item.description}
-                    {item.notes && <div className="text-[11px] text-text-muted">{item.notes}</div>}
+                    {item.notes && <div className="text-2xs text-text-muted">{item.notes}</div>}
                     {(item.part_id || item.vendor_id) && (
-                      <div className="mt-0.5 text-[11px] text-text-muted">
+                      <div className="mt-0.5 text-2xs text-text-muted">
                         Catalog:{' '}
                         {item.part_id && (
                           <Link href={`/parts/${item.part_id}`} className="text-accent-blue hover:underline">
@@ -288,14 +288,14 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
                   <td className="py-2 pr-2 text-right font-medium tabular-nums text-text-primary">{formatCurrency(lineTotal(item))}</td>
                   <td className="py-2 pr-2">
                     {item.link && (
-                      <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-accent-blue hover:underline">
+                      <a aria-label="Open item link (opens in a new tab)" href={item.link} target="_blank" rel="noopener noreferrer" className="text-accent-blue hover:underline">
                         <LinkIcon size={12} />
                       </a>
                     )}
                   </td>
                   {canManage && (
                     <td className="py-2 text-right">
-                      <button type="button" disabled={busy} onClick={() => handleRemove(item.id)} className="text-text-muted hover:text-status-danger">
+                      <button aria-label="Remove this item" type="button" disabled={busy} onClick={() => handleRemove(item.id)} className="text-text-muted hover:text-status-danger">
                         <Trash2 size={13} />
                       </button>
                     </td>
@@ -306,7 +306,7 @@ export default function PurchaseLineItemsPanel({ purchaseRequestId, items, canMa
             {items.length > 0 && (
               <tfoot>
                 <tr className="border-t border-border">
-                  <td colSpan={7} className="pt-3 pr-2 text-right text-[11px] font-medium uppercase tracking-wide text-text-muted">
+                  <td colSpan={7} className="pt-3 pr-2 text-right text-2xs font-medium text-text-muted">
                     Total
                   </td>
                   <td className="pt-3 pr-2 text-right text-sm font-semibold tabular-nums text-text-primary">{formatCurrency(total)}</td>

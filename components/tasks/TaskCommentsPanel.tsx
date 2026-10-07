@@ -82,8 +82,8 @@ export default function TaskCommentsPanel({ taskId, comments, subsystemMembers, 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-text-primary">{c.user?.display_name || c.user?.email}</span>
-                    <span className="text-[11px] text-text-muted">{timeAgo(c.created_at)}</span>
-                    {c.updated_at !== c.created_at && <span className="text-[11px] text-text-muted">(edited)</span>}
+                    <span className="text-2xs text-text-muted">{timeAgo(c.created_at)}</span>
+                    {c.updated_at !== c.created_at && <span className="text-2xs text-text-muted">(edited)</span>}
                   </div>
                   {editingId === c.id ? (
                     <div className="mt-1 space-y-1.5">
@@ -103,7 +103,7 @@ export default function TaskCommentsPanel({ taskId, comments, subsystemMembers, 
                   {c.mentions && c.mentions.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {c.mentions.map((m) => (
-                        <span key={m.mentioned_profile_id} className="rounded-full bg-accent-blue/10 px-2 py-0.5 text-[11px] text-accent-blue">
+                        <span key={m.mentioned_profile_id} className="rounded-full bg-accent-blue/10 px-2 py-0.5 text-2xs text-accent-blue">
                           @{m.profile?.display_name || m.profile?.email}
                         </span>
                       ))}
@@ -116,7 +116,7 @@ export default function TaskCommentsPanel({ taskId, comments, subsystemMembers, 
                         setEditingId(c.id)
                         setEditText(c.comment)
                       }}
-                      className="mt-1 flex items-center gap-1 text-[11px] text-text-muted hover:text-accent-blue"
+                      className="mt-1 flex items-center gap-1 text-2xs text-text-muted hover:text-accent-blue"
                     >
                       <Pencil size={10} /> Edit
                     </button>
@@ -137,7 +137,7 @@ export default function TaskCommentsPanel({ taskId, comments, subsystemMembers, 
                 type="button"
                 key={m.user_id}
                 onClick={() => toggleMention(m.user_id)}
-                className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                className={`rounded-full border px-2 py-0.5 text-2xs transition-colors ${
                   mentionIds.includes(m.user_id) ? 'border-accent-blue bg-accent-blue/15 text-accent-blue' : 'border-border text-text-secondary hover:border-accent-blue/40'
                 }`}
               >
@@ -151,7 +151,7 @@ export default function TaskCommentsPanel({ taskId, comments, subsystemMembers, 
           <button
             type="button"
             onClick={() => setShowMentionPicker((v) => !v)}
-            className="flex items-center gap-1 text-[11px] font-mono uppercase text-text-muted hover:text-accent-blue"
+            className="flex items-center gap-1 text-2xs text-text-muted hover:text-accent-blue"
           >
             <AtSign size={12} /> Mention{mentionIds.length > 0 ? ` (${mentionIds.length})` : ''}
           </button>

@@ -77,7 +77,7 @@ export default function EmailNotificationsPanel({ categories, email, loadError }
                   {state.status === 'error' && <div className="mt-1 text-[12px] text-status-danger">{state.message}</div>}
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-2.5">
-                  <span className="flex w-16 items-center justify-end gap-1 text-[11px] font-mono text-text-muted" aria-live="polite">
+                  <span className="flex w-16 items-center justify-end gap-1 text-2xs font-mono text-text-muted" aria-live="polite">
                     {state.status === 'saving' && (
                       <>
                         <Loader2 size={11} className="animate-spin" /> Saving

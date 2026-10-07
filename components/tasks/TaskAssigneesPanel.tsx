@@ -86,7 +86,7 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-text-primary">Owners</h3>
         {canManage && !adding && available.length > 0 && (
-          <button type="button" onClick={() => setAdding(true)} className="text-[11px] font-mono uppercase text-accent-blue hover:underline">
+          <button type="button" onClick={() => setAdding(true)} className="text-2xs text-accent-blue hover:underline">
             <UserPlus size={11} className="mr-0.5 inline" /> Add
           </button>
         )}
@@ -100,12 +100,12 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
             <Avatar name={primary.profile?.display_name || primary.profile?.email} src={primary.profile?.avatar_url} size={26} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-xs font-medium text-text-primary">{primary.profile?.display_name || primary.profile?.email}</div>
-              <div className="flex items-center gap-1 text-[11px] text-qu-gold">
+              <div className="flex items-center gap-1 text-2xs text-accent">
                 <Star size={9} /> Primary owner
               </div>
             </div>
             {canManage && (
-              <button type="button" disabled={busy} onClick={() => handleRemove(primary.user_id)} className="text-text-muted hover:text-status-danger">
+              <button aria-label="Remove primary owner" type="button" disabled={busy} onClick={() => handleRemove(primary.user_id)} className="text-text-muted hover:text-status-danger">
                 <X size={13} />
               </button>
             )}
@@ -119,14 +119,14 @@ export default function TaskAssigneesPanel({ taskId, assignees, subsystemMembers
             <Avatar name={a.profile?.display_name || a.profile?.email} src={a.profile?.avatar_url} size={26} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-xs font-medium text-text-primary">{a.profile?.display_name || a.profile?.email}</div>
-              <div className="text-[11px] text-text-muted">Co-owner</div>
+              <div className="text-2xs text-text-muted">Co-owner</div>
             </div>
             {canManage && (
               <div className="flex items-center gap-2">
-                <button type="button" disabled={busy} onClick={() => handleSetPrimary(a.user_id)} title="Make primary" className="text-text-muted hover:text-qu-gold">
+                <button type="button" disabled={busy} onClick={() => handleSetPrimary(a.user_id)} title="Make primary" aria-label="Make primary" className="text-text-muted hover:text-accent">
                   <Star size={13} />
                 </button>
-                <button type="button" disabled={busy} onClick={() => handleRemove(a.user_id)} className="text-text-muted hover:text-status-danger">
+                <button aria-label="Remove co-owner" type="button" disabled={busy} onClick={() => handleRemove(a.user_id)} className="text-text-muted hover:text-status-danger">
                   <X size={13} />
                 </button>
               </div>

@@ -20,7 +20,7 @@ export default function MetricStrip({ metrics, className = '' }: { metrics: Metr
         const value = <span className={`text-2xl font-semibold tabular-nums leading-8 ${m.tone ? STATUS_TEXT_CLASSES[m.tone] : 'text-text-primary'}`}>{m.value}</span>
         return (
           <div key={m.label}>
-            <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">{m.label}</dt>
+            <dt className="text-2xs font-medium text-text-muted">{m.label}</dt>
             <dd className="mt-1">
               {m.href ? (
                 <Link href={m.href} className="block rounded-md transition-colors hover:opacity-80">

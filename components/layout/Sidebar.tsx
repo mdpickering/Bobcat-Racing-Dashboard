@@ -89,7 +89,7 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
 
         {def.groups.map((group) => (
           <div key={group.label} className="sidebar-group">
-            <div className="sidebar-group-label px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wider text-text-muted">{group.label}</div>
+            <div className="sidebar-group-label px-3 pb-1 pt-3 text-2xs font-medium text-text-muted">{group.label}</div>
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = NAV_ICONS[item.icon]
@@ -106,7 +106,7 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
                       <Icon size={16} className="flex-shrink-0" aria-hidden="true" />
                       <span className="sidebar-label flex flex-1 items-center justify-between gap-2">
                         {item.label}
-                        <span className="rounded-full border border-border px-1.5 text-[11px] font-normal text-text-muted">Soon</span>
+                        <span className="rounded-full border border-border px-1.5 text-2xs font-normal text-text-muted">Soon</span>
                       </span>
                     </div>
                   )
@@ -151,9 +151,9 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
           </Link>
         )}
         <div className="sidebar-footer px-3 pt-2">
-          <div className="text-[11px] uppercase tracking-wider text-text-muted">Signed in as</div>
+          <div className="text-2xs text-text-muted">Signed in as</div>
           <div className="mt-0.5 truncate text-xs font-semibold text-text-primary">{profile.display_name || profile.email}</div>
-          <div className="text-[11px] uppercase tracking-wide text-text-secondary">{profile.role.replace('_', ' ')}</div>
+          <div className="text-2xs text-text-secondary">{profile.role.replace('_', ' ')}</div>
         </div>
       </div>
 

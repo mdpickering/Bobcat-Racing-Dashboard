@@ -185,12 +185,12 @@ export default function ReceivingFormModal({ open, onClose, purchaseRequestId, r
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <div className="font-medium text-text-primary">{row.description}</div>
-                      <div className="text-[11px] text-text-muted">
+                      <div className="text-2xs text-text-muted">
                         {row.part_number && <span className="font-mono">{row.part_number}</span>}
                         {row.vendor && <span> · {row.vendor}</span>}
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 text-[11px]">
+                    <div className="flex flex-wrap gap-1.5 text-2xs">
                       <Badge tone="neutral">Ordered {row.ordered_quantity}</Badge>
                       <Badge tone="info">Accepted {row.accepted_quantity}</Badge>
                       <Badge tone="warning">Outstanding {row.outstanding_quantity}</Badge>
@@ -200,7 +200,7 @@ export default function ReceivingFormModal({ open, onClose, purchaseRequestId, r
                   {!row.part_id && (
                     <div className="mb-2">
                       <CatalogPartPicker selected={s.chosenPart} onChange={(p) => setLine(row.item_id, { chosenPart: p })} disabled={busy} />
-                      <p className="mt-1 text-[11px] text-text-muted">This line has no catalog part. Optional: pick one to track it as stock. Leave blank to just record it as received.</p>
+                      <p className="mt-1 text-2xs text-text-muted">This line has no catalog part. Optional: pick one to track it as stock. Leave blank to just record it as received.</p>
                     </div>
                   )}
 
@@ -223,7 +223,7 @@ export default function ReceivingFormModal({ open, onClose, purchaseRequestId, r
                       <div className="col-span-2">
                         <label className="mb-1 block text-text-secondary">Location</label>
                         {locations.length === 0 ? (
-                          <p className="text-[11px] text-status-warning">No locations exist yet — an Admin, CTO or the COO adds one from the Inventory page.</p>
+                          <p className="text-2xs text-status-warning">No locations exist yet — an Admin, CTO or the COO adds one from the Inventory page.</p>
                         ) : (
                           <Select value={s.locationId} onChange={(e) => setLine(row.item_id, { locationId: e.target.value })} disabled={busy}>
                             {locations.map((l) => (
@@ -236,7 +236,7 @@ export default function ReceivingFormModal({ open, onClose, purchaseRequestId, r
                       </div>
                     )}
                   </div>
-                  {err && <p className="mt-1.5 text-[11px] text-status-danger">{err}</p>}
+                  {err && <p className="mt-1.5 text-2xs text-status-danger">{err}</p>}
                 </div>
               )
             })}
@@ -244,8 +244,8 @@ export default function ReceivingFormModal({ open, onClose, purchaseRequestId, r
 
           {already.length > 0 && (
             <div>
-              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-text-muted">Already fully received</p>
-              <ul className="text-[11px] text-text-muted">
+              <p className="mb-1 text-2xs font-medium text-text-muted">Already fully received</p>
+              <ul className="text-2xs text-text-muted">
                 {already.map((row) => (
                   <li key={row.item_id}>
                     {row.description} — {row.accepted_quantity} of {row.ordered_quantity}

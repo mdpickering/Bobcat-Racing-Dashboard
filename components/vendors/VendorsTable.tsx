@@ -20,7 +20,7 @@ export default function VendorsTable({ rows, filtered, canAdd }: { rows: VendorO
           </Link>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 md:hidden">
             <CatalogStatusBadge active={r.active} />
-            <span className="text-[11px] text-text-muted">{r.part_count} part{r.part_count === 1 ? '' : 's'}</span>
+            <span className="text-2xs text-text-muted">{r.part_count} part{r.part_count === 1 ? '' : 's'}</span>
           </div>
         </>
       ),
@@ -34,8 +34,8 @@ export default function VendorsTable({ rows, filtered, canAdd }: { rows: VendorO
         r.contact_name || r.contact_email || r.contact_phone ? (
           <span className="text-text-secondary">
             {r.contact_name ?? ''}
-            {r.contact_email && <span className="block text-[11px] text-text-muted">{r.contact_email}</span>}
-            {!r.contact_email && r.contact_phone && <span className="block text-[11px] text-text-muted">{r.contact_phone}</span>}
+            {r.contact_email && <span className="block text-2xs text-text-muted">{r.contact_email}</span>}
+            {!r.contact_email && r.contact_phone && <span className="block text-2xs text-text-muted">{r.contact_phone}</span>}
           </span>
         ) : (
           <span className="text-text-muted">—</span>

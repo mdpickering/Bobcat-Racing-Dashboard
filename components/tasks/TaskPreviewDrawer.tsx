@@ -107,8 +107,8 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
       headerActions={
         <Link
           href={`/tasks/${task.id}`}
-          title="Open full task page"
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary"
+          title="Open full task page" aria-label="Open full task page"
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary"
         >
           <ExternalLink size={16} />
         </Link>
@@ -133,7 +133,7 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
             <div className="flex items-start justify-between gap-3">
               <h3 className="text-sm font-bold text-text-primary">{task.title}</h3>
               {canManage && (
-                <button
+                <button aria-label="Edit title and description"
                   type="button"
                   onClick={() => {
                     setTitle(task.title)
@@ -157,7 +157,7 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
 
         <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
           <div>
-            <p className="mb-1 text-[11px] font-semibold text-text-secondary">Status</p>
+            <p className="mb-1 text-2xs font-semibold text-text-secondary">Status</p>
             {canEditStatus ? (
               <Select value={task.status} disabled={saving} onChange={(e) => persist({ status: e.target.value })} className="w-full">
                 {STATUSES.map((s) => (
@@ -171,7 +171,7 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
             )}
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-semibold text-text-secondary">Priority</p>
+            <p className="mb-1 text-2xs font-semibold text-text-secondary">Priority</p>
             {canManage ? (
               <Select value={task.priority} disabled={saving} onChange={(e) => persist({ priority: e.target.value })} className="w-full">
                 {PRIORITIES.map((p) => (
@@ -187,19 +187,19 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
         </div>
 
         <div>
-          <p className="mb-1 text-[11px] font-semibold text-text-secondary">Due date</p>
+          <p className="mb-1 text-2xs font-semibold text-text-secondary">Due date</p>
           {canManage || canReschedule ? <InlineDateEditor taskId={task.id} deadline={task.deadline} status={task.status} viaReschedule={canReschedule} /> : <p className="text-text-secondary">{task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</p>}
         </div>
 
         <div className="border-t border-border pt-3">
-          <p className="mb-2 text-[11px] font-semibold text-text-secondary">Owners</p>
+          <p className="mb-2 text-2xs font-semibold text-text-secondary">Owners</p>
           {task.assignees && task.assignees.length > 0 ? (
             <div className="space-y-1.5">
               {task.assignees.map((a) => (
                 <div key={a.user_id} className="flex items-center gap-2">
                   <Avatar name={a.profile?.display_name || a.profile?.email} src={a.profile?.avatar_url} size={22} />
                   <span className="text-text-secondary">{a.profile?.display_name || a.profile?.email}</span>
-                  {a.role === 'primary' && <span className="text-[10px] uppercase tracking-wide text-qu-gold">Primary</span>}
+                  {a.role === 'primary' && <span className="text-2xs uppercase tracking-wide text-accent">Primary</span>}
                 </div>
               ))}
             </div>
@@ -207,14 +207,14 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
             <p className="text-text-muted">Unassigned</p>
           )}
           {canManage && (
-            <Link href={`/tasks/${task.id}`} className="mt-1.5 inline-block text-[11px] text-accent-blue hover:underline">
+            <Link href={`/tasks/${task.id}`} className="mt-1.5 inline-block text-2xs text-accent-blue hover:underline">
               Manage owners on the full page →
             </Link>
           )}
         </div>
 
         <div className="border-t border-border pt-3">
-          <p className="mb-2 text-[11px] font-semibold text-text-secondary">Activity</p>
+          <p className="mb-2 text-2xs font-semibold text-text-secondary">Activity</p>
           {comments === null ? (
             <p className="text-text-muted">Loading…</p>
           ) : comments.length === 0 ? (
@@ -227,7 +227,7 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-text-primary">{c.user?.display_name || c.user?.email}</span>
-                      <span className="text-[10px] text-text-muted">{timeAgo(c.created_at)}</span>
+                      <span className="text-2xs text-text-muted">{timeAgo(c.created_at)}</span>
                     </div>
                     <p className="whitespace-pre-wrap text-text-secondary">{c.comment}</p>
                   </div>
@@ -237,7 +237,7 @@ export default function TaskPreviewDrawer({ task, open, onClose, currentUserId, 
           )}
           <Textarea rows={2} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Add a quick comment…" />
           <div className="mt-1.5 flex items-center justify-between">
-            <Link href={`/tasks/${task.id}`} className="text-[11px] text-accent-blue hover:underline">
+            <Link href={`/tasks/${task.id}`} className="text-2xs text-accent-blue hover:underline">
               Full activity, mentions & attachments →
             </Link>
             <Button size="sm" disabled={postingComment || !commentText.trim()} onClick={handlePostComment}>

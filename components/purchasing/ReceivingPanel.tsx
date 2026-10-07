@@ -67,7 +67,7 @@ export default function ReceivingPanel({ purchaseRequestId, requestTitle, reques
           <li key={l.item_id} className="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
             <div className="min-w-0">
               <div className="font-medium text-text-primary">{l.description}</div>
-              {l.last_received_on && <div className="text-[11px] text-text-muted">Last received {formatDate(l.last_received_on)}</div>}
+              {l.last_received_on && <div className="text-2xs text-text-muted">Last received {formatDate(l.last_received_on)}</div>}
             </div>
             <div className="flex flex-wrap gap-1.5">
               <Badge tone="neutral">Ordered {l.ordered_quantity}</Badge>

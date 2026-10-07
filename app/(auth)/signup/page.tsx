@@ -3,9 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { MailCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
-import Panel from '@/components/ui/Panel'
+import Input from '@/components/ui/Input'
+import Select from '@/components/ui/Select'
+import AuthShell from '@/components/auth/AuthShell'
 
 const YEAR_OPTIONS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate']
 
@@ -57,93 +60,88 @@ export default function SignupPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-        <Panel className="w-full max-w-sm p-6 text-xs text-text-secondary">
-          <h1 className="text-sm font-bold mb-2 text-text-primary">
-            Check your email
-          </h1>
-          <p>
-            We sent a confirmation link to <strong>{email}</strong>. Confirm
-            your account, then{' '}
-            <Link href="/login" className="text-accent hover:underline">
-              log in
-            </Link>
-            .
-          </p>
-        </Panel>
-      </div>
+      <AuthShell
+        title="Check your email"
+        icon={<MailCheck size={20} aria-hidden="true" />}
+        description={
+          <>
+            We sent a confirmation link to <strong className="text-text-primary">{email}</strong>. Confirm your account, then sign in.
+          </>
+        }
+        footer={
+          <Link href="/login" className="font-medium text-accent hover:underline">
+            Go to sign in
+          </Link>
+        }
+      >
+        <p className="text-xs text-text-muted">A team admin approves new accounts before you can open the dashboard.</p>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-      <Panel className="w-full max-w-sm p-6">
-        <h1 className="text-sm font-bold mb-4">Join Bobcat Racing</h1>
-        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
-          <div>
-            <label className="block mb-1 text-xs text-text-secondary">
-              Name
-            </label>
-            <input
-              required
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg p-2 text-xs text-text-primary outline-none transition-colors focus:border-accent-blue"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-xs text-text-secondary">
-              Academic Year
-            </label>
-            <select
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg p-2 text-xs text-text-primary outline-none transition-colors focus:border-accent-blue"
-            >
-              {YEAR_OPTIONS.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block mb-1 text-xs text-text-secondary">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg p-2 text-xs text-text-primary outline-none transition-colors focus:border-accent-blue"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-xs text-text-secondary">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg p-2 text-xs text-text-primary outline-none transition-colors focus:border-accent-blue"
-            />
-          </div>
-          {error && <p className="text-status-danger">{error}</p>}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Creating Account…' : 'Create Account'}
-          </Button>
-        </form>
-        <p className="text-[12px] text-text-secondary mt-4">
+    <AuthShell
+      title="Join the team"
+      description="Create your account. A team admin approves new members before they can open the dashboard."
+      footer={
+        <>
           Already have an account?{' '}
-          <Link href="/login" className="text-accent hover:underline">
+          <Link href="/login" className="font-medium text-accent hover:underline">
             Sign in
           </Link>
-        </p>
-      </Panel>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <div>
+          <label htmlFor="signup-name" className="mb-1.5 block font-medium text-text-secondary">
+            Name
+          </label>
+          <Input id="signup-name" required autoComplete="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-xl !bg-bg py-2.5" />
+        </div>
+        <div>
+          <label htmlFor="signup-year" className="mb-1.5 block font-medium text-text-secondary">
+            Academic year
+          </label>
+          <Select id="signup-year" value={year} onChange={(e) => setYear(e.target.value)} className="rounded-xl !bg-bg py-2.5">
+            {YEAR_OPTIONS.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <label htmlFor="signup-email" className="mb-1.5 block font-medium text-text-secondary">
+            Email
+          </label>
+          <Input id="signup-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl !bg-bg py-2.5" />
+        </div>
+        <div>
+          <label htmlFor="signup-password" className="mb-1.5 block font-medium text-text-secondary">
+            Password
+          </label>
+          <Input
+            id="signup-password"
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="rounded-xl !bg-bg py-2.5"
+          />
+          <p className="mt-1 text-2xs text-text-muted">At least 6 characters.</p>
+        </div>
+        {error && (
+          <p role="alert" className="text-status-danger">
+            {error}
+          </p>
+        )}
+        <Button type="submit" disabled={loading} className="w-full rounded-xl py-2.5 active:scale-[0.98]">
+          {loading ? 'Creating account…' : 'Create account'}
+        </Button>
+      </form>
+    </AuthShell>
   )
 }

@@ -186,7 +186,7 @@ export default function TaskList({
 
   return (
     <>
-      <DataTable
+      <DataTable countLabel="tasks"
         caption="Tasks"
         columns={columns}
         rows={tasks}

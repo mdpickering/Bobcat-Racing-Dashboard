@@ -43,7 +43,7 @@ export default function CadReviewList({ reviews, filtered = false }: { reviews: 
   ]
 
   return (
-    <DataTable
+    <DataTable countLabel="reviews"
       caption="CAD reviews"
       columns={columns}
       rows={reviews}

@@ -59,7 +59,7 @@ export default function ReceivingTable({ rows, subsystemNames, canReceive, empty
   ]
 
   return (
-    <DataTable
+    <DataTable countLabel="requests"
       caption={mode === 'needs' ? 'Needs receiving' : 'Recently received'}
       columns={columns}
       rows={rows}

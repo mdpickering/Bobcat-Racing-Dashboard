@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
-import Panel from '@/components/ui/Panel'
+import Input from '@/components/ui/Input'
+import AuthShell from '@/components/auth/AuthShell'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -34,46 +35,40 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-      <Panel className="w-full max-w-sm p-6">
-        <h1 className="text-sm font-bold mb-4">Bobcat Racing — Sign In</h1>
-        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
-          <div>
-            <label className="block mb-1 text-xs text-text-secondary">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg p-2 text-xs text-text-primary outline-none transition-colors focus:border-accent-blue"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-xs text-text-secondary">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg p-2 text-xs text-text-primary outline-none transition-colors focus:border-accent-blue"
-            />
-          </div>
-          {error && <p className="text-status-danger">{error}</p>}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Signing In…' : 'Sign In'}
-          </Button>
-        </form>
-        <p className="text-[12px] text-text-secondary mt-4">
+    <AuthShell
+      title="Sign in"
+      description="Welcome back. Sign in to the team workspace."
+      footer={
+        <>
           Need an account?{' '}
-          <Link href="/signup" className="text-accent hover:underline">
+          <Link href="/signup" className="font-medium text-accent hover:underline">
             Join the team
           </Link>
-        </p>
-      </Panel>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <div>
+          <label htmlFor="login-email" className="mb-1.5 block font-medium text-text-secondary">
+            Email
+          </label>
+          <Input id="login-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl !bg-bg py-2.5" />
+        </div>
+        <div>
+          <label htmlFor="login-password" className="mb-1.5 block font-medium text-text-secondary">
+            Password
+          </label>
+          <Input id="login-password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-xl !bg-bg py-2.5" />
+        </div>
+        {error && (
+          <p role="alert" className="text-status-danger">
+            {error}
+          </p>
+        )}
+        <Button type="submit" disabled={loading} className="w-full rounded-xl py-2.5 active:scale-[0.98]">
+          {loading ? 'Signing in…' : 'Sign in'}
+        </Button>
+      </form>
+    </AuthShell>
   )
 }

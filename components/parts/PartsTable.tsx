@@ -74,7 +74,7 @@ export default function PartsTable({ rows, filtered, canAdd }: { rows: PartCatal
   ]
 
   return (
-    <DataTable
+    <DataTable countLabel="parts"
       caption="Parts"
       columns={columns}
       rows={rows}

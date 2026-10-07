@@ -7,6 +7,8 @@ import PurchaseFilters from '@/components/purchasing/PurchaseFilters'
 import PurchaseRequestList from '@/components/purchasing/PurchaseRequestList'
 import PurchasingToolbar from '@/components/purchasing/PurchasingToolbar'
 import ErrorState from '@/components/ui/ErrorState'
+import LimitNotice from '@/components/ui/LimitNotice'
+import { hitLimit, parseListLimit } from '@/lib/pagination'
 import PageHeader from '@/components/ui/PageHeader'
 
 export const metadata = { title: 'Purchasing' }
@@ -38,29 +40,33 @@ export default async function PurchasingPage({
   // correctly does) would otherwise default to one they can't submit for.
   const createSubsystemOptions = admin ? subsystems : subsystems.filter((s) => ledSubsystemIds.has(s.id))
 
+  const limit = parseListLimit(searchParams.limit)
   let requests
   try {
     requests = await listPurchaseRequests(supabase, {
       subsystemId: searchParams.subsystem,
       status: searchParams.status,
+      limit,
     })
   } catch {
     return <ErrorState message="Could not load purchase requests." />
   }
 
   const filtered = Boolean(searchParams.subsystem || searchParams.status)
+  const capped = hitLimit(requests.length, limit)
 
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Purchasing"
-        description={`${requests.length} request${requests.length === 1 ? '' : 's'}${filtered ? ' matching your filters' : ''}. Team orders are reviewed and approved before anything is ordered.`}
+        description={`${requests.length}${capped ? '+' : ''} request${requests.length === 1 && !capped ? '' : 's'}${filtered ? ' matching your filters' : ''}. Team orders are reviewed and approved before anything is ordered.`}
         actions={<PurchasingToolbar canCreate={canCreate} subsystems={createSubsystemOptions} />}
       />
       <div className="mb-4">
         <PurchaseFilters subsystems={subsystems} />
       </div>
       <PurchaseRequestList requests={requests} filtered={filtered} />
+      {capped && <LimitNotice noun="purchase requests" limit={limit} searchParams={searchParams} pathname="/purchasing" />}
     </div>
   )
 }

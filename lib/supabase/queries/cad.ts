@@ -12,12 +12,14 @@ const CAD_REVIEW_SELECT = `
 export interface CadReviewFilters {
   subsystemId?: string
   status?: string
+  limit?: number
 }
 
 export async function listCadReviews(supabase: SupabaseClient, filters: CadReviewFilters = {}): Promise<CadReview[]> {
   let query = supabase.from('cad_reviews').select(CAD_REVIEW_SELECT).order('created_at', { ascending: false })
   if (filters.subsystemId) query = query.eq('subsystem_id', filters.subsystemId)
   if (filters.status) query = query.eq('status', filters.status)
+  if (filters.limit) query = query.limit(filters.limit)
   const { data, error } = await query
   if (error) throw error
   return (data ?? []) as unknown as CadReview[]

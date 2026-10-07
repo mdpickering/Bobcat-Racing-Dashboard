@@ -18,6 +18,8 @@ export interface TaskFilters {
   // Restrict to tasks the given user is assigned to (primary owner or co-owner). Used to make
   // /tasks a "my tasks" board — every other filter still composes normally on top of this.
   assignedUserId?: string
+  // read at most this many rows (see lib/pagination.ts); omit for no limit
+  limit?: number
 }
 
 export async function listTasks(supabase: SupabaseClient, filters: TaskFilters = {}): Promise<Task[]> {
@@ -40,6 +42,7 @@ export async function listTasks(supabase: SupabaseClient, filters: TaskFilters =
   if (filters.priority) query = query.eq('priority', filters.priority)
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.search) query = query.ilike('title', `%${filters.search}%`)
+  if (filters.limit) query = query.limit(filters.limit)
 
   const { data, error } = await query
   if (error) throw error

@@ -25,7 +25,7 @@ export default function BackButton({ fallbackHref, label = 'Back', className = '
   }
 
   return (
-    <button type="button" onClick={handleClick} className={`mb-3 flex min-h-[40px] items-center gap-1 text-[12px] text-text-muted hover:text-accent-blue ${className}`}>
+    <button type="button" onClick={handleClick} className={`mb-3 flex min-h-[44px] items-center md:min-h-[40px] gap-1 text-[12px] text-text-muted hover:text-accent-blue ${className}`}>
       <ChevronLeft size={13} /> {label}
     </button>
   )

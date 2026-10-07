@@ -23,7 +23,7 @@ export default function MetricStrip({ metrics, className = '' }: { metrics: Metr
             <dt className="text-2xs font-medium text-text-muted">{m.label}</dt>
             <dd className="mt-1">
               {m.href ? (
-                <Link href={m.href} className="block rounded-md transition-colors hover:opacity-80">
+                <Link href={m.href} className="touch-target block rounded-md transition-colors hover:opacity-80">
                   {value}
                 </Link>
               ) : (

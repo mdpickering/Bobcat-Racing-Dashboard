@@ -153,6 +153,13 @@ button:has(> svg:only-child) {
   .touch-target {
     min-height: 44px;
   }
+  /* the small "view all" / "open calendar" links that sit in section headers */
+  a[class*='text-accent-blue'][class*='text-xs'] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
   button:has(> svg:only-child),
   .touch-target-square {
     min-width: 44px;
@@ -162,6 +169,25 @@ button:has(> svg:only-child) {
   label:has(> input[type='radio']) {
     min-height: 44px;
   }
+  /* A switch must keep its pill shape, so it is not stretched; its tap area is widened invisibly instead. */
+  button[role='switch'] {
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+  }
+  button[role='switch']::after {
+    content: '';
+    position: absolute;
+    inset: -12px -6px;
+  }
+}
+
+/* Hand-built tables inside detail panels get the same row hover wash as the shared DataTable. */
+tbody tr {
+  transition: background-color 150ms ease;
+}
+tbody tr:hover {
+  background-color: rgb(var(--surface-raised) / 0.6);
 }
 
 /* Respect the OS "reduce motion" setting everywhere (skeleton pulses, spinners, tooltip/drawer animations,

@@ -22,7 +22,7 @@ export default function AdminNav() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`touch-target inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
               active ? 'bg-qu-gold/15 text-accent' : 'text-text-secondary hover:text-text-primary'
             }`}
           >

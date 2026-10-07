@@ -15,12 +15,14 @@ const PURCHASE_REQUEST_SELECT = `
 export interface PurchaseRequestFilters {
   subsystemId?: string
   status?: string
+  limit?: number
 }
 
 export async function listPurchaseRequests(supabase: SupabaseClient, filters: PurchaseRequestFilters = {}): Promise<PurchaseRequest[]> {
   let query = supabase.from('purchase_requests').select(PURCHASE_REQUEST_SELECT).order('created_at', { ascending: false })
   if (filters.subsystemId) query = query.eq('subsystem_id', filters.subsystemId)
   if (filters.status) query = query.eq('status', filters.status)
+  if (filters.limit) query = query.limit(filters.limit)
   const { data, error } = await query
   if (error) throw error
   return (data ?? []) as unknown as PurchaseRequest[]

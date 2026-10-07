@@ -32,6 +32,9 @@ export interface FilterField {
   allLabel: string
   options: { value: string; label: string }[]
   className?: string
+  // Show the options as toggle chips instead of a dropdown. Best for a short list people flip between often
+  // (a status); a long list or one with long names stays a dropdown.
+  chips?: boolean
 }
 
 interface FilterBarProps {
@@ -41,6 +44,22 @@ interface FilterBarProps {
   clearKeys?: string[]
 }
 
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`inline-flex min-w-11 items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+        active ? 'border-accent/40 bg-accent/15 text-accent' : 'border-border text-text-secondary hover:bg-surface-raised hover:text-text-primary'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+// A floating toolbar card above a table: search, dropdown filters, status chips and a Clear button in one place.
 export default function FilterBar({ search, fields, clearKeys }: FilterBarProps) {
   const filters = useUrlFilters()
   const [text, setText] = useState(search ? filters.get(search.key) : '')
@@ -54,10 +73,10 @@ export default function FilterBar({ search, fields, clearKeys }: FilterBarProps)
   const active = keys.some((k) => filters.get(k) !== '')
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center" role="search">
+    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-2.5 shadow-panel sm:flex-row sm:flex-wrap sm:items-center" role="search">
       {search && (
         <form
-          className="flex min-w-[10rem] flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 focus-within:border-accent-blue sm:max-w-xs"
+          className="flex min-w-[10rem] flex-1 items-center gap-2 rounded-xl border border-border bg-bg/60 px-3 py-2 focus-within:border-accent-blue sm:max-w-xs"
           onSubmit={(e) => {
             e.preventDefault()
             filters.set({ [search.key]: text.trim() })
@@ -74,21 +93,34 @@ export default function FilterBar({ search, fields, clearKeys }: FilterBarProps)
           />
         </form>
       )}
-      {fields.map((f) => (
-        <Select key={f.key} aria-label={f.allLabel.replace(/^All /, '')} className={f.className ?? 'sm:w-40'} value={filters.get(f.key)} onChange={(e) => filters.set({ [f.key]: e.target.value })}>
-          <option value="">{f.allLabel}</option>
-          {f.options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
-      ))}
+      {fields.map((f) =>
+        f.chips ? (
+          <div key={f.key} role="group" aria-label={f.allLabel.replace(/^All /, '')} className="flex flex-wrap items-center gap-1.5">
+            <Chip active={filters.get(f.key) === ''} onClick={() => filters.set({ [f.key]: '' })}>
+              All
+            </Chip>
+            {f.options.map((o) => (
+              <Chip key={o.value} active={filters.get(f.key) === o.value} onClick={() => filters.set({ [f.key]: filters.get(f.key) === o.value ? '' : o.value })}>
+                {o.label}
+              </Chip>
+            ))}
+          </div>
+        ) : (
+          <Select key={f.key} aria-label={f.allLabel.replace(/^All /, '')} className={`rounded-xl ${f.className ?? 'sm:w-40'}`} value={filters.get(f.key)} onChange={(e) => filters.set({ [f.key]: e.target.value })}>
+            <option value="">{f.allLabel}</option>
+            {f.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        )
+      )}
       {active && (
         <button
           type="button"
           onClick={() => filters.set(Object.fromEntries(keys.map((k) => [k, ''])))}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
+          className="inline-flex items-center gap-1 rounded-xl px-2 py-2 text-xs text-text-secondary transition-colors hover:text-text-primary"
         >
           <X size={13} aria-hidden="true" /> Clear filters
         </button>

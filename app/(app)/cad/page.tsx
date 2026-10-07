@@ -7,6 +7,8 @@ import CadFilters from '@/components/cad/CadFilters'
 import CadReviewList from '@/components/cad/CadReviewList'
 import CadToolbar from '@/components/cad/CadToolbar'
 import ErrorState from '@/components/ui/ErrorState'
+import LimitNotice from '@/components/ui/LimitNotice'
+import { hitLimit, parseListLimit } from '@/lib/pagination'
 import PageHeader from '@/components/ui/PageHeader'
 
 export const metadata = { title: 'CAD review' }
@@ -33,29 +35,33 @@ export default async function CadPage({
   const memberSubsystemIds = new Set((memberRows ?? []).map((r) => r.subsystem_id as string))
   const createSubsystemOptions = isCtoOrAdmin(profile) ? subsystems : subsystems.filter((s) => memberSubsystemIds.has(s.id))
 
+  const limit = parseListLimit(searchParams.limit)
   let reviews
   try {
     reviews = await listCadReviews(supabase, {
       subsystemId: searchParams.subsystem,
       status: searchParams.status,
+      limit,
     })
   } catch {
     return <ErrorState message="Could not load CAD reviews." />
   }
 
   const filtered = Boolean(searchParams.subsystem || searchParams.status)
+  const capped = hitLimit(reviews.length, limit)
 
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="CAD review"
-        description={`${reviews.length} review${reviews.length === 1 ? '' : 's'}${filtered ? ' matching your filters' : ''}. Designs submitted for the team to check before manufacturing.`}
+        description={`${reviews.length}${capped ? '+' : ''} review${reviews.length === 1 && !capped ? '' : 's'}${filtered ? ' matching your filters' : ''}. Designs submitted for the team to check before manufacturing.`}
         actions={<CadToolbar subsystems={createSubsystemOptions} />}
       />
       <div className="mb-4">
         <CadFilters subsystems={subsystems} />
       </div>
       <CadReviewList reviews={reviews} filtered={filtered} />
+      {capped && <LimitNotice noun="CAD reviews" limit={limit} searchParams={searchParams} pathname="/cad" />}
     </div>
   )
 }

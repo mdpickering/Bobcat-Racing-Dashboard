@@ -74,7 +74,7 @@ export default function PurchaseRequestList({ requests, filtered = false }: { re
   ]
 
   return (
-    <DataTable
+    <DataTable countLabel="requests"
       caption="Purchase requests"
       density="comfortable"
       columns={columns}

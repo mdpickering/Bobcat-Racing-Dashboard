@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
-import Panel from '@/components/ui/Panel'
+import AuthShell from '@/components/auth/AuthShell'
 
 export default function PendingApprovalPage() {
   const router = useRouter()
@@ -16,20 +17,14 @@ export default function PendingApprovalPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-      <Panel className="w-full max-w-sm p-6 text-xs text-text-secondary space-y-4">
-        <h1 className="text-sm font-bold text-text-primary">
-          Application Pending
-        </h1>
-        <p>
-          Your account has been created and is waiting for a team admin to
-          approve it. You&apos;ll be able to access the dashboard once
-          you&apos;re approved.
-        </p>
-        <Button variant="secondary" onClick={handleLogout}>
-          Log Out
-        </Button>
-      </Panel>
-    </div>
+    <AuthShell
+      title="Application pending"
+      icon={<Clock size={20} aria-hidden="true" />}
+      description="Your account has been created and is waiting for a team admin to approve it. You'll be able to open the dashboard once you're approved."
+    >
+      <Button variant="secondary" onClick={handleLogout} className="rounded-xl">
+        Log out
+      </Button>
+    </AuthShell>
   )
 }

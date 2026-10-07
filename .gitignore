@@ -5,3 +5,4 @@ node_modules
 supabase/.temp
 tsconfig.tsbuildinfo
 supabase/production-prep/results/
+.env

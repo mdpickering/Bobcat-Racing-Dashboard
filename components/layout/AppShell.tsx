@@ -9,6 +9,7 @@ import { resolveShellWorkspace, workspaceToRemember, type WorkspaceId } from '@/
 import { rememberWorkspace } from '@/lib/workspacePreference'
 import { ToastProvider } from '@/components/ui/Toast'
 import { TooltipProvider } from '@/components/shadcn/tooltip'
+import LabelAssociator from '@/components/a11y/LabelAssociator'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
@@ -60,6 +61,7 @@ export default function AppShell({ profile, available, startWorkspace, children 
 
   return (
     <ToastProvider>
+      <LabelAssociator />
       <TooltipProvider delayDuration={300}>
       {/* First tab stop on every page: lets keyboard and screen-reader users jump past the sidebar and header. */}
       <a

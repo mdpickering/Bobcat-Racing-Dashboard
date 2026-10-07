@@ -55,7 +55,7 @@ export default async function AdminApplicationsPage({
           <Link
             key={tab.key || 'all'}
             href={`/admin/applications${tab.key ? `?status=${tab.key}` : ''}`}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`touch-target inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
               status === tab.key ? 'bg-accent-blue/15 text-text-primary' : 'text-text-secondary hover:text-text-primary'
             }`}
           >

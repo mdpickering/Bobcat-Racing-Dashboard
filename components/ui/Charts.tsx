@@ -32,7 +32,7 @@ export function BarList({ items, ariaLabel }: { items: BarItem[]; ariaLabel: str
         return (
           <li key={i.label}>
             {i.href ? (
-              <Link href={i.href} className="block rounded-md transition-colors hover:text-accent-blue">
+              <Link href={i.href} className="touch-target block rounded-md transition-colors hover:text-accent-blue">
                 {row}
               </Link>
             ) : (

@@ -116,7 +116,7 @@ export default function ActionItemRow({ item, canEditNow, canManage, onEdit }: A
         busyLabel="Removing…"
         busy={busy}
         error={deleteError}
-        description={<p>"{item.title}" will be removed from this meeting.</p>}
+        description={<p>&ldquo;{item.title}&rdquo; will be removed from this meeting.</p>}
       />
     </div>
   )

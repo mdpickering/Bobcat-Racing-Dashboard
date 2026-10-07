@@ -108,7 +108,7 @@ export default function TimelineGrid({ columns, subsystems, milestones, canEditS
                             setEditingCell(cellKey)
                             setDraft(value)
                           }}
-                          className={`min-h-[32px] w-full rounded-md px-1.5 py-1 text-left text-[12px] ${
+                          className={`min-h-[44px] w-full rounded-md md:min-h-[32px] px-1.5 py-1 text-left text-[12px] ${
                             editable ? 'hover:bg-surface-raised' : 'cursor-default'
                           } ${value ? 'text-text-primary' : 'text-text-muted'}`}
                         >

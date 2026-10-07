@@ -11,6 +11,8 @@ import TaskRequestsList from '@/components/tasks/TaskRequestsList'
 import ErrorState from '@/components/ui/ErrorState'
 import PageHeader from '@/components/ui/PageHeader'
 import Tabs from '@/components/ui/Tabs'
+import LimitNotice from '@/components/ui/LimitNotice'
+import { hitLimit, parseListLimit } from '@/lib/pagination'
 
 export const metadata = { title: 'My tasks' }
 
@@ -77,6 +79,7 @@ export default async function TasksPage({
     )
   }
 
+  const limit = parseListLimit(searchParams.limit)
   let tasks
   try {
     // /tasks is each user's own board: only tasks they're assigned to (primary or co-owner),
@@ -89,6 +92,7 @@ export default async function TasksPage({
       priority: searchParams.priority,
       status: searchParams.status,
       search: searchParams.search,
+      limit,
     })
   } catch {
     return <ErrorState message="Could not load tasks." />
@@ -103,6 +107,7 @@ export default async function TasksPage({
   }
 
   const filtered = Boolean(searchParams.subsystem || searchParams.category || searchParams.priority || searchParams.status || searchParams.search)
+  const capped = hitLimit(tasks.length, limit)
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -131,6 +136,7 @@ export default async function TasksPage({
         emptyTitle={filtered ? 'No tasks match these filters' : 'No tasks assigned to you'}
         emptyDescription={filtered ? 'Try adjusting or clearing your filters.' : 'Tasks you own or co-own appear here.'}
       />
+      {capped && <LimitNotice noun="tasks" limit={limit} searchParams={searchParams} pathname="/tasks" />}
     </div>
   )
 }

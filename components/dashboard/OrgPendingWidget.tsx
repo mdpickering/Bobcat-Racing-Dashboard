@@ -21,7 +21,7 @@ export default function OrgPendingWidget({ counts }: { counts: NonNullable<Dashb
             </>
           )
           return i.href ? (
-            <Link key={i.label} href={i.href} className="block rounded-md transition-colors hover:text-accent-blue">
+            <Link key={i.label} href={i.href} className="touch-target block rounded-md transition-colors hover:text-accent-blue">
               {body}
             </Link>
           ) : (

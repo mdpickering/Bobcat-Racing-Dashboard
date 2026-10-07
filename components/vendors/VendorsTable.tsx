@@ -65,7 +65,7 @@ export default function VendorsTable({ rows, filtered, canAdd }: { rows: VendorO
   ]
 
   return (
-    <DataTable
+    <DataTable countLabel="vendors"
       caption="Vendors"
       density="comfortable"
       columns={columns}

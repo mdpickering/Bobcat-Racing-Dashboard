@@ -81,7 +81,7 @@ export default function SponsorshipTable({ rows, filtered }: SponsorshipTablePro
   ]
 
   return (
-    <DataTable
+    <DataTable countLabel="sponsorships"
       caption="Sponsorships"
       density="comfortable"
       columns={columns}

@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { ShieldOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
-import Panel from '@/components/ui/Panel'
+import AuthShell from '@/components/auth/AuthShell'
 
 export default function DeactivatedPage() {
   const router = useRouter()
@@ -16,20 +17,14 @@ export default function DeactivatedPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg px-4">
-      <Panel className="w-full max-w-sm p-6 text-xs text-text-secondary space-y-4">
-        <h1 className="text-sm font-bold text-text-primary">
-          Account Deactivated
-        </h1>
-        <p>
-          Your account has been deactivated by a team admin, so you can no
-          longer access the dashboard. If you think this is a mistake, contact
-          your CTO or a team admin.
-        </p>
-        <Button variant="secondary" onClick={handleLogout}>
-          Log Out
-        </Button>
-      </Panel>
-    </div>
+    <AuthShell
+      title="Account deactivated"
+      icon={<ShieldOff size={20} aria-hidden="true" />}
+      description="Your account has been deactivated by a team admin, so you can no longer access the dashboard. If you think this is a mistake, contact your CTO or a team admin."
+    >
+      <Button variant="secondary" onClick={handleLogout} className="rounded-xl">
+        Log out
+      </Button>
+    </AuthShell>
   )
 }

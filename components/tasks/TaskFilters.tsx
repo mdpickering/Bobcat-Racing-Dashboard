@@ -18,7 +18,7 @@ export default function TaskFilters({ subsystems, categories }: { subsystems: Su
         { key: 'subsystem', allLabel: 'All subsystems', options: subsystems.map((s) => ({ value: s.id, label: s.name })) },
         { key: 'category', allLabel: 'All categories', options: filteredCategories.map((c) => ({ value: c.id, label: c.name })) },
         { key: 'priority', allLabel: 'All priorities', className: 'sm:w-36', options: PRIORITIES.map((p) => ({ value: p, label: p })) },
-        { key: 'status', allLabel: 'All statuses', className: 'sm:w-36', options: STATUSES.map((s) => ({ value: s, label: s })) },
+        { key: 'status', allLabel: 'All statuses', chips: true, options: STATUSES.map((s) => ({ value: s, label: s })) },
       ]}
     />
   )

@@ -50,7 +50,7 @@ export default async function ReceivingPage({ searchParams }: { searchParams: { 
             <Link
               key={t.id}
               href={t.id === 'needs' ? '/receiving' : '/receiving?tab=recent'}
-              className={`border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${tab === t.id ? 'border-ws text-text-primary' : 'border-transparent text-text-muted hover:text-text-primary'}`}
+              className={`touch-target inline-flex items-center border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${tab === t.id ? 'border-ws text-text-primary' : 'border-transparent text-text-muted hover:text-text-primary'}`}
             >
               {t.label} <span className="ml-1 text-text-muted">({count})</span>
             </Link>

@@ -9,7 +9,7 @@ export default function CadFilters({ subsystems }: { subsystems: Subsystem[] }) 
     <FilterBar
       fields={[
         { key: 'subsystem', allLabel: 'All subsystems', className: 'sm:w-48', options: subsystems.map((s) => ({ value: s.id, label: s.name })) },
-        { key: 'status', allLabel: 'All statuses', className: 'sm:w-52', options: ALL_CAD_STATUSES.map((s) => ({ value: s, label: s })) },
+        { key: 'status', allLabel: 'All statuses', chips: true, options: ALL_CAD_STATUSES.map((s) => ({ value: s, label: s })) },
       ]}
     />
   )

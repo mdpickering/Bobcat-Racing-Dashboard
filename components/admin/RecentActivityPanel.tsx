@@ -23,7 +23,7 @@ export default function RecentActivityPanel({ items }: { items: RecentActivityIt
         <ul className="space-y-1">
           {items.map((item) => (
             <li key={`${item.type}-${item.id}`}>
-              <Link href={item.href} className="flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-xs transition-colors hover:bg-surface-raised">
+              <Link href={item.href} className="touch-target flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-xs transition-colors hover:bg-surface-raised">
                 <div className="min-w-0">
                   <span className="truncate font-medium text-text-primary">{item.title}</span>
                   <div className="mt-0.5 text-2xs text-text-muted">

@@ -60,7 +60,7 @@ export default function InventoryTable({ rows, filtered, hasLocations }: { rows:
   ]
 
   return (
-    <DataTable
+    <DataTable countLabel="items"
       caption="Inventory"
       columns={columns}
       rows={rows}

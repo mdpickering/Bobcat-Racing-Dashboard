@@ -165,7 +165,7 @@ export default async function BusinessPage() {
                   {sponsorship.needsReview > 0 && (
                     <Link
                       href={`/business/sponsorships?season=${encodeURIComponent(sponsorship.season)}&review=needs_review`}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-xs transition-colors hover:bg-surface-raised"
+                      className="touch-target flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-xs transition-colors hover:bg-surface-raised"
                     >
                       <span className="text-text-secondary">
                         <strong className="text-text-primary">{sponsorship.needsReview}</strong> sponsorship{sponsorship.needsReview === 1 ? '' : 's'} need a level review
@@ -207,7 +207,7 @@ export default async function BusinessPage() {
                       { label: 'Ordered, awaiting receipt', value: purchasing.awaitingReceipt, tone: undefined, href: '/purchasing?status=Ordered' },
                       { label: 'Received', value: purchasing.received, tone: purchasing.received > 0 ? 'success' : undefined, href: '/purchasing?status=Arrived%20in%20Shop' },
                     ].map((m) => (
-                      <Link key={m.label} href={m.href} className="block rounded-md transition-colors hover:text-accent-blue">
+                      <Link key={m.label} href={m.href} className="touch-target block rounded-md transition-colors hover:text-accent-blue">
                         <div className={`text-2xl font-semibold tabular-nums leading-8 ${m.tone === 'warning' ? 'text-status-warning' : m.tone === 'success' ? 'text-status-success' : 'text-text-primary'}`}>{m.value}</div>
                         <div className="text-xs text-text-muted">{m.label}</div>
                       </Link>

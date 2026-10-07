@@ -82,7 +82,7 @@ export default async function DeadlinesPage({ searchParams }: { searchParams: { 
           fields={[
             { key: 'range', allLabel: 'Any date', className: 'sm:w-40', options: RANGES },
             { key: 'subsystem', allLabel: 'All subsystems', className: 'sm:w-48', options: subsystems.map((s) => ({ value: s.id, label: s.name })) },
-            { key: 'status', allLabel: 'All statuses', className: 'sm:w-36', options: STATUSES.map((s) => ({ value: s, label: s })) },
+            { key: 'status', allLabel: 'All statuses', chips: true, options: STATUSES.map((s) => ({ value: s, label: s })) },
             {
               key: 'owner',
               allLabel: 'All owners',

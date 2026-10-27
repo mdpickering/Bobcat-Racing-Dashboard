@@ -19,6 +19,7 @@ export type NavIconName =
   | 'sponsorships'
   | 'budget'
   | 'parts'
+  | 'bom'
   | 'inventory'
   | 'receiving'
   | 'vendors'
@@ -82,6 +83,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
           { label: 'Task Requests', icon: 'requests', status: 'available', href: '/tasks?tab=requests', activeWhen: isTaskRequests },
           { label: 'Purchasing', icon: 'purchasing', status: 'available', href: '/purchasing' },
           { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
+          { label: 'BOM Lookup', icon: 'bom', status: 'available', href: '/bom' },
           { label: 'Inventory', icon: 'inventory', status: 'available', href: '/inventory' },
         ],
       },
@@ -118,6 +120,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         items: [
           // the same read-only catalog page as Engineering's Parts (one route, one data set)
           { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
+          { label: 'BOM Lookup', icon: 'bom', status: 'available', href: '/bom' },
           { label: 'Inventory', icon: 'inventory', status: 'available', href: '/inventory' },
           { label: 'Vendors', icon: 'vendors', status: 'available', href: '/business/vendors' },
         ],

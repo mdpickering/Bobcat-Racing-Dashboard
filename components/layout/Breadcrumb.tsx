@@ -14,6 +14,7 @@ const LABELS: Record<string, string> = {
   cad: 'CAD review',
   purchasing: 'Purchasing',
   parts: 'Parts',
+  bom: 'BOM lookup',
   inventory: 'Inventory',
   receiving: 'Receiving',
   timeline: 'Timeline',

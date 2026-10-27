@@ -6,6 +6,8 @@ import { listAllProfiles } from '@/lib/supabase/queries/admin'
 import { listTasks } from '@/lib/supabase/queries/tasks'
 import { canManageOperations, isCtoOrAdmin } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
+import Panel from '@/components/ui/Panel'
+import { isGeneralSubsystem } from '@/lib/sorting'
 import PageHeader from '@/components/ui/PageHeader'
 import SectionHeader from '@/components/ui/SectionHeader'
 import ErrorState from '@/components/ui/ErrorState'
@@ -45,7 +47,8 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
   // Self-accept (migration 0024): only an approved member of THIS subsystem sees the Accept
   // button — accept_task() re-checks the same thing server-side, this only decides display.
   const isMemberHere = members.some((m) => m.user_id === profile.id)
-  const canAcceptTasks = isMemberHere && profile.approved && profile.active
+  // General (migration 0047) is team-wide: everyone may accept an unowned task there.
+  const canAcceptTasks = (isMemberHere || isGeneralSubsystem(params.id)) && profile.approved && profile.active
 
   // Member-management candidate pool (migration 0025): admin keeps its existing full "any
   // approved profile" picker; a lead-only viewer gets the narrower "eligible new members" list
@@ -78,14 +81,26 @@ export default async function SubsystemDetailPage({ params }: { params: { id: st
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <SubsystemMembersPanel
-          subsystemId={params.id}
-          subsystemName={subsystem.name}
-          members={members}
-          candidateProfiles={candidateProfiles}
-          canManage={canManageMembers}
-          canRemoveOrPromote={admin}
-        />
+        {isGeneralSubsystem(params.id) ? (
+          // Nobody is a "member" of General: everyone can see and pick up its tasks. A lead (appointed on the Users page,
+          // e.g. the COO) is who may add and edit them.
+          <Panel className="p-4">
+            <h2 className="text-xs font-semibold text-text-primary">Open to the whole team</h2>
+            <p className="mt-1 text-xs leading-5 text-text-secondary">
+              General holds team-wide jobs that do not belong to one subsystem. Anyone can open these tasks and accept an unowned one.
+              {leads.length > 0 ? ` Managed by ${leads.map((l) => l.profile?.display_name || l.profile?.email || 'a lead').join(', ')}.` : ' Only the CTO and admins can add tasks here until a lead is appointed.'}
+            </p>
+          </Panel>
+        ) : (
+          <SubsystemMembersPanel
+            subsystemId={params.id}
+            subsystemName={subsystem.name}
+            members={members}
+            candidateProfiles={candidateProfiles}
+            canManage={canManageMembers}
+            canRemoveOrPromote={admin}
+          />
+        )}
         <CategoryManagementPanel subsystemId={params.id} categories={categories} canManage={canManageCategories} />
       </div>
 

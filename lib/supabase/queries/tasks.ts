@@ -49,6 +49,26 @@ export async function listTasks(supabase: SupabaseClient, filters: TaskFilters =
   return (data ?? []) as unknown as Task[]
 }
 
+/**
+ * Open tasks with no category, for the "Needs sorting" page: every subsystem except General (a General task is already
+ * where it belongs). `subsystemIds` narrows it to the subsystems a lead looks after; omit it for cto/admin.
+ */
+export async function listUncategorizedTasks(supabase: SupabaseClient, opts: { subsystemIds?: string[]; limit?: number } = {}): Promise<Task[]> {
+  if (opts.subsystemIds && opts.subsystemIds.length === 0) return []
+  let query = supabase
+    .from('tasks')
+    .select(TASK_SELECT)
+    .is('category_id', null)
+    .neq('status', 'Complete')
+    .neq('subsystem_id', 'general')
+    .order('created_at', { ascending: true })
+  if (opts.subsystemIds) query = query.in('subsystem_id', opts.subsystemIds)
+  if (opts.limit) query = query.limit(opts.limit)
+  const { data, error } = await query
+  if (error) throw error
+  return (data ?? []) as unknown as Task[]
+}
+
 export async function getTaskById(supabase: SupabaseClient, id: string): Promise<Task | null> {
   const { data, error } = await supabase.from('tasks').select(TASK_SELECT).eq('id', id).maybeSingle()
   if (error) throw error

@@ -22,6 +22,7 @@ export type NavIconName =
   | 'bom'
   | 'pickup'
   | 'sorting'
+  | 'bulkadd'
   | 'inventory'
   | 'receiving'
   | 'vendors'
@@ -86,6 +87,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
           { label: 'Task Requests', icon: 'requests', status: 'available', href: '/tasks?tab=requests', activeWhen: isTaskRequests },
           // for subsystem leads, the CTO and admins; anyone else who opens it is told it is limited to them
           { label: 'Needs Sorting', icon: 'sorting', status: 'available', href: '/sorting' },
+          { label: 'Add Several Tasks', icon: 'bulkadd', status: 'available', href: '/add-tasks' },
           { label: 'Purchasing', icon: 'purchasing', status: 'available', href: '/purchasing' },
           { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
           { label: 'BOM Lookup', icon: 'bom', status: 'available', href: '/bom' },

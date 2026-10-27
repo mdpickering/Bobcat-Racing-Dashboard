@@ -23,7 +23,7 @@ export default function LimitNotice({ noun, limit, searchParams, pathname }: Lim
       {atMax ? (
         'Narrow the filters to see the rest.'
       ) : (
-        <Link href={href} className="font-medium text-accent-blue hover:underline">
+        <Link href={href} className="touch-target inline-flex items-center font-medium text-accent-blue hover:underline">
           Show more
         </Link>
       )}

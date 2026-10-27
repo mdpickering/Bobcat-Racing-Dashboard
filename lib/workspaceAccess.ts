@@ -78,6 +78,9 @@ const ROUTE_WORKSPACES: { prefix: string; workspaces: WorkspaceId[] }[] = [
   { prefix: '/parts', workspaces: ['engineering', 'business'] },
   // The BOM lookup (migration 0044) is read-only reference data, shared the same way as the parts catalog.
   { prefix: '/bom', workspaces: ['engineering', 'business'] },
+  // The pick-up board (migration 0046) is for everyone, so it belongs to every workspace and the shell keeps whichever
+  // one the person is in.
+  { prefix: '/pickup', workspaces: ['engineering', 'business', 'operations'] },
   // Inventory + receiving (migration 0038): shared routes, never /operations/*, so Engineering team leads (who
   // cannot open /operations at all) can still receive and adjust stock for their own subsystem. Business is
   // read-only here (lib/permissions/roles.ts); Operations is where receiving/adjusting is a primary job.

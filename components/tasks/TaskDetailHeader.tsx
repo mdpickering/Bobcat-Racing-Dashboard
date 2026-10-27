@@ -14,6 +14,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import InlineDateEditor from '@/components/ui/InlineDateEditor'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask, deleteTask, removeTaskAttachmentFiles } from '@/lib/supabase/queries/tasks'
+import { setTaskSize } from '@/lib/supabase/queries/pickup'
+import { SIZE_HINT, SIZE_LABEL, TASK_SIZES, isTaskSize } from '@/lib/pickup'
 import { getErrorMessage } from '@/lib/errors'
 import { broadcastNotificationsChanged } from '@/lib/notificationEvents'
 import { useToast } from '@/components/ui/Toast'
@@ -90,6 +92,21 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
     if (!(await persist({ status }))) return
     const nudge = startNudge(task, status)
     if (nudge) toast.push(nudge, 'warning')
+  }
+
+  // Put the task on the pick-up board (or take it off): saved through set_task_size(), which re-checks that the person is
+  // this subsystem's lead, the COO, the CTO or an admin.
+  async function handleSizeChange(value: string) {
+    setSaving(true)
+    setError(null)
+    try {
+      await setTaskSize(createClient(), task.id, isTaskSize(value) ? value : null)
+      router.refresh()
+    } catch (err) {
+      setError(getErrorMessage(err, 'Could not change the pick-up board.'))
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleSaveDetails() {
@@ -199,6 +216,28 @@ export default function TaskDetailHeader({ task, categories, canManage, canChang
             <label className="mb-1 block text-xs text-text-secondary">Priority</label>
             <Badge tone="slate">{task.priority}</Badge>
           </div>
+        )}
+        {(canManage || canReschedule) && task.status !== 'Complete' ? (
+          <div>
+            <label htmlFor="pickup-size" className="mb-1 block text-xs text-text-secondary">
+              Pick-up board
+            </label>
+            <Select id="pickup-size" value={task.size ?? ''} disabled={saving} onChange={(e) => handleSizeChange(e.target.value)} className="w-40">
+              <option value="">Not on the board</option>
+              {TASK_SIZES.map((s) => (
+                <option key={s} value={s}>
+                  {SIZE_LABEL[s]} · {SIZE_HINT[s].replace('About ', '')}
+                </option>
+              ))}
+            </Select>
+          </div>
+        ) : (
+          task.size && (
+            <div>
+              <span className="mb-1 block text-xs text-text-secondary">Pick-up size</span>
+              <Badge tone="sky">{SIZE_LABEL[task.size]}</Badge>
+            </div>
+          )
         )}
         {canDelete && (
           <Button size="sm" variant="danger" className="ml-auto" onClick={() => { setDeleteError(null); setConfirmOpen(true) }}>

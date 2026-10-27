@@ -10,6 +10,8 @@ import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import { updateTask, setTaskAssignee } from '@/lib/supabase/queries/tasks'
 import { rescheduleTask } from '@/lib/supabase/queries/operations'
+import { setTaskSize } from '@/lib/supabase/queries/pickup'
+import { SIZE_LABEL, TASK_SIZES, isTaskSize } from '@/lib/pickup'
 import { getErrorMessage } from '@/lib/errors'
 import { pastDateNote } from '@/lib/taskGuards'
 import TaskList from './TaskList'
@@ -46,6 +48,8 @@ export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsys
   const [applying, setApplying] = useState(false)
   const [bulkOwner, setBulkOwner] = useState('')
   const [assigning, setAssigning] = useState(false)
+  const [bulkSize, setBulkSize] = useState('')
+  const [sizing, setSizing] = useState(false)
 
   // Bulk assign only fills in owners that are missing: a task that already has a primary owner is left alone, so a bulk
   // action can never silently take a task away from someone.
@@ -91,6 +95,28 @@ export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsys
       toast.push(getErrorMessage(err, 'Could not update these tasks.'), 'danger')
     } finally {
       setApplying(false)
+    }
+  }
+
+  // Only unowned tasks can be on the pick-up board (an owned one is already someone's), so owned selections are skipped.
+  async function applyBulkSize() {
+    if (!isTaskSize(bulkSize) || selectedUnowned.length === 0) return
+    setSizing(true)
+    try {
+      const supabase = createClient()
+      const results = await Promise.allSettled(selectedUnowned.map((t) => setTaskSize(supabase, t.id, bulkSize)))
+      const failed = results.filter((r) => r.status === 'rejected').length
+      const done = selectedUnowned.length - failed
+      if (failed > 0) toast.push(`Added ${done} of ${selectedUnowned.length} tasks to the pick-up board — ${failed} failed.`, 'warning')
+      else toast.push(`Added ${done} task${done === 1 ? '' : 's'} to the pick-up board as ${SIZE_LABEL[bulkSize].toLowerCase()}.`, 'success')
+      if (alreadyOwned > 0) toast.push(`${alreadyOwned} selected task${alreadyOwned === 1 ? ' already has' : 's already have'} an owner and ${alreadyOwned === 1 ? 'was' : 'were'} left off the board.`, 'info')
+      setSelected(new Set())
+      setBulkSize('')
+      router.refresh()
+    } catch (err) {
+      toast.push(getErrorMessage(err, 'Could not update the pick-up board.'), 'danger')
+    } finally {
+      setSizing(false)
     }
   }
 
@@ -157,6 +183,25 @@ export default function TaskListBoard({ tasks, currentUserId, isAdmin, ledSubsys
               {assigning ? 'Assigning…' : `Assign ${selectedUnowned.length} unowned`}
             </Button>
             {alreadyOwned > 0 && <span className="text-2xs text-text-muted">{alreadyOwned} already owned, skipped</span>}
+          </>
+        )}
+        {(canAssign || canReschedule) && (
+          <>
+            <span className="hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
+            <label className="flex items-center gap-1.5 text-xs text-text-secondary">
+              Pick-up board
+              <Select value={bulkSize} onChange={(e) => setBulkSize(e.target.value)} disabled={sizing} className="w-auto py-1">
+                <option value="">Choose a size…</option>
+                {TASK_SIZES.map((s) => (
+                  <option key={s} value={s}>
+                    {SIZE_LABEL[s]}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <Button size="sm" disabled={sizing || !bulkSize || selectedUnowned.length === 0} onClick={applyBulkSize}>
+              {sizing ? 'Adding…' : `Add ${selectedUnowned.length} unowned`}
+            </Button>
           </>
         )}
       </BulkActionBar>

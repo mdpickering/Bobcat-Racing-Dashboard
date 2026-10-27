@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { AlertTriangle, ExternalLink, Library } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ExternalLink, Info, Library } from 'lucide-react'
 import DataTable, { type Column } from '@/components/ui/DataTable'
 import EmptyState from '@/components/ui/EmptyState'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { KIND_HINT, KIND_LABEL, KIND_TONE, formatOrderDate, kindOf, safeHttpUrl, type BomKind, type BomLine, type BomPart } from '@/lib/bom'
+import { KIND_HINT, KIND_LABEL, KIND_TONE, formatOrderDate, kindOf, needsCheck, safeHttpUrl, type BomKind, type BomLine, type BomPart } from '@/lib/bom'
 import { formatUsd } from '@/lib/parts'
 
 const DASH = <span className="text-text-muted">—</span>
@@ -39,14 +39,34 @@ function ProductLink({ href, label }: { href: string | null; label: string }) {
   )
 }
 
-function ReviewNote({ text }: { text: string }) {
+// A real open question is amber; housekeeping from the spreadsheet is a quiet note; a line an admin has gone through
+// says so (with their note) instead of repeating the question.
+function LineNote({ line }: { line: BomLine }) {
+  if (!line.review_flag) return null
+  if (line.review_status === 'checked') {
+    return (
+      <div className="mt-1 flex items-start gap-1 text-2xs leading-4 text-text-muted">
+        <CheckCircle2 size={11} className="mt-0.5 flex-shrink-0 text-status-success" aria-hidden="true" />
+        <span>Checked{line.review_note ? `: ${line.review_note}` : ''}</span>
+      </div>
+    )
+  }
+  if (line.review_status === 'ignored') return null
+  if (needsCheck(line)) {
+    return (
+      <div className="mt-1 flex items-start gap-1 text-2xs leading-4 text-status-warning">
+        <AlertTriangle size={11} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+        <span>
+          <span className="font-semibold">Check: </span>
+          {line.review_flag}
+        </span>
+      </div>
+    )
+  }
   return (
-    <div className="mt-1 flex items-start gap-1 text-2xs leading-4 text-status-warning">
-      <AlertTriangle size={11} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
-      <span>
-        <span className="font-semibold">Check: </span>
-        {text}
-      </span>
+    <div className="mt-1 flex items-start gap-1 text-2xs leading-4 text-text-muted">
+      <Info size={11} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+      <span>{line.review_flag}</span>
     </div>
   )
 }
@@ -61,7 +81,9 @@ function Empty({ filtered }: { filtered: boolean }) {
   )
 }
 
-export function BomLinesTable({ rows, filtered }: { rows: BomLine[]; filtered: boolean }) {
+// showMoney: prices are only for Business members and cto/admin (the database withholds them from everyone else); for
+// anyone else the price columns are left out entirely rather than shown empty.
+export function BomLinesTable({ rows, filtered, showMoney }: { rows: BomLine[]; filtered: boolean; showMoney: boolean }) {
   const columns: Column<BomLine>[] = [
     {
       key: 'item',
@@ -80,7 +102,7 @@ export function BomLinesTable({ rows, filtered }: { rows: BomLine[]; filtered: b
             {[r.vendor, r.season, r.subsystem].filter(Boolean).join(' · ')}
           </div>
           {r.notes && <div className="mt-0.5 text-2xs text-text-muted">{r.notes}</div>}
-          {r.review_flag && <ReviewNote text={r.review_flag} />}
+          <LineNote line={r} />
         </>
       ),
     },
@@ -109,14 +131,18 @@ export function BomLinesTable({ rows, filtered }: { rows: BomLine[]; filtered: b
     },
     { key: 'vendor', header: 'Vendor', hideBelow: 'md', cell: (r) => (r.vendor ? <span className="text-text-secondary">{r.vendor}</span> : DASH) },
     { key: 'qty', header: 'Qty', align: 'right', hideBelow: 'sm', cell: (r) => (r.quantity === null ? DASH : r.quantity) },
-    { key: 'unit', header: 'Unit', align: 'right', hideBelow: 'lg', cell: (r) => (r.unit_cost === null ? DASH : formatUsd(r.unit_cost)) },
-    { key: 'total', header: 'Total', align: 'right', cell: (r) => (r.total_cost === null ? DASH : formatUsd(r.total_cost)) },
+    ...(showMoney
+      ? [
+          { key: 'unit', header: 'Unit', align: 'right' as const, hideBelow: 'lg' as const, cell: (r: BomLine) => (r.unit_cost === null ? DASH : formatUsd(r.unit_cost)) },
+          { key: 'total', header: 'Total', align: 'right' as const, cell: (r: BomLine) => (r.total_cost === null ? DASH : formatUsd(r.total_cost)) },
+        ]
+      : []),
     { key: 'type', header: 'Type', hideBelow: 'lg', cell: (r) => <KindBadge kind={kindOf(r)} /> },
   ]
   return <DataTable countLabel="lines" caption="BOM lines" columns={columns} rows={rows} rowKey={(r) => r.id} emptyState={<Empty filtered={filtered} />} />
 }
 
-export function BomPartsTable({ rows, filtered }: { rows: BomPart[]; filtered: boolean }) {
+export function BomPartsTable({ rows, filtered, showMoney }: { rows: BomPart[]; filtered: boolean; showMoney: boolean }) {
   const columns: Column<BomPart>[] = [
     {
       key: 'item',
@@ -148,7 +174,7 @@ export function BomPartsTable({ rows, filtered }: { rows: BomPart[]; filtered: b
     { key: 'seasons', header: 'Seasons', hideBelow: 'lg', cell: (r) => <span className="text-text-secondary">{r.seasons.join(', ')}</span> },
     { key: 'lines', header: 'Lines', align: 'right', hideBelow: 'sm', cell: (r) => r.lineCount },
     { key: 'qty', header: 'Units ordered', align: 'right', hideBelow: 'lg', cell: (r) => (r.orderedQuantity > 0 ? r.orderedQuantity : DASH) },
-    { key: 'cost', header: 'Latest unit cost', align: 'right', cell: (r) => (r.latestUnitCost === null ? DASH : formatUsd(r.latestUnitCost)) },
+    ...(showMoney ? [{ key: 'cost', header: 'Latest unit cost', align: 'right' as const, cell: (r: BomPart) => (r.latestUnitCost === null ? DASH : formatUsd(r.latestUnitCost)) }] : []),
   ]
   return <DataTable countLabel="parts" caption="BOM parts" columns={columns} rows={rows} rowKey={(r) => r.key} emptyState={<Empty filtered={filtered} />} />
 }

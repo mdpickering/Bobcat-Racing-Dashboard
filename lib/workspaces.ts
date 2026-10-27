@@ -20,6 +20,7 @@ export type NavIconName =
   | 'budget'
   | 'parts'
   | 'bom'
+  | 'pickup'
   | 'inventory'
   | 'receiving'
   | 'vendors'
@@ -72,6 +73,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
           { label: 'Dashboard', icon: 'dashboard', status: 'available', href: '/dashboard' },
           // /tasks has always been each person's own board (only tasks they own or co-own)
           { label: 'My Tasks', icon: 'tasks', status: 'available', href: '/tasks', activeWhen: isTasksBoard },
+          { label: 'Pick Up a Task', icon: 'pickup', status: 'available', href: '/pickup' },
           { label: 'Calendar', icon: 'calendar', status: 'available', href: '/calendar' },
         ],
       },
@@ -105,7 +107,10 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
     groups: [
       {
         label: 'Workspace',
-        items: [{ label: 'Business Dashboard', icon: 'dashboard', status: 'available', href: '/business', activeWhen: (p) => p === '/business' }],
+        items: [
+          { label: 'Business Dashboard', icon: 'dashboard', status: 'available', href: '/business', activeWhen: (p) => p === '/business' },
+          { label: 'Pick Up a Task', icon: 'pickup', status: 'available', href: '/pickup' },
+        ],
       },
       {
         label: 'Finance',
@@ -135,7 +140,13 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
     description: 'Schedule, events, deadlines and timeline',
     home: '/operations',
     groups: [
-      { label: 'Workspace', items: [{ label: 'Operations Dashboard', icon: 'operations', status: 'available', href: '/operations', activeWhen: (p) => p === '/operations' }] },
+      {
+        label: 'Workspace',
+        items: [
+          { label: 'Operations Dashboard', icon: 'operations', status: 'available', href: '/operations', activeWhen: (p) => p === '/operations' },
+          { label: 'Pick Up a Task', icon: 'pickup', status: 'available', href: '/pickup' },
+        ],
+      },
       {
         label: 'Schedule',
         items: [

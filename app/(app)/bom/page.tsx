@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import { listBomLines } from '@/lib/supabase/queries/bom'
+import { getBusinessAccess } from '@/lib/supabase/queries/business'
 import { createClient } from '@/lib/supabase/server'
-import { bomMatches, groupByPart, kindOf, seasonOptions, summarizeBom, type BomKind } from '@/lib/bom'
+import { bomMatches, canSeeBomCosts, groupByPart, kindOf, needsCheck, seasonOptions, summarizeBom, type BomKind } from '@/lib/bom'
 import { formatUsd } from '@/lib/parts'
+import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import type { Profile } from '@/types/user'
 import ErrorState from '@/components/ui/ErrorState'
 import FilterBar from '@/components/ui/FilterBar'
 import MetricStrip from '@/components/ui/MetricStrip'
@@ -20,15 +23,27 @@ const isMissingTable = (e: unknown) => ['PGRST205', '42P01'].includes((e as { co
 
 export default async function BomLookupPage({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
   const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data: profileRow } = await supabase.from('profiles').select('*').eq('id', user!.id).single()
+  if (!profileRow) return <ErrorState message="Could not load your profile." />
+  const profile = profileRow as Profile
+
+  // Prices are for Business members and cto/admin only. The database withholds them from everyone else (migration 0045);
+  // this just decides whether to ask and which columns to draw.
+  const business = await getBusinessAccess(supabase, profile)
+  const admin = isCtoOrAdmin(profile)
+  const showMoney = canSeeBomCosts({ isBusinessMember: business.isMember, isCtoOrAdmin: admin })
 
   let lines
   try {
-    lines = await listBomLines(supabase)
+    lines = await listBomLines(supabase, { withCosts: showMoney })
   } catch (e) {
     return (
       <div className="mx-auto max-w-6xl">
         <PageHeader title="BOM Lookup" description="Every part the team has bought, quoted or planned, by season." />
-        <ErrorState message={isMissingTable(e) ? 'The BOM table has not been set up yet. Run migration 0044_bom_history.sql, then supabase/data/bom_history_2022_2026.sql.' : 'Could not load the BOM.'} />
+        <ErrorState message={isMissingTable(e) ? 'The BOM tables are not set up yet. Run migrations 0044_bom_history.sql and 0045_bom_costs_and_review.sql, then supabase/data/bom_history_2022_2026.sql.' : 'Could not load the BOM.'} />
       </div>
     )
   }
@@ -48,7 +63,7 @@ export default async function BomLookupPage({ searchParams }: { searchParams: { 
       (!season || l.season === season) &&
       (!vendor || l.vendor === vendor) &&
       (!kind || kindOf(l) === kind) &&
-      (!reviewOnly || Boolean(l.review_flag)) &&
+      (!reviewOnly || needsCheck(l)) &&
       bomMatches(l, q)
   )
   const isFiltered = Boolean(q.trim() || subsystem || season || vendor || kind || reviewOnly)
@@ -77,16 +92,33 @@ export default async function BomLookupPage({ searchParams }: { searchParams: { 
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader title="BOM Lookup" description="Every part the team has bought, quoted or planned since 2022-23, with where it came from and what it cost." />
+      <PageHeader
+        title="BOM Lookup"
+        description={`Every part the team has bought, quoted or planned since 2022-23, with where it came from${showMoney ? ' and what it cost' : ''}.`}
+        actions={
+          admin ? (
+            <Link href="/admin/bom-review" className="touch-target inline-flex items-center rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary">
+              Review the BOM
+            </Link>
+          ) : undefined
+        }
+      />
 
       <MetricStrip
         className="mb-5"
         metrics={[
           { label: 'Lines', value: String(summary.lines), hint: isFiltered ? `of ${lines.length}` : undefined },
           { label: 'Distinct parts', value: String(summary.distinctParts) },
-          { label: 'On purchase lists', value: formatUsd(summary.purchaseTotal), hint: 'Ordered, not proof of arrival' },
-          { label: 'Quoted only', value: formatUsd(summary.quoteTotal), hint: 'No record it was ordered' },
-          { label: 'Need checking', value: String(summary.needsReview), tone: summary.needsReview > 0 ? 'warning' : 'success' },
+          ...(showMoney
+            ? [
+                { label: 'On purchase lists', value: formatUsd(summary.purchaseTotal), hint: 'Ordered, not proof of arrival' },
+                { label: 'Quoted only', value: formatUsd(summary.quoteTotal), hint: 'No record it was ordered' },
+              ]
+            : [
+                { label: 'Purchases', value: String(summary.purchaseLines), hint: 'Ordered, not proof of arrival' },
+                { label: 'Quotes only', value: String(summary.quoteLines), hint: 'No record it was ordered' },
+              ]),
+          { label: 'Need checking', value: String(summary.needsReview), tone: summary.needsReview > 0 ? ('warning' as const) : ('success' as const) },
         ]}
       />
 
@@ -108,7 +140,7 @@ export default async function BomLookupPage({ searchParams }: { searchParams: { 
         {tab('lines', 'All lines')}
       </nav>
 
-      {view === 'parts' ? <BomPartsTable rows={parts} filtered={isFiltered} /> : <BomLinesTable rows={filtered} filtered={isFiltered} />}
+      {view === 'parts' ? <BomPartsTable rows={parts} filtered={isFiltered} showMoney={showMoney} /> : <BomLinesTable rows={filtered} filtered={isFiltered} showMoney={showMoney} />}
 
       <p className="mt-4 max-w-3xl text-2xs leading-4 text-text-muted">
         Source: Baja Master BOM 2022-23 to 2025-26, compiled from the team&rsquo;s order sheets, quotes and planning files. A purchase list shows what was put on an order; it does not prove the part arrived or is on the car. Lines marked

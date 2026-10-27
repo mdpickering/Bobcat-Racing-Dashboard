@@ -70,6 +70,8 @@ export interface Task {
   updated_at: string
   legacy_id: string | null
   legacy_assignee_raw: string | null
+  // pick-up board (migration 0046): a task with a size is on the board when nobody owns it
+  size?: 'quick' | 'short' | 'half_day' | null
   // joined convenience fields (populated by query layer, not real columns)
   subsystem?: Pick<Subsystem, 'id' | 'name'>
   category?: Pick<SubsystemCategory, 'id' | 'name'> | null

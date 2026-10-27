@@ -25,8 +25,48 @@ export interface BomLine {
   source_files: string | null
   subsystem_basis: string | null
   review_flag: string | null
+  // the admin review queue (migration 0045)
+  review_status: ReviewStatus
+  review_note: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
   sort_order: number
 }
+
+export type ReviewStatus = 'open' | 'checked' | 'ignored'
+
+// ---------------------------------------------------------
+// Which flags are worth a person's time. The workbook flags 171 of 335 lines, but most of those are housekeeping the
+// page already explains by itself (a link rebuilt from the part number, a date taken from a file name, "Quote only"
+// when the badge already says Quote). Only a flag that asks a real question counts as "needs checking"; the rest
+// stay visible as quiet notes.
+// ---------------------------------------------------------
+export type FlagSeverity = 'check' | 'note'
+
+const CHECK_PATTERNS: RegExp[] = [
+  /confirm which/i, // "Confirm which vendor was ordered", "Confirm which set is on the car"
+  /check which/i, // "check which is right"
+  /reorder or repeated entry/i, // the same part/qty/price on two dates
+  /assign a subsystem/i, // no subsystem could be worked out
+  /link goes to/i, // "Vendor listed as X but link goes to Y", "Link goes to part A but sheet says B"
+  /could be /i, // "Could be drivetrain or steering shaft"
+  /conflicts with/i, // "File name year (23) conflicts with quote date (2024)"
+  /name corrected/i,
+  /rack itself is not/i,
+  /fitment/i, // "Tie rod kit fitment per vendor page: ..." (may not fit our car)
+]
+
+/** null = no flag; 'check' = a real question for a person; 'note' = housekeeping, shown quietly. */
+export function flagSeverity(flag: string | null | undefined): FlagSeverity | null {
+  const f = flag?.trim()
+  if (!f) return null
+  return CHECK_PATTERNS.some((p) => p.test(f)) ? 'check' : 'note'
+}
+
+/** Counts as "needs checking": a real question that nobody has reviewed yet. */
+export const needsCheck = (l: Pick<BomLine, 'review_flag' | 'review_status'>): boolean => l.review_status === 'open' && flagSeverity(l.review_flag) === 'check'
+
+export const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = { open: 'Open', checked: 'Checked', ignored: 'Ignored' }
 
 // What a line is worth as evidence. A purchase list is an order sheet (it does not prove the part arrived or is on the
 // car); a quote has no record of being ordered; everything else is a plan or a list.
@@ -39,6 +79,8 @@ export const RECORD_KIND: Record<BomRecordType, BomKind> = {
   'Team master BOM': 'plan',
   'CAD part list': 'plan',
 }
+
+export const RECORD_TYPES: BomRecordType[] = ['Purchase list', 'Quote', 'Planned BOM', 'Team master BOM', 'CAD part list']
 
 export const KIND_LABEL: Record<BomKind, string> = { purchase: 'Purchase', quote: 'Quote', plan: 'Plan' }
 export const KIND_TONE: Record<BomKind, StatusTone> = { purchase: 'info', quote: 'warning', plan: 'neutral' }
@@ -53,8 +95,39 @@ export const kindOf = (line: Pick<BomLine, 'record_type'>): BomKind => RECORD_KI
 /** Numbers arrive from Postgres as strings (numeric) or numbers; blank stays null. */
 export function normalizeBomLine(row: BomLine): BomLine {
   const n = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v))
-  return { ...row, unit_cost: n(row.unit_cost), total_cost: n(row.total_cost), quantity: n(row.quantity), sort_order: Number(row.sort_order) }
+  return {
+    ...row,
+    unit_cost: n(row.unit_cost),
+    total_cost: n(row.total_cost),
+    quantity: n(row.quantity),
+    sort_order: Number(row.sort_order),
+    review_status: row.review_status ?? 'open',
+    review_note: row.review_note ?? null,
+    reviewed_by: row.reviewed_by ?? null,
+    reviewed_at: row.reviewed_at ?? null,
+  }
 }
+
+export interface BomCostRow {
+  line_id: string
+  unit_cost: number | string | null
+  total_cost: number | string | null
+}
+
+/**
+ * Prices live in their own table that only Business members and cto/admin can read (migration 0045), so everyone else
+ * simply gets no rows back. Every line's cost is set from that table; a line with no row has no cost.
+ */
+export function attachCosts(lines: BomLine[], costs: BomCostRow[]): BomLine[] {
+  const byLine = new Map(costs.map((c) => [c.line_id, c]))
+  return lines.map((l) => {
+    const c = byLine.get(l.id)
+    return { ...l, unit_cost: c && c.unit_cost !== null ? Number(c.unit_cost) : null, total_cost: c && c.total_cost !== null ? Number(c.total_cost) : null }
+  })
+}
+
+/** People who may see prices: Business members and cto/admin (mirrors public.can_view_bom_costs()). */
+export const canSeeBomCosts = (a: { isBusinessMember: boolean; isCtoOrAdmin: boolean }): boolean => a.isBusinessMember || a.isCtoOrAdmin
 
 /**
  * Every word you type must appear somewhere on the line ("bearing mcmaster" finds McMaster bearings), case-insensitive,
@@ -72,6 +145,9 @@ export function bomMatches(line: BomLine, query: string): boolean {
 export interface BomSummary {
   lines: number
   distinctParts: number
+  // how many lines are on purchase lists / are quotes (the counts people without price access see instead of money)
+  purchaseLines: number
+  quoteLines: number
   // money on purchase lists / quotes only: plans are not spend, and quotes are not spend either
   purchaseTotal: number
   quoteTotal: number
@@ -82,15 +158,23 @@ export function summarizeBom(lines: BomLine[]): BomSummary {
   const parts = new Set<string>()
   let purchaseTotal = 0
   let quoteTotal = 0
+  let purchaseLines = 0
+  let quoteLines = 0
   let needsReview = 0
   for (const l of lines) {
     parts.add(partKey(l))
     const kind = kindOf(l)
-    if (kind === 'purchase') purchaseTotal += l.total_cost ?? 0
-    if (kind === 'quote') quoteTotal += l.total_cost ?? 0
-    if (l.review_flag) needsReview += 1
+    if (kind === 'purchase') {
+      purchaseLines += 1
+      purchaseTotal += l.total_cost ?? 0
+    }
+    if (kind === 'quote') {
+      quoteLines += 1
+      quoteTotal += l.total_cost ?? 0
+    }
+    if (needsCheck(l)) needsReview += 1
   }
-  return { lines: lines.length, distinctParts: parts.size, purchaseTotal: round2(purchaseTotal), quoteTotal: round2(quoteTotal), needsReview }
+  return { lines: lines.length, distinctParts: parts.size, purchaseLines, quoteLines, purchaseTotal: round2(purchaseTotal), quoteTotal: round2(quoteTotal), needsReview }
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
@@ -152,7 +236,7 @@ export function groupByPart(lines: BomLine[]): BomPart[] {
       orderedQuantity: group.filter((l) => kindOf(l) === 'purchase').reduce((sum, l) => sum + (l.quantity ?? 0), 0),
       latestUnitCost: latest?.unit_cost ?? null,
       link: newestFirst.find((l) => l.link)?.link ?? null,
-      flagged: group.some((l) => Boolean(l.review_flag)),
+      flagged: group.some(needsCheck),
       kinds: Array.from(new Set(group.map(kindOf))),
     })
   }

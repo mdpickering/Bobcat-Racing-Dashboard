@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bomMatches, formatOrderDate, groupByPart, kindOf, normalizeBomLine, partKey, safeHttpUrl, seasonOptions, summarizeBom, type BomLine } from './bom'
+import { attachCosts, bomMatches, canSeeBomCosts, flagSeverity, formatOrderDate, groupByPart, kindOf, needsCheck, normalizeBomLine, partKey, safeHttpUrl, seasonOptions, summarizeBom, type BomLine } from './bom'
 
 let n = 0
 function line(over: Partial<BomLine> = {}): BomLine {
@@ -24,10 +24,16 @@ function line(over: Partial<BomLine> = {}): BomLine {
     source_files: 'order.xlsx',
     subsystem_basis: 'From file',
     review_flag: null,
+    review_status: 'open',
+    review_note: null,
+    reviewed_by: null,
+    reviewed_at: null,
     sort_order: n,
     ...over,
   }
 }
+
+const CHECK = 'Similar plates are on the 2024-05-28 Metals Depot quote. Confirm which vendor was ordered'
 
 describe('kindOf', () => {
   it('treats only a purchase list as a purchase; quotes and the three plan types are not spend', () => {
@@ -70,8 +76,18 @@ describe('summarizeBom', () => {
     expect(s.lines).toBe(5)
   })
   it('counts distinct parts and flagged lines', () => {
-    const s = summarizeBom([line({ part_number: 'X' }), line({ part_number: 'x' }), line({ part_number: null, item: 'Zip tie' }), line({ part_number: null, item: 'zip tie ', review_flag: 'check me' })])
+    const s = summarizeBom([line({ part_number: 'X' }), line({ part_number: 'x' }), line({ part_number: null, item: 'Zip tie' }), line({ part_number: null, item: 'zip tie ', review_flag: CHECK })])
     expect(s.distinctParts).toBe(2)
+    expect(s.needsReview).toBe(1)
+  })
+  it('only counts real open questions as needing a check, not housekeeping notes or reviewed lines', () => {
+    const s = summarizeBom([
+      line({ review_flag: CHECK }),
+      line({ review_flag: CHECK, review_status: 'checked' }),
+      line({ review_flag: CHECK, review_status: 'ignored' }),
+      line({ review_flag: 'Date from file name' }),
+      line({ review_flag: 'Link: Built from part # (original was a category/search page)' }),
+    ])
     expect(s.needsReview).toBe(1)
   })
   it('does not accumulate float noise', () => {
@@ -124,11 +140,85 @@ describe('groupByPart', () => {
   it('groups unnumbered lines by item name and flags a part when any line is flagged', () => {
     const parts = groupByPart([
       line({ part_number: null, item: 'Zip tie' }),
-      line({ part_number: null, item: 'zip tie', review_flag: 'duplicate?' }),
+      line({ part_number: null, item: 'zip tie', review_flag: CHECK }),
       line({ part_number: null, item: 'Washer' }),
     ])
     expect(parts.map((p) => p.item)).toEqual(['Washer', 'zip tie'].sort((a, b) => a.localeCompare(b)))
     expect(parts.find((p) => p.lineCount === 2)?.flagged).toBe(true)
+  })
+})
+
+describe('flagSeverity', () => {
+  it('has no severity without a flag', () => {
+    expect(flagSeverity(null)).toBeNull()
+    expect(flagSeverity('')).toBeNull()
+    expect(flagSeverity('   ')).toBeNull()
+  })
+  it.each([
+    'Same part/qty/price also ordered on 2025-02-18: reorder or repeated entry?',
+    'Similar plates are on the 2024-05-28 Metals Depot quote and the compiled 23-24 sheet. Confirm which vendor was ordered',
+    'Prices match the 2024-05-28 Metals Depot quote; a cheaper Yarde quote (2024-09-17) covers similar plates. Confirm which was ordered',
+    'Compiled 24-25 sheet lists 1.25" tube and QA1 rod ends for the same A-arms. Confirm which set is on the car',
+    'Link goes to part 6677K86 but sheet says 6677K55; check which is right',
+    'Vendor listed as McMaster-Carr but link goes to Grainger',
+    'Date from file name; No subassembly given; assign a subsystem',
+    'Could be drivetrain or steering shaft',
+    'File name year (23) conflicts with quote date (2024)',
+  ])('treats a real question as a check: %s', (flag) => {
+    expect(flagSeverity(flag)).toBe('check')
+  })
+  it.each([
+    'Link: Built from part # (original was a category/search page)',
+    'Link: Missing',
+    'Quote only: no record it was ordered; Link: Missing',
+    'Undated source: season unknown',
+    'Date from file name',
+    'Date from file name; year assumed 2026',
+    'Date in May-Aug: season assigned by Aug 1 cutoff',
+    'Quote status PENDING: no record it was paid; Link: Vendor home page only',
+    'Subassembly in file: Hardware',
+    'No price in source',
+    'Exact date from 24-25_Purchase_Orders_Compiled.xlsx',
+  ])('treats housekeeping as a quiet note: %s', (flag) => {
+    expect(flagSeverity(flag)).toBe('note')
+  })
+})
+
+describe('needsCheck', () => {
+  it('is true only for an open line with a real question', () => {
+    expect(needsCheck(line({ review_flag: CHECK }))).toBe(true)
+    expect(needsCheck(line({ review_flag: CHECK, review_status: 'checked' }))).toBe(false)
+    expect(needsCheck(line({ review_flag: 'Date from file name' }))).toBe(false)
+    expect(needsCheck(line())).toBe(false)
+  })
+})
+
+describe('attachCosts', () => {
+  it('sets prices from the costs table, as numbers', () => {
+    const a = line({ unit_cost: null, total_cost: null })
+    const [out] = attachCosts([a], [{ line_id: a.id, unit_cost: '11.18', total_cost: 44.72 }])
+    expect(out.unit_cost).toBe(11.18)
+    expect(out.total_cost).toBe(44.72)
+  })
+  it('leaves a line without a cost row priceless, even if it carried a price before', () => {
+    const a = line({ unit_cost: 99, total_cost: 99 })
+    const [out] = attachCosts([a], [])
+    expect(out.unit_cost).toBeNull()
+    expect(out.total_cost).toBeNull()
+  })
+  it('keeps a missing half of a cost row null rather than 0', () => {
+    const a = line()
+    const [out] = attachCosts([a], [{ line_id: a.id, unit_cost: null, total_cost: 5 }])
+    expect(out.unit_cost).toBeNull()
+    expect(out.total_cost).toBe(5)
+  })
+})
+
+describe('canSeeBomCosts', () => {
+  it('allows Business members and cto/admin only', () => {
+    expect(canSeeBomCosts({ isBusinessMember: true, isCtoOrAdmin: false })).toBe(true)
+    expect(canSeeBomCosts({ isBusinessMember: false, isCtoOrAdmin: true })).toBe(true)
+    expect(canSeeBomCosts({ isBusinessMember: false, isCtoOrAdmin: false })).toBe(false)
   })
 })
 

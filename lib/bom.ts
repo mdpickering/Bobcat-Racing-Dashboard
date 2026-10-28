@@ -25,6 +25,9 @@ export interface BomLine {
   source_files: string | null
   subsystem_basis: string | null
   review_flag: string | null
+  // The note as originally written, dollar amounts and all (migration 0048). It lives next to the prices, so only people
+  // allowed to see money get it; everyone else only ever has `notes`, where the amounts are hidden.
+  cost_notes?: string | null
   // the admin review queue (migration 0045)
   review_status: ReviewStatus
   review_note: string | null
@@ -86,7 +89,7 @@ export const KIND_LABEL: Record<BomKind, string> = { purchase: 'Purchase', quote
 export const KIND_TONE: Record<BomKind, StatusTone> = { purchase: 'info', quote: 'warning', plan: 'neutral' }
 export const KIND_HINT: Record<BomKind, string> = {
   purchase: 'Appears on a purchase order or purchasing list. This does not prove it arrived.',
-  quote: 'A quote only: there is no record it was ordered.',
+  quote: 'From a quote the team ordered from. Counted as spent, unless the same part from the same vendor is already on an order sheet.',
   plan: 'A planned BOM or part list, not a purchase.',
 }
 
@@ -112,6 +115,30 @@ export interface BomCostRow {
   line_id: string
   unit_cost: number | string | null
   total_cost: number | string | null
+  cost_notes?: string | null
+}
+
+const AMOUNT = /\$\s?\d[\d,]*(?:\.\d+)?/g
+export const HIDDEN_AMOUNT = '[amount hidden]'
+
+/** Replace every dollar amount in a piece of text. Used for anyone who may not see money. */
+export const redactMoney = (text: string | null | undefined): string | null => (text == null ? null : text.replace(AMOUNT, HIDDEN_AMOUNT))
+
+/**
+ * A second layer for people without price access: even if a dollar amount is ever typed into a note, a flag or a review note,
+ * it is hidden before the page is drawn. (The database holds the original wording of existing notes apart from the shared
+ * note, in bom_line_costs.cost_notes: migration 0048.) Prices themselves are already absent for these people.
+ */
+export function redactBomMoney(lines: BomLine[]): BomLine[] {
+  return lines.map((l) => ({
+    ...l,
+    notes: redactMoney(l.notes),
+    review_flag: redactMoney(l.review_flag),
+    review_note: redactMoney(l.review_note),
+    cost_notes: null,
+    unit_cost: null,
+    total_cost: null,
+  }))
 }
 
 /**
@@ -122,9 +149,17 @@ export function attachCosts(lines: BomLine[], costs: BomCostRow[]): BomLine[] {
   const byLine = new Map(costs.map((c) => [c.line_id, c]))
   return lines.map((l) => {
     const c = byLine.get(l.id)
-    return { ...l, unit_cost: c && c.unit_cost !== null ? Number(c.unit_cost) : null, total_cost: c && c.total_cost !== null ? Number(c.total_cost) : null }
+    return {
+      ...l,
+      unit_cost: c && c.unit_cost !== null ? Number(c.unit_cost) : null,
+      total_cost: c && c.total_cost !== null ? Number(c.total_cost) : null,
+      cost_notes: c?.cost_notes ?? null,
+    }
   })
 }
+
+/** The note to show: the original wording for people who may see money, otherwise the shared (amount-free) note. */
+export const noteFor = (l: Pick<BomLine, 'notes' | 'cost_notes'>, showMoney: boolean): string | null => (showMoney && l.cost_notes ? l.cost_notes : l.notes)
 
 /** People who may see prices: Business members and cto/admin (mirrors public.can_view_bom_costs()). */
 export const canSeeBomCosts = (a: { isBusinessMember: boolean; isCtoOrAdmin: boolean }): boolean => a.isBusinessMember || a.isCtoOrAdmin
@@ -142,39 +177,59 @@ export function bomMatches(line: BomLine, query: string): boolean {
   return words.every((w) => haystack.includes(w))
 }
 
+// ---------------------------------------------------------
+// What counts as money spent. The team ordered from its quotes, so a quote counts the same as a line on an order sheet. A plan
+// (a planned BOM or part list) is not a purchase and never counts. To avoid counting one purchase twice, a quote line is left out
+// when the SAME part number from the SAME vendor is already on a purchase-list line (the quote and the order sheet describe one
+// buy). A quote with no part number cannot be matched, so it counts.
+// ---------------------------------------------------------
+const norm = (s: string | null | undefined): string => (s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+const partVendorKey = (l: Pick<BomLine, 'part_number' | 'vendor'>): string | null => (norm(l.part_number) ? `${norm(l.part_number)}|${norm(l.vendor)}` : null)
+
+/** The ids of every line that counts as spent (before looking at whether it has a price). Pass the WHOLE list, not a filtered view. */
+export function spendIds(lines: BomLine[]): Set<string> {
+  const orderedKeys = new Set<string>()
+  for (const l of lines) {
+    const k = kindOf(l) === 'purchase' ? partVendorKey(l) : null
+    if (k) orderedKeys.add(k)
+  }
+  const ids = new Set<string>()
+  for (const l of lines) {
+    const kind = kindOf(l)
+    if (kind === 'purchase') ids.add(l.id)
+    else if (kind === 'quote') {
+      const k = partVendorKey(l)
+      if (!k || !orderedKeys.has(k)) ids.add(l.id)
+    }
+  }
+  return ids
+}
+
 export interface BomSummary {
   lines: number
   distinctParts: number
-  // how many lines are on purchase lists / are quotes (the counts people without price access see instead of money)
-  purchaseLines: number
-  quoteLines: number
-  // money on purchase lists / quotes only: plans are not spend, and quotes are not spend either
-  purchaseTotal: number
-  quoteTotal: number
+  // how many lines count as bought (the count people without price access see instead of money)
+  spentLines: number
+  // money spent: purchase-list lines plus quoted lines the team ordered (see spendIds)
+  spentTotal: number
   needsReview: number
 }
 
-export function summarizeBom(lines: BomLine[]): BomSummary {
+/** `counted` is spendIds() of the whole BOM; leave it out to work it out from the lines given. */
+export function summarizeBom(lines: BomLine[], counted: ReadonlySet<string> = spendIds(lines)): BomSummary {
   const parts = new Set<string>()
-  let purchaseTotal = 0
-  let quoteTotal = 0
-  let purchaseLines = 0
-  let quoteLines = 0
+  let spentTotal = 0
+  let spentLines = 0
   let needsReview = 0
   for (const l of lines) {
     parts.add(partKey(l))
-    const kind = kindOf(l)
-    if (kind === 'purchase') {
-      purchaseLines += 1
-      purchaseTotal += l.total_cost ?? 0
-    }
-    if (kind === 'quote') {
-      quoteLines += 1
-      quoteTotal += l.total_cost ?? 0
+    if (counted.has(l.id)) {
+      spentLines += 1
+      spentTotal += l.total_cost ?? 0
     }
     if (needsCheck(l)) needsReview += 1
   }
-  return { lines: lines.length, distinctParts: parts.size, purchaseLines, quoteLines, purchaseTotal: round2(purchaseTotal), quoteTotal: round2(quoteTotal), needsReview }
+  return { lines: lines.length, distinctParts: parts.size, spentLines, spentTotal: round2(spentTotal), needsReview }
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100

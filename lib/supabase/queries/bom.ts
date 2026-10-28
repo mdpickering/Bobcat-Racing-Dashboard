@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { attachCosts, normalizeBomLine, type BomCostRow, type BomLine, type BomRecordType, type ReviewStatus } from '@/lib/bom'
+import { attachCosts, normalizeBomLine, redactBomMoney, type BomCostRow, type BomLine, type BomRecordType, type ReviewStatus } from '@/lib/bom'
 
 // The whole Master BOM is a few hundred lines, so the page reads it in one go and filters in memory (the same
 // approach as the parts catalog). Row-level security (migrations 0044/0045) lets any approved user read the lines, and
@@ -15,11 +15,16 @@ export async function listBomLines(supabase: SupabaseClient, { withCosts }: { wi
   const { data, error } = await supabase.from('bom_lines').select('*').order('sort_order', { ascending: true }).limit(MAX_LINES)
   if (error) throw error
   const lines = ((data ?? []) as BomLine[]).map(normalizeBomLine)
-  if (!withCosts) return attachCosts(lines, [])
+  // Without price access: no prices, and any dollar amount typed into a note, flag or review note is hidden before it leaves here.
+  if (!withCosts) return redactBomMoney(lines)
 
-  const { data: costs, error: costError } = await supabase.from('bom_line_costs').select('line_id, unit_cost, total_cost').limit(MAX_LINES)
-  if (costError) throw costError
-  return attachCosts(lines, (costs ?? []) as BomCostRow[])
+  // cost_notes arrived in migration 0048; until that is run the column does not exist (42703), so fall back to prices only
+  const withNotes = await supabase.from('bom_line_costs').select('line_id, unit_cost, total_cost, cost_notes').limit(MAX_LINES)
+  if (!withNotes.error) return attachCosts(lines, (withNotes.data ?? []) as BomCostRow[])
+  if (withNotes.error.code !== '42703') throw withNotes.error
+  const pricesOnly = await supabase.from('bom_line_costs').select('line_id, unit_cost, total_cost').limit(MAX_LINES)
+  if (pricesOnly.error) throw pricesOnly.error
+  return attachCosts(lines, (pricesOnly.data ?? []) as BomCostRow[])
 }
 
 export interface BomReviewPatch {

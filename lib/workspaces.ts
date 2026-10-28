@@ -24,6 +24,7 @@ export type NavIconName =
   | 'pickup'
   | 'sorting'
   | 'bulkadd'
+  | 'spending'
   | 'inventory'
   | 'receiving'
   | 'vendors'
@@ -127,6 +128,7 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         items: [
           { label: 'Purchasing', icon: 'purchasing', status: 'available', href: '/purchasing' },
           { label: 'Sponsorships', icon: 'sponsorships', status: 'available', href: '/business/sponsorships', activeWhen: (p) => p.startsWith('/business/sponsor') },
+          { label: 'Spending', icon: 'spending', status: 'available', href: '/business/spending' },
           { label: 'Budget', icon: 'budget', status: 'soon' },
         ],
       },

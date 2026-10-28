@@ -11,7 +11,7 @@ import Panel from '@/components/ui/Panel'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { createClient } from '@/lib/supabase/client'
 import { updateBomLine, type BomReviewPatch } from '@/lib/supabase/queries/bom'
-import { KIND_LABEL, KIND_TONE, RECORD_TYPES, flagSeverity, formatOrderDate, kindOf, safeHttpUrl, type BomLine } from '@/lib/bom'
+import { KIND_LABEL, KIND_TONE, RECORD_TYPES, flagSeverity, formatOrderDate, kindOf, noteFor, safeHttpUrl, type BomLine } from '@/lib/bom'
 import { formatUsd } from '@/lib/parts'
 import { formatDateTime } from '@/lib/format'
 
@@ -118,7 +118,7 @@ export default function BomReviewCard({ line, subsystems, seasons, vendors }: Bo
           </div>
         )}
       </dl>
-      {line.notes && <p className="mt-1 text-2xs text-text-muted">{line.notes}</p>}
+      {noteFor(line, true) && <p className="mt-1 text-2xs text-text-muted">{noteFor(line, true)}</p>}
 
       {line.review_flag && (
         <div className={`mt-3 flex items-start gap-1.5 rounded-xl px-3 py-2 text-xs leading-5 ${severity === 'check' ? 'bg-status-warning/10 text-status-warning' : 'bg-surface-raised/60 text-text-secondary'}`}>

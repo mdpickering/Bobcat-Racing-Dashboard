@@ -17,6 +17,7 @@ const LABELS: Record<string, string> = {
   bom: 'BOM lookup',
   pickup: 'Pick up a task',
   sorting: 'Needs sorting',
+  spending: 'Spending',
   'add-tasks': 'Add several tasks',
   inventory: 'Inventory',
   receiving: 'Receiving',

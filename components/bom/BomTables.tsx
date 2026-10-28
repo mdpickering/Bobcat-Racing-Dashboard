@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, ExternalLink, Info, Library } from 'lucide
 import DataTable, { type Column } from '@/components/ui/DataTable'
 import EmptyState from '@/components/ui/EmptyState'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { KIND_HINT, KIND_LABEL, KIND_TONE, formatOrderDate, kindOf, needsCheck, safeHttpUrl, type BomKind, type BomLine, type BomPart } from '@/lib/bom'
+import { KIND_HINT, KIND_LABEL, KIND_TONE, formatOrderDate, kindOf, needsCheck, noteFor, safeHttpUrl, type BomKind, type BomLine, type BomPart } from '@/lib/bom'
 import { formatUsd } from '@/lib/parts'
 
 const DASH = <span className="text-text-muted">—</span>
@@ -101,7 +101,7 @@ export function BomLinesTable({ rows, filtered, showMoney }: { rows: BomLine[]; 
             <KindBadge kind={kindOf(r)} />
             {[r.vendor, r.season, r.subsystem].filter(Boolean).join(' · ')}
           </div>
-          {r.notes && <div className="mt-0.5 text-2xs text-text-muted">{r.notes}</div>}
+          {noteFor(r, showMoney) && <div className="mt-0.5 text-2xs text-text-muted">{noteFor(r, showMoney)}</div>}
           <LineNote line={r} />
         </>
       ),

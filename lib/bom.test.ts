@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { attachCosts, bomMatches, canSeeBomCosts, flagSeverity, formatOrderDate, groupByPart, kindOf, needsCheck, normalizeBomLine, partKey, safeHttpUrl, seasonOptions, summarizeBom, type BomLine } from './bom'
+import { attachCosts, bomMatches, canSeeBomCosts, flagSeverity, formatOrderDate, groupByPart, kindOf, needsCheck, noteFor, normalizeBomLine, partKey, redactBomMoney, redactMoney, safeHttpUrl, seasonOptions, spendIds, summarizeBom, type BomLine } from './bom'
 
 let n = 0
 function line(over: Partial<BomLine> = {}): BomLine {
@@ -63,17 +63,26 @@ describe('bomMatches', () => {
 })
 
 describe('summarizeBom', () => {
-  it('counts spend on purchase lists only, quotes separately, and ignores plans', () => {
+  it('counts spend on order sheets and quotes the team ordered from, but never on a plan', () => {
     const s = summarizeBom([
       line({ total_cost: 100 }),
       line({ total_cost: 50.5, part_number: 'A' }),
       line({ record_type: 'Quote', total_cost: 900, part_number: 'B' }),
       line({ record_type: 'Planned BOM', total_cost: 5000, part_number: 'C' }),
+      line({ record_type: 'CAD part list', total_cost: 200, part_number: 'E' }),
       line({ total_cost: null, part_number: 'D' }),
     ])
-    expect(s.purchaseTotal).toBe(150.5)
-    expect(s.quoteTotal).toBe(900)
-    expect(s.lines).toBe(5)
+    expect(s.spentTotal).toBe(1050.5)
+    expect(s.spentLines).toBe(4)
+    expect(s.lines).toBe(6)
+  })
+  it('counts a quote once when the same part from the same vendor is already on an order sheet', () => {
+    const s = summarizeBom([
+      line({ part_number: 'P34-6061', vendor: 'Metals Depot', total_cost: 1155 }),
+      line({ part_number: 'p34 6061', vendor: 'METALS DEPOT', record_type: 'Quote', total_cost: 1155 }),
+    ])
+    expect(s.spentTotal).toBe(1155)
+    expect(s.spentLines).toBe(1)
   })
   it('counts distinct parts and flagged lines', () => {
     const s = summarizeBom([line({ part_number: 'X' }), line({ part_number: 'x' }), line({ part_number: null, item: 'Zip tie' }), line({ part_number: null, item: 'zip tie ', review_flag: CHECK })])
@@ -91,7 +100,43 @@ describe('summarizeBom', () => {
     expect(s.needsReview).toBe(1)
   })
   it('does not accumulate float noise', () => {
-    expect(summarizeBom([line({ total_cost: 0.1 }), line({ total_cost: 0.2, part_number: 'Z' })]).purchaseTotal).toBe(0.3)
+    expect(summarizeBom([line({ total_cost: 0.1 }), line({ total_cost: 0.2, part_number: 'Z' })]).spentTotal).toBe(0.3)
+  })
+})
+
+describe('spendIds', () => {
+  it('counts every purchase-list line', () => {
+    const a = line()
+    expect(spendIds([a]).has(a.id)).toBe(true)
+  })
+  it('counts a quote, because the team ordered from its quotes', () => {
+    const q = line({ record_type: 'Quote' })
+    expect(spendIds([q]).has(q.id)).toBe(true)
+  })
+  it('never counts a plan or a part list', () => {
+    const plans = (['Planned BOM', 'Team master BOM', 'CAD part list'] as const).map((t) => line({ record_type: t }))
+    expect(spendIds(plans).size).toBe(0)
+  })
+  it('leaves out a quote only when the same part number from the same vendor is on an order sheet', () => {
+    const order = line({ part_number: 'R2158', vendor: 'Metals Depot' })
+    const sameBuy = line({ record_type: 'Quote', part_number: 'R2158', vendor: 'Metals Depot' })
+    const otherVendor = line({ record_type: 'Quote', part_number: 'R2158', vendor: 'Yarde Metals' })
+    const otherPart = line({ record_type: 'Quote', part_number: 'R9999', vendor: 'Metals Depot' })
+    const ids = spendIds([order, sameBuy, otherVendor, otherPart])
+    expect(ids.has(order.id)).toBe(true)
+    expect(ids.has(sameBuy.id)).toBe(false)
+    expect(ids.has(otherVendor.id)).toBe(true)
+    expect(ids.has(otherPart.id)).toBe(true)
+  })
+  it('cannot match a quote with no part number, so it counts', () => {
+    const order = line({ part_number: null, vendor: 'Alro Steel' })
+    const q = line({ record_type: 'Quote', part_number: null, vendor: 'Alro Steel' })
+    expect(spendIds([order, q]).has(q.id)).toBe(true)
+  })
+  it('does not let a plan hide a quote', () => {
+    const plan = line({ record_type: 'Planned BOM', part_number: 'X1', vendor: 'V' })
+    const q = line({ record_type: 'Quote', part_number: 'X1', vendor: 'V' })
+    expect(spendIds([plan, q]).has(q.id)).toBe(true)
   })
 })
 
@@ -211,6 +256,61 @@ describe('attachCosts', () => {
     const [out] = attachCosts([a], [{ line_id: a.id, unit_cost: null, total_cost: 5 }])
     expect(out.unit_cost).toBeNull()
     expect(out.total_cost).toBe(5)
+  })
+})
+
+describe('redactMoney', () => {
+  it('hides every dollar amount, in the formats the notes use', () => {
+    expect(redactMoney('Quote Q41112KN028, total $400.45 + $3.00 est. fuel surcharge.')).toBe('Quote Q41112KN028, total [amount hidden] + [amount hidden] est. fuel surcharge.')
+    expect(redactMoney('Online quotation, order total $3,152.85 (447 lb).')).toBe('Online quotation, order total [amount hidden] (447 lb).')
+    expect(redactMoney('tax $92.82, subtotal $ 1,409.72 less 25%')).toBe('tax [amount hidden], subtotal [amount hidden] less 25%')
+    expect(redactMoney('Merchandise $120 + shipping')).toBe('Merchandise [amount hidden] + shipping')
+  })
+  it('leaves text without money exactly as it was', () => {
+    expect(redactMoney('Package of 50 - Need 2 PCS')).toBe('Package of 50 - Need 2 PCS')
+    expect(redactMoney('Quote only: no record it was ordered; Link: Missing')).toBe('Quote only: no record it was ordered; Link: Missing')
+  })
+  it('passes null and undefined through', () => {
+    expect(redactMoney(null)).toBeNull()
+    expect(redactMoney(undefined)).toBeNull()
+  })
+})
+
+describe('redactBomMoney', () => {
+  it('removes prices and hides amounts in notes, flags and review notes', () => {
+    const [out] = redactBomMoney([line({ unit_cost: 5, total_cost: 10, notes: 'total $400.45', review_flag: 'Quote says $12.00', review_note: 'paid $9', cost_notes: 'secret $1' })])
+    expect(out.unit_cost).toBeNull()
+    expect(out.total_cost).toBeNull()
+    expect(out.notes).toBe('total [amount hidden]')
+    expect(out.review_flag).toBe('Quote says [amount hidden]')
+    expect(out.review_note).toBe('paid [amount hidden]')
+    expect(out.cost_notes).toBeNull()
+  })
+  it('does not change the lines it was given', () => {
+    const input = [line({ notes: 'total $1.00' })]
+    redactBomMoney(input)
+    expect(input[0].notes).toBe('total $1.00')
+  })
+})
+
+describe('noteFor', () => {
+  it('gives money viewers the original wording and everyone else the shared note', () => {
+    const l = { notes: 'total [amount hidden]', cost_notes: 'total $400.45' }
+    expect(noteFor(l, true)).toBe('total $400.45')
+    expect(noteFor(l, false)).toBe('total [amount hidden]')
+  })
+  it('falls back to the shared note when there is no original', () => {
+    expect(noteFor({ notes: 'Package of 50', cost_notes: null }, true)).toBe('Package of 50')
+    expect(noteFor({ notes: null, cost_notes: null }, true)).toBeNull()
+  })
+})
+
+describe('attachCosts and notes', () => {
+  it('carries the original note from the costs table, so only people who can read that table have it', () => {
+    const a = line({ notes: 'total [amount hidden]' })
+    const [out] = attachCosts([a], [{ line_id: a.id, unit_cost: 1, total_cost: 2, cost_notes: 'total $400.45' }])
+    expect(out.cost_notes).toBe('total $400.45')
+    expect(attachCosts([a], [])[0].cost_notes).toBeNull()
   })
 })
 

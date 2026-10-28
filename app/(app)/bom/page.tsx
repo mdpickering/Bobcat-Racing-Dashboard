@@ -2,8 +2,9 @@ import Link from 'next/link'
 import { listBomLines } from '@/lib/supabase/queries/bom'
 import { getBusinessAccess } from '@/lib/supabase/queries/business'
 import { createClient } from '@/lib/supabase/server'
-import { bomMatches, canSeeBomCosts, groupByPart, kindOf, needsCheck, seasonOptions, summarizeBom, type BomKind } from '@/lib/bom'
+import { bomMatches, canSeeBomCosts, groupByPart, kindOf, needsCheck, seasonOptions, spendIds, summarizeBom, type BomKind } from '@/lib/bom'
 import { formatUsd } from '@/lib/parts'
+import { seasonSpan } from '@/lib/bomSpend'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
 import type { Profile } from '@/types/user'
 import ErrorState from '@/components/ui/ErrorState'
@@ -67,7 +68,8 @@ export default async function BomLookupPage({ searchParams }: { searchParams: { 
       bomMatches(l, q)
   )
   const isFiltered = Boolean(q.trim() || subsystem || season || vendor || kind || reviewOnly)
-  const summary = summarizeBom(filtered)
+  // what counts as spent is decided on the WHOLE BOM, so a quote is matched against every order sheet even when a filter hides it
+  const summary = summarizeBom(filtered, spendIds(lines))
   const parts = view === 'parts' ? groupByPart(filtered) : []
 
   const subsystemOptions = Array.from(new Set(lines.map((l) => l.subsystem))).sort((a, b) => a.localeCompare(b))
@@ -109,15 +111,11 @@ export default async function BomLookupPage({ searchParams }: { searchParams: { 
         metrics={[
           { label: 'Lines', value: String(summary.lines), hint: isFiltered ? `of ${lines.length}` : undefined },
           { label: 'Distinct parts', value: String(summary.distinctParts) },
+          // One money figure, for the people allowed to see money (Business, CTO, admin): what the team has spent, from order sheets
+          // and the quotes it ordered from. Plans are not counted. It links to the Business spending breakdown. Everyone else sees a count.
           ...(showMoney
-            ? [
-                { label: 'On purchase lists', value: formatUsd(summary.purchaseTotal), hint: 'Ordered, not proof of arrival' },
-                { label: 'Quoted only', value: formatUsd(summary.quoteTotal), hint: 'No record it was ordered' },
-              ]
-            : [
-                { label: 'Purchases', value: String(summary.purchaseLines), hint: 'Ordered, not proof of arrival' },
-                { label: 'Quotes only', value: String(summary.quoteLines), hint: 'No record it was ordered' },
-              ]),
+            ? [{ label: 'Spent', value: formatUsd(summary.spentTotal), hint: isFiltered ? 'In this view' : seasonSpan(seasonOptions(lines)) ?? 'All seasons', href: '/business/spending' }]
+            : [{ label: 'Bought', value: String(summary.spentLines), hint: 'Lines the team ordered' }]),
           { label: 'Need checking', value: String(summary.needsReview), tone: summary.needsReview > 0 ? ('warning' as const) : ('success' as const) },
         ]}
       />
@@ -143,7 +141,7 @@ export default async function BomLookupPage({ searchParams }: { searchParams: { 
       {view === 'parts' ? <BomPartsTable rows={parts} filtered={isFiltered} showMoney={showMoney} /> : <BomLinesTable rows={filtered} filtered={isFiltered} showMoney={showMoney} />}
 
       <p className="mt-4 max-w-3xl text-2xs leading-4 text-text-muted">
-        Source: Baja Master BOM 2022-23 to 2025-26, compiled from the team&rsquo;s order sheets, quotes and planning files. A purchase list shows what was put on an order; it does not prove the part arrived or is on the car. Lines marked
+        Source: Baja Master BOM 2022-23 to 2025-26, compiled from the team&rsquo;s order sheets, quotes and planning files. Order sheets and the quotes the team ordered from both count as bought; planned lists do not. A line on an order sheet or quote does not prove the part arrived or is on the car. Lines marked
         &ldquo;Check&rdquo; have an open question in the source data.
       </p>
     </div>

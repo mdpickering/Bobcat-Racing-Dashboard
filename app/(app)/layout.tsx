@@ -32,7 +32,7 @@ export default async function AppLayout({
   const workspaces = await getWorkspaceContext(supabase, profile as Profile, cookies().get(WORKSPACE_COOKIE)?.value)
 
   return (
-    <AppShell profile={profile as Profile} available={workspaces.available} startWorkspace={workspaces.start}>
+    <AppShell profile={profile as Profile} available={workspaces.available} startWorkspace={workspaces.start} navLevel={workspaces.navLevel}>
       {children}
     </AppShell>
   )

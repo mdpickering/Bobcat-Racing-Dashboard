@@ -1,4 +1,5 @@
 import type { WorkspaceId } from '@/lib/workspaceAccess'
+import type { NavLevel } from '@/lib/navAudience'
 
 // Navigation for all three workspaces lives here and nowhere else. The sidebar renders it; adding a feature later
 // is one entry flipped from 'soon' to 'available' (plus its route). 'soon' entries are listed but are NOT links,
@@ -40,6 +41,9 @@ export interface NavItemDef {
   status: 'available' | 'soon'
   // required for 'available', forbidden for 'soon'
   href?: string
+  // Who sees this entry in the sidebar: everyone by default, or only leads / only the CTO and admins (lib/navAudience.ts).
+  // Navigation only: the page itself is still reachable by its link and keeps its own access check.
+  audience?: NavLevel
   // items that share a path (e.g. Tasks and Task Requests are both /tasks) say when they are the active one
   activeWhen?: (pathname: string, params: { get(name: string): string | null }) => boolean
 }
@@ -83,23 +87,24 @@ export const WORKSPACES: Record<WorkspaceId, WorkspaceDef> = {
         label: 'Engineering',
         items: [
           { label: 'Subsystems', icon: 'subsystems', status: 'available', href: '/subsystems' },
-          { label: 'CAD Review', icon: 'cad', status: 'available', href: '/cad' },
-          { label: 'Task Requests', icon: 'requests', status: 'available', href: '/tasks?tab=requests', activeWhen: isTaskRequests },
-          // for subsystem leads, the CTO and admins; anyone else who opens it is told it is limited to them
-          { label: 'Needs Sorting', icon: 'sorting', status: 'available', href: '/sorting' },
-          { label: 'Add Several Tasks', icon: 'bulkadd', status: 'available', href: '/add-tasks' },
+          { label: 'CAD Review', icon: 'cad', status: 'available', href: '/cad', audience: 'lead' },
+          // A member asks for a task from the Requests tab on My Tasks; leads review them here.
+          { label: 'Task Requests', icon: 'requests', status: 'available', href: '/tasks?tab=requests', activeWhen: isTaskRequests, audience: 'lead' },
+          { label: 'Needs Sorting', icon: 'sorting', status: 'available', href: '/sorting', audience: 'lead' },
+          { label: 'Add Several Tasks', icon: 'bulkadd', status: 'available', href: '/add-tasks', audience: 'lead' },
           { label: 'Purchasing', icon: 'purchasing', status: 'available', href: '/purchasing' },
-          { label: 'Parts', icon: 'parts', status: 'available', href: '/parts' },
+          // the parts catalog is managed by leads; everyone can look parts up in BOM Lookup
+          { label: 'Parts', icon: 'parts', status: 'available', href: '/parts', audience: 'lead' },
           { label: 'BOM Lookup', icon: 'bom', status: 'available', href: '/bom' },
-          { label: 'Inventory', icon: 'inventory', status: 'available', href: '/inventory' },
+          { label: 'Inventory', icon: 'inventory', status: 'available', href: '/inventory', audience: 'lead' },
         ],
       },
       {
         label: 'Planning',
         items: [
           { label: 'Timeline', icon: 'timeline', status: 'available', href: '/timeline' },
-          { label: 'Milestones', icon: 'milestones', status: 'available', href: '/milestones' },
-          { label: 'Technical Meetings', icon: 'meetings', status: 'available', href: '/meetings' },
+          { label: 'Milestones', icon: 'milestones', status: 'available', href: '/milestones', audience: 'lead' },
+          { label: 'Technical Meetings', icon: 'meetings', status: 'available', href: '/meetings', audience: 'lead' },
         ],
       },
     ],

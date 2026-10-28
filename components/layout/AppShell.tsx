@@ -6,6 +6,7 @@ import { X } from 'lucide-react'
 import type { Profile } from '@/types/user'
 import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/sidebarPreference'
 import { resolveShellWorkspace, workspaceToRemember, type WorkspaceId } from '@/lib/workspaceAccess'
+import type { NavLevel } from '@/lib/navAudience'
 import { rememberWorkspace } from '@/lib/workspacePreference'
 import { ToastProvider } from '@/components/ui/Toast'
 import { TooltipProvider } from '@/components/shadcn/tooltip'
@@ -19,10 +20,12 @@ interface AppShellProps {
   available: WorkspaceId[]
   // the remembered workspace if still allowed, else the role-based default
   startWorkspace: WorkspaceId
+  // how much of the sidebar to show (lib/navAudience.ts): navigation only, never access
+  navLevel: NavLevel
   children: React.ReactNode
 }
 
-export default function AppShell({ profile, available, startWorkspace, children }: AppShellProps) {
+export default function AppShell({ profile, available, startWorkspace, navLevel, children }: AppShellProps) {
   const pathname = usePathname() ?? ''
   const [mobileOpen, setMobileOpen] = useState(false)
   // Layout is driven by <html data-sidebar> (set before first paint); this state only
@@ -72,14 +75,14 @@ export default function AppShell({ profile, available, startWorkspace, children 
       </a>
       <div data-workspace={workspace} className="flex h-screen overflow-hidden bg-bg text-text-primary">
         <div className="hidden md:block">
-          <Sidebar profile={profile} workspace={workspace} available={available} showSwitcher collapsible collapsed={collapsed} onToggleCollapsed={toggleSidebar} />
+          <Sidebar profile={profile} workspace={workspace} available={available} navLevel={navLevel} showSwitcher collapsible collapsed={collapsed} onToggleCollapsed={toggleSidebar} />
         </div>
 
         {mobileOpen && (
           <div className="fixed inset-0 z-50 flex md:hidden">
             <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
             <div className="relative flex h-full">
-              <Sidebar profile={profile} workspace={workspace} available={available} onNavigate={() => setMobileOpen(false)} />
+              <Sidebar profile={profile} workspace={workspace} available={available} navLevel={navLevel} onNavigate={() => setMobileOpen(false)} />
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}

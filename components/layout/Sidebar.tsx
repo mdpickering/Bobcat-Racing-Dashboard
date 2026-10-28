@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { ChevronsLeft, ShieldCheck } from 'lucide-react'
 import { ADMIN_LINK, WORKSPACES, isNavItemActive } from '@/lib/workspaces'
 import { isCtoOrAdmin } from '@/lib/permissions/roles'
+import { isNavItemVisible, type NavLevel } from '@/lib/navAudience'
 import type { WorkspaceId } from '@/lib/workspaceAccess'
 import type { Profile } from '@/types/user'
 import Avatar from '@/components/ui/Avatar'
@@ -17,6 +18,8 @@ interface SidebarProps {
   profile: Profile
   workspace: WorkspaceId
   available: WorkspaceId[]
+  // how much of the navigation this person is shown (lib/navAudience.ts)
+  navLevel: NavLevel
   onNavigate?: () => void
   // Desktop instance only: turns on the collapse toggle and icon-rail behaviour.
   // The mobile drawer omits these and always renders the full sidebar.
@@ -27,7 +30,7 @@ interface SidebarProps {
   showSwitcher?: boolean
 }
 
-export default function Sidebar({ profile, workspace, available, onNavigate, collapsible = false, collapsed = false, onToggleCollapsed, showSwitcher = false }: SidebarProps) {
+export default function Sidebar({ profile, workspace, available, navLevel, onNavigate, collapsible = false, collapsed = false, onToggleCollapsed, showSwitcher = false }: SidebarProps) {
   const pathname = usePathname() ?? ''
   const params = useSearchParams()
   const railMode = collapsible && collapsed
@@ -99,7 +102,7 @@ export default function Sidebar({ profile, workspace, available, onNavigate, col
             the app look unfinished. A group left with nothing to show is dropped too; flipping an item to 'available'
             brings it (and its group) back. */}
         {def.groups
-          .map((group) => ({ group, items: group.items.filter((i) => i.status === 'available' && i.href) }))
+          .map((group) => ({ group, items: group.items.filter((i) => i.status === 'available' && i.href && isNavItemVisible(i, navLevel)) }))
           .filter(({ items }) => items.length > 0)
           .map(({ group, items }) => (
           <div key={group.label} className="sidebar-group">

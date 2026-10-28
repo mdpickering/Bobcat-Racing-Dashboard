@@ -5,6 +5,14 @@ import type { Task } from '@/types/database'
 export const GENERAL_SUBSYSTEM_ID = 'general'
 export const isGeneralSubsystem = (id: string | null | undefined): boolean => id === GENERAL_SUBSYSTEM_ID
 
+/**
+ * The dashboard's subsystem cards leave General out until it has at least one task: an empty "General, no tasks yet" card
+ * is just noise on a team that has not started using it. Every other subsystem always shows, even with no tasks.
+ */
+export function withoutEmptyGeneral<T extends { id: string; total: number }>(subsystems: T[]): T[] {
+  return subsystems.filter((s) => !(isGeneralSubsystem(s.id) && s.total === 0))
+}
+
 // ---------------------------------------------------------
 // "Needs sorting": open tasks with no category, in any subsystem except General (a General task is already where it
 // belongs). Each can be sorted two ways: into a category of its own subsystem (that subsystem's lead or cto/admin), or

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GENERAL_SUBSYSTEM_ID, encodeMove, isGeneralSubsystem, moveOptions, moveToPatch, parseMove, sortingMatches, type SortingCategory, type SortingSubsystem } from './sorting'
+import { GENERAL_SUBSYSTEM_ID, encodeMove, isGeneralSubsystem, moveOptions, moveToPatch, parseMove, sortingMatches, withoutEmptyGeneral, type SortingCategory, type SortingSubsystem } from './sorting'
 
 const categories: SortingCategory[] = [
   { id: 'c1', name: 'Gearbox', subsystem_id: 'drivetrain' },
@@ -19,6 +19,28 @@ describe('General subsystem', () => {
     expect(isGeneralSubsystem('general')).toBe(true)
     expect(isGeneralSubsystem('drivetrain')).toBe(false)
     expect(isGeneralSubsystem(null)).toBe(false)
+  })
+})
+
+describe('withoutEmptyGeneral', () => {
+  const list = [
+    { id: 'drivetrain', total: 0 },
+    { id: 'general', total: 0 },
+    { id: 'fabrication', total: 4 },
+  ]
+  it('hides General while it has no tasks', () => {
+    expect(withoutEmptyGeneral(list).map((s) => s.id)).toEqual(['drivetrain', 'fabrication'])
+  })
+  it('shows General as soon as it has a task', () => {
+    expect(withoutEmptyGeneral(list.map((s) => (s.id === 'general' ? { ...s, total: 1 } : s))).map((s) => s.id)).toEqual(['drivetrain', 'general', 'fabrication'])
+  })
+  it('never hides any other subsystem, even an empty one', () => {
+    expect(withoutEmptyGeneral(list).some((s) => s.id === 'drivetrain')).toBe(true)
+  })
+  it('does not change the list it was given', () => {
+    const copy = [...list]
+    withoutEmptyGeneral(copy)
+    expect(copy).toEqual(list)
   })
 })
 

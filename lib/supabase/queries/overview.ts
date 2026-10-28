@@ -3,6 +3,7 @@ import { deadlineDateKey, formatDeadline, isDeadlineDueSoon, isDeadlineOverdue, 
 import { formatDate } from '@/lib/format'
 import { listCalendarEventsInRange, listMilestonesInRange } from './calendar'
 import { listSubsystems } from './subsystems'
+import { withoutEmptyGeneral } from '@/lib/sorting'
 
 export interface SubsystemProgress {
   id: string
@@ -124,7 +125,8 @@ export async function getTeamOverview(supabase: SupabaseClient, opts: { restrict
     }
   }
 
-  const subsystemList = [...bySubsystem.values()].sort((a, b) => b.overdue - a.overdue || b.open - a.open || a.name.localeCompare(b.name))
+  // General (migration 0047) stays off the dashboard until it has a task; a team that has not started using it should not see an empty card
+  const subsystemList = withoutEmptyGeneral([...bySubsystem.values()]).sort((a, b) => b.overdue - a.overdue || b.open - a.open || a.name.localeCompare(b.name))
   counts.overdueSubsystems = subsystemList.filter((s) => s.overdue > 0).length
 
   const visible = (id: string) => !opts.restrictToTaskIds || opts.restrictToTaskIds.has(id)
